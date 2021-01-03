@@ -119,9 +119,10 @@ public class ClientConnection implements IConnection {
 
 		connectionState = EConnectionState.DISCONNECTING;
 
-		onLogEvent(ELogLevel.INFO, null, "%s closing connection", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "%s - Closing connection", remoteAddress);
 		closeSocket();
 
+		cancelFuture(connection);
 		cancelFuture(receiving);
 
 		connectionState = EConnectionState.DISCONNECTED;
