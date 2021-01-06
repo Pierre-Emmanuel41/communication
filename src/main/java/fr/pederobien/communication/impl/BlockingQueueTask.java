@@ -2,23 +2,28 @@ package fr.pederobien.communication.impl;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class BlockingQueueTask<T> {
-	private ScheduledExecutorService executorService;
+	private Thread queueThread;
 	private Consumer<T> consumer;
 	private BlockingQueue<T> queue;
 	private AtomicBoolean disposed;
 	private boolean isStarted;
-	private ScheduledFuture<?> task;
 
-	public BlockingQueueTask(ScheduledExecutorService executorService, Consumer<T> consumer) {
-		this.executorService = executorService;
+	/**
+	 * Create a thread associated to a BlockingQueue.
+	 * 
+	 * @param name     The thread name.
+	 * @param consumer The code to execute when an element is added to this queue.
+	 */
+	public BlockingQueueTask(String name, Consumer<T> consumer) {
 		this.consumer = consumer;
+
+		queueThread = new Thread(() -> internalStart(), name);
+		queueThread.setDaemon(true);
+
 		disposed = new AtomicBoolean(false);
 	}
 
@@ -28,10 +33,9 @@ public class BlockingQueueTask<T> {
 		if (isStarted)
 			return;
 
-		isStarted = true;
 		queue = new ArrayBlockingQueue<>(10000);
-
-		task = executorService.schedule(() -> internalStart(), 1, TimeUnit.MILLISECONDS);
+		queueThread.start();
+		isStarted = true;
 	}
 
 	public void add(T e) {
@@ -43,7 +47,7 @@ public class BlockingQueueTask<T> {
 		if (!disposed.compareAndSet(false, true))
 			return;
 
-		task.cancel(true);
+		queueThread.interrupt();
 	}
 
 	private boolean isDisposed() {

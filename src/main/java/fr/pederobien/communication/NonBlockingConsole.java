@@ -12,7 +12,7 @@ public class NonBlockingConsole {
 	static {
 		queue = new ArrayBlockingQueue<>(10000);
 		formater = DateTimeFormatter.ofPattern("HH:mm:ss:SSS");
-		Thread thread = new Thread(() -> work());
+		Thread thread = new Thread(() -> work(), "NonBlockingConsole");
 		thread.setDaemon(true);
 		thread.start();
 	}

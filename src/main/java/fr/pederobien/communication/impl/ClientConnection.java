@@ -6,10 +6,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -23,6 +20,7 @@ import fr.pederobien.communication.interfaces.IObsConnection;
 import fr.pederobien.communication.interfaces.IRequestMessage;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.Observable;
+import fr.pederobien.utils.SimpleTimer;
 
 public class ClientConnection implements IConnection {
 	/**
@@ -40,8 +38,8 @@ public class ClientConnection implements IConnection {
 	 */
 	private static final int SOCKET_ERROR_RETRY_MS = 1000;
 
-	private ScheduledFuture<?> receiving, connection;
-	private ScheduledExecutorService executorService;
+	private SimpleTimer timer;
+	private TimerTask receiving, connection;
 	private BlockingQueueTask<byte[]> extractingQueue;
 	private BlockingQueueTask<IRequestMessage> sendingQueue;
 	private String remoteAddress;
@@ -60,18 +58,11 @@ public class ClientConnection implements IConnection {
 
 		isDisposed = new AtomicBoolean(false);
 
-		// Create a thread pool such as each created thread are daemon.
-		executorService = Executors.newScheduledThreadPool(5, runnable -> {
-			Thread thread = new Thread(runnable);
-			thread.setDaemon(true);
-			return thread;
-		});
-
-		requestResponseManager = new RequestResponseManager(this, answersExtractor, executorService);
+		requestResponseManager = new RequestResponseManager(this, remoteAddress, answersExtractor);
 		observers = new Observable<IObsConnection>();
 
-		sendingQueue = new BlockingQueueTask<>(executorService, message -> startSending(message));
-		extractingQueue = new BlockingQueueTask<>(executorService, answer -> startExtracting(answer));
+		sendingQueue = new BlockingQueueTask<IRequestMessage>("Sending_".concat(remoteAddress), message -> startSending(message));
+		extractingQueue = new BlockingQueueTask<byte[]>("Extracting_".concat(remoteAddress), answer -> startExtracting(answer));
 
 		connectionState = EConnectionState.DISCONNECTED;
 	}
@@ -110,7 +101,8 @@ public class ClientConnection implements IConnection {
 		connectionState = EConnectionState.CONNECTING;
 		onLogEvent(ELogLevel.INFO, null, "%s - Starting connection", remoteAddress);
 
-		connection = executorService.scheduleWithFixedDelay(() -> startConnect(), 1, RECONNECTION_IDLE_TIME, TimeUnit.MILLISECONDS);
+		timer = new SimpleTimer("ClientConnection", true);
+		connection = timer.scheduleAtFixedRate(() -> startConnect(), 0, RECONNECTION_IDLE_TIME);
 	}
 
 	@Override
@@ -121,9 +113,8 @@ public class ClientConnection implements IConnection {
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Closing connection", remoteAddress);
 		closeSocket();
-
-		cancelFuture(connection);
-		cancelFuture(receiving);
+		cancelTimerTask(connection);
+		cancelTimerTask(receiving);
 
 		connectionState = EConnectionState.DISCONNECTED;
 		onLogEvent(ELogLevel.INFO, null, "%s - Connection closed", remoteAddress);
@@ -142,19 +133,15 @@ public class ClientConnection implements IConnection {
 		if (getState() != EConnectionState.DISCONNECTED)
 			disconnect();
 
-		if (isDisposed.compareAndSet(false, true))
+		if (!isDisposed.compareAndSet(false, true))
 			return;
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Disposing connection", remoteAddress);
 
+		timer.cancel();
 		sendingQueue.dispose();
 		extractingQueue.dispose();
 		requestResponseManager.dispose();
-		try {
-			executorService.awaitTermination(2000, TimeUnit.MILLISECONDS);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Connection disposed", remoteAddress);
 	}
@@ -192,8 +179,8 @@ public class ClientConnection implements IConnection {
 				socket.close();
 				onLogEvent(ELogLevel.INFO, null, "%s - Connection timeout. Retry.", remoteAddress);
 			} catch (IOException e) {
-				cancelFuture(connection);
-				connection = executorService.scheduleWithFixedDelay(() -> startConnect(), SOCKET_ERROR_RETRY_MS, RECONNECTION_IDLE_TIME, TimeUnit.MILLISECONDS);
+				connection.cancel();
+				connection = timer.scheduleAtFixedRate(() -> startConnect(), SOCKET_ERROR_RETRY_MS, RECONNECTION_IDLE_TIME);
 			}
 		} catch (IOException e) {
 			// do nothing
@@ -268,9 +255,9 @@ public class ClientConnection implements IConnection {
 			return;
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Connection successfull", remoteAddress);
-		cancelFuture(connection);
 
-		receiving = executorService.schedule(() -> startReceiving(), 2, TimeUnit.MILLISECONDS);
+		cancelTimerTask(connection);
+		receiving = timer.schedule(() -> startReceiving(), 0);
 
 		sendingQueue.start();
 		extractingQueue.start();
@@ -284,7 +271,6 @@ public class ClientConnection implements IConnection {
 		onLogEvent(ELogLevel.INFO, null, "%s - Connection lost", remoteAddress);
 
 		closeSocket();
-		cancelFuture(receiving);
 
 		notifyObservers(obs -> obs.onConnectionLost());
 
@@ -300,8 +286,8 @@ public class ClientConnection implements IConnection {
 		notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(buffer, length)));
 	}
 
-	private void cancelFuture(ScheduledFuture<?> future) {
-		if (future != null)
-			future.cancel(true);
+	private void cancelTimerTask(TimerTask task) {
+		if (task != null)
+			task.cancel();
 	}
 }

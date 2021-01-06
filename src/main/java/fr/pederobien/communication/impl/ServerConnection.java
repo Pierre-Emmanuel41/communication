@@ -54,9 +54,9 @@ public class ServerConnection implements IConnection {
 
 		receiving = executorService.schedule(() -> startReceiving(), 1, TimeUnit.MILLISECONDS);
 
-		sendingQueue = new BlockingQueueTask<>(executorService, message -> startSending(message));
-		extractingQueue = new BlockingQueueTask<>(executorService, answer -> startExtracting(answer));
-		unexpectedQueue = new BlockingQueueTask<>(executorService, event -> startReceivingUnexpectedData(event));
+		sendingQueue = new BlockingQueueTask<>("Sending_".concat(remoteAddress), message -> startSending(message));
+		extractingQueue = new BlockingQueueTask<>("Extracting_".concat(remoteAddress), answer -> startExtracting(answer));
+		unexpectedQueue = new BlockingQueueTask<>("UnexpectedData_".concat(remoteAddress), event -> startReceivingUnexpectedData(event));
 
 		sendingQueue.start();
 		extractingQueue.start();

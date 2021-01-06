@@ -3,7 +3,6 @@ package fr.pederobien.communication.impl;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimerTask;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -50,7 +49,7 @@ public class RequestResponseManager {
 	private AtomicBoolean disposed;
 	private ClientConnection connection;
 
-	public RequestResponseManager(ClientConnection connection, IAnswersExtractor answersExtractor, ScheduledExecutorService executorService) {
+	public RequestResponseManager(ClientConnection connection, String remoteAddress, IAnswersExtractor answersExtractor) {
 		this.connection = connection;
 		this.answersExtractors = answersExtractor;
 
@@ -59,10 +58,10 @@ public class RequestResponseManager {
 		disposed = new AtomicBoolean(false);
 		pendingRequest = new HashMap<String, PendingRequestEntry>();
 
-		callbackQueue = new BlockingQueueTask<>(executorService, callback -> startCallBack(callback));
+		callbackQueue = new BlockingQueueTask<>("Callback_".concat(remoteAddress), callback -> startCallBack(callback));
 		callbackQueue.start();
 
-		unexpectedDataReceivedQueue = new BlockingQueueTask<>(executorService, entry -> startUnexpectedDataReceived(entry));
+		unexpectedDataReceivedQueue = new BlockingQueueTask<>("UnexpectedData_".concat(remoteAddress), entry -> startUnexpectedDataReceived(entry));
 		unexpectedDataReceivedQueue.start();
 	}
 
