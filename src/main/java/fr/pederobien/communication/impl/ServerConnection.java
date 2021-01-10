@@ -164,6 +164,12 @@ public class ServerConnection implements IConnection {
 			try {
 				byte[] buffer = new byte[1024];
 				int read = socket.getInputStream().read(buffer);
+
+				if (read == -1) {
+					onConnectionLostEvent();
+					break;
+				}
+
 				extractingQueue.add(ByteWrapper.wrap(buffer).extract(0, read));
 			} catch (IOException e) {
 				onLogEvent(ELogLevel.WARNING, e, "%s - Reception failure : %s", remoteAddress, e.getMessage());
