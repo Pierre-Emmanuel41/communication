@@ -1,6 +1,6 @@
 package fr.pederobien.communication.interfaces;
 
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 import fr.pederobien.communication.EConnectionState;
 
@@ -14,7 +14,7 @@ public interface IConnection {
 	 *
 	 * @return the remote IP address to which this connected is connected, or {@code null} if the socket is not connected.
 	 */
-	InetAddress getAddress();
+	InetSocketAddress getAddress();
 
 	/**
 	 * @return The current connection state.

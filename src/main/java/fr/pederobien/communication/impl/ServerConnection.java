@@ -1,7 +1,7 @@
 package fr.pederobien.communication.impl;
 
 import java.io.IOException;
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -66,8 +66,8 @@ public class ServerConnection implements IConnection {
 	}
 
 	@Override
-	public InetAddress getAddress() {
-		return socket == null ? null : socket.getInetAddress();
+	public InetSocketAddress getAddress() {
+		return socket == null ? null : (InetSocketAddress) socket.getRemoteSocketAddress();
 	}
 
 	@Override

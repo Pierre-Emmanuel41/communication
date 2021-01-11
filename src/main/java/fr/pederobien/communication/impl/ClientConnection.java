@@ -72,8 +72,8 @@ public class ClientConnection implements IConnection {
 	}
 
 	@Override
-	public InetAddress getAddress() {
-		return socket == null ? null : socket.getInetAddress();
+	public InetSocketAddress getAddress() {
+		return socket == null ? null : (InetSocketAddress) socket.getRemoteSocketAddress();
 	}
 
 	@Override
