@@ -263,6 +263,13 @@ public class ClientConnection implements IConnection {
 		extractingQueue.start();
 
 		connectionState = EConnectionState.CONNECTED;
+
+		try {
+			Thread.sleep(200);
+		} catch (InterruptedException e) {
+			return;
+		}
+
 		notifyObservers(obs -> obs.onConnectionComplete());
 	}
 
