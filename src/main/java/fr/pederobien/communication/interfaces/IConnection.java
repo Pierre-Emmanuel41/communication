@@ -3,8 +3,9 @@ package fr.pederobien.communication.interfaces;
 import java.net.InetSocketAddress;
 
 import fr.pederobien.communication.EConnectionState;
+import fr.pederobien.utils.IObservable;
 
-public interface IConnection {
+public interface IConnection extends IObservable<IObsConnection> {
 
 	/**
 	 * Returns the address to which the connection is connected.
@@ -62,18 +63,4 @@ public interface IConnection {
 	 * @return True if the connection is disposed and cannot be used any more.
 	 */
 	boolean isDisposed();
-
-	/**
-	 * Append an observer to this observable object.
-	 * 
-	 * @param obs The observer to add.
-	 */
-	void addObserver(IObsConnection obs);
-
-	/**
-	 * Remove an observer from this observable object.
-	 * 
-	 * @param obs The observer to remove.
-	 */
-	void removeObserver(IObsConnection obs);
 }
