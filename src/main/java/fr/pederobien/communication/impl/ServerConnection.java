@@ -4,12 +4,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 import fr.pederobien.communication.EConnectionState;
 import fr.pederobien.communication.event.DataReceivedEvent;
@@ -22,11 +18,12 @@ import fr.pederobien.communication.interfaces.IObsConnection;
 import fr.pederobien.communication.interfaces.IRequestMessage;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.Observable;
+import fr.pederobien.utils.SimpleTimer;
 
 public class ServerConnection implements IConnection {
 	private IAnswersExtractor answersExtractor;
-	private ScheduledFuture<?> receiving;
-	private ScheduledExecutorService executorService;
+	private SimpleTimer timer;
+	private TimerTask receiving;
 	private BlockingQueueTask<byte[]> extractingQueue;
 	private BlockingQueueTask<UnexpectedDataReceivedEvent> unexpectedQueue;
 	private BlockingQueueTask<IRequestMessage> sendingQueue;
@@ -45,14 +42,8 @@ public class ServerConnection implements IConnection {
 		isDisposed = new AtomicBoolean(false);
 		observers = new Observable<IObsConnection>();
 
-		// Create a thread pool such as each created thread are daemon.
-		executorService = Executors.newScheduledThreadPool(5, runnable -> {
-			Thread thread = new Thread(runnable);
-			thread.setDaemon(true);
-			return thread;
-		});
-
-		receiving = executorService.schedule(() -> startReceiving(), 1, TimeUnit.MILLISECONDS);
+		timer = new SimpleTimer("ServerConnection", true);
+		receiving = timer.schedule(() -> startReceiving(), 0);
 
 		sendingQueue = new BlockingQueueTask<>("Sending_".concat(remoteAddress), message -> startSending(message));
 		extractingQueue = new BlockingQueueTask<>("Extracting_".concat(remoteAddress), answer -> startExtracting(answer));
@@ -98,7 +89,7 @@ public class ServerConnection implements IConnection {
 		onLogEvent(ELogLevel.INFO, null, "%s - closing connection", remoteAddress);
 		closeSocket();
 
-		cancelFuture(receiving);
+		cancelTimerTask(receiving);
 
 		connectionState = EConnectionState.DISCONNECTED;
 		onLogEvent(ELogLevel.INFO, null, "%s - Connection closed", remoteAddress);
@@ -122,15 +113,13 @@ public class ServerConnection implements IConnection {
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Disposing connection", remoteAddress);
 
+		timer.cancel();
 		sendingQueue.dispose();
 		extractingQueue.dispose();
-		try {
-			executorService.awaitTermination(2000, TimeUnit.MILLISECONDS);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Connection disposed", remoteAddress);
+
+		observers.notifyObservers(obs -> obs.onConnectionDisposed());
 	}
 
 	@Override
@@ -146,10 +135,6 @@ public class ServerConnection implements IConnection {
 	@Override
 	public void removeObserver(IObsConnection obs) {
 		observers.removeObserver(obs);
-	}
-
-	private void notifyObservers(Consumer<IObsConnection> consumer) {
-		observers.notifyObservers(consumer);
 	}
 
 	private void startExtracting(byte[] answer) {
@@ -180,7 +165,7 @@ public class ServerConnection implements IConnection {
 	}
 
 	private void startReceivingUnexpectedData(UnexpectedDataReceivedEvent event) {
-		notifyObservers(obs -> obs.onUnexpectedDataReceived(event));
+		observers.notifyObservers(obs -> obs.onUnexpectedDataReceived(event));
 	}
 
 	private void startSending(IRequestMessage message) {
@@ -216,21 +201,21 @@ public class ServerConnection implements IConnection {
 		onLogEvent(ELogLevel.INFO, null, "%s - Connection lost", remoteAddress);
 
 		closeSocket();
-		cancelFuture(receiving);
+		cancelTimerTask(receiving);
 
-		notifyObservers(obs -> obs.onConnectionLost());
+		observers.notifyObservers(obs -> obs.onConnectionLost());
 	}
 
 	private void onDataReceivedEvent(byte[] answer, int length) {
-		notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(answer, length)));
+		observers.notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(answer, length)));
 	}
 
 	private void onLogEvent(ELogLevel level, Exception exception, String message, Object... parameters) {
-		notifyObservers(obs -> obs.onLog(new LogEvent(level, String.format(message, parameters), exception)));
+		observers.notifyObservers(obs -> obs.onLog(new LogEvent(level, String.format(message, parameters), exception)));
 	}
 
-	private void cancelFuture(ScheduledFuture<?> future) {
-		if (future != null)
-			future.cancel(true);
+	private void cancelTimerTask(TimerTask task) {
+		if (task != null)
+			task.cancel();
 	}
 }

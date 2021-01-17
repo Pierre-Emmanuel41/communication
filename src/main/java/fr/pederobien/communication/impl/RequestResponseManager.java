@@ -202,7 +202,7 @@ public class RequestResponseManager {
 	}
 
 	private void startUnexpectedDataReceived(Map.Entry<Integer, byte[]> entry) {
-		connection.notifyObservers(obs -> obs.onUnexpectedDataReceived(new UnexpectedDataReceivedEvent(entry.getKey(), entry.getValue())));
+		connection.getObservers().notifyObservers(obs -> obs.onUnexpectedDataReceived(new UnexpectedDataReceivedEvent(entry.getKey(), entry.getValue())));
 	}
 
 	private boolean isDisposed() {

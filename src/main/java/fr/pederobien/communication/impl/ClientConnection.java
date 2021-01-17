@@ -8,7 +8,6 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 import fr.pederobien.communication.EConnectionState;
 import fr.pederobien.communication.event.DataReceivedEvent;
@@ -144,6 +143,8 @@ public class ClientConnection implements IConnection {
 		requestResponseManager.dispose();
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Connection disposed", remoteAddress);
+
+		observers.notifyObservers(obs -> obs.onConnectionDisposed());
 	}
 
 	@Override
@@ -161,8 +162,11 @@ public class ClientConnection implements IConnection {
 		observers.removeObserver(obs);
 	}
 
-	public void notifyObservers(Consumer<IObsConnection> consumer) {
-		observers.notifyObservers(consumer);
+	/**
+	 * @return The observable object associated to this object.
+	 */
+	public Observable<IObsConnection> getObservers() {
+		return observers;
 	}
 
 	private void startConnect() {
@@ -254,8 +258,6 @@ public class ClientConnection implements IConnection {
 		if (connectionState == EConnectionState.DISCONNECTING || connectionState == EConnectionState.DISCONNECTED)
 			return;
 
-		onLogEvent(ELogLevel.INFO, null, "%s - Connection successfull", remoteAddress);
-
 		cancelTimerTask(connection);
 		receiving = timer.schedule(() -> startReceiving(), 0);
 
@@ -264,13 +266,15 @@ public class ClientConnection implements IConnection {
 
 		connectionState = EConnectionState.CONNECTED;
 
+		onLogEvent(ELogLevel.INFO, null, "%s - Connection successfull", remoteAddress);
+
 		try {
 			Thread.sleep(200);
 		} catch (InterruptedException e) {
 			return;
 		}
 
-		notifyObservers(obs -> obs.onConnectionComplete());
+		observers.notifyObservers(obs -> obs.onConnectionComplete());
 	}
 
 	private void onConnectionLostEvent() {
@@ -279,18 +283,18 @@ public class ClientConnection implements IConnection {
 
 		closeSocket();
 
-		notifyObservers(obs -> obs.onConnectionLost());
+		observers.notifyObservers(obs -> obs.onConnectionLost());
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Starting automatic reconnection", remoteAddress);
 		connect();
 	}
 
 	private void onLogEvent(ELogLevel level, Exception exception, String message, Object... parameters) {
-		notifyObservers(obs -> obs.onLog(new LogEvent(level, String.format(message, parameters), exception)));
+		observers.notifyObservers(obs -> obs.onLog(new LogEvent(level, String.format(message, parameters), exception)));
 	}
 
 	private void onDataReceivedEvent(byte[] buffer, int length) {
-		notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(buffer, length)));
+		observers.notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(buffer, length)));
 	}
 
 	private void cancelTimerTask(TimerTask task) {
