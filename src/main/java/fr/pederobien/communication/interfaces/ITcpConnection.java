@@ -5,7 +5,7 @@ import java.net.InetSocketAddress;
 import fr.pederobien.communication.EConnectionState;
 import fr.pederobien.utils.IObservable;
 
-public interface IConnection extends IObservable<IObsConnection> {
+public interface ITcpConnection extends IObservable<IObsConnection> {
 
 	/**
 	 * Returns the address to which the connection is connected.

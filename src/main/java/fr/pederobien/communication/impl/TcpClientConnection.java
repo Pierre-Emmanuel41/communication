@@ -14,14 +14,14 @@ import fr.pederobien.communication.event.DataReceivedEvent;
 import fr.pederobien.communication.event.LogEvent;
 import fr.pederobien.communication.event.LogEvent.ELogLevel;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
-import fr.pederobien.communication.interfaces.IConnection;
+import fr.pederobien.communication.interfaces.ITcpConnection;
 import fr.pederobien.communication.interfaces.IObsConnection;
 import fr.pederobien.communication.interfaces.IRequestMessage;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.Observable;
 import fr.pederobien.utils.SimpleTimer;
 
-public class TcpClientConnection implements IConnection {
+public class TcpClientConnection implements ITcpConnection {
 	/**
 	 * Time in ms to establish the connection to the remote.
 	 */
