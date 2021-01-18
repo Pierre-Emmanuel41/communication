@@ -1,14 +1,14 @@
 package fr.pederobien.communication;
 
-import fr.pederobien.communication.interfaces.IRequestMessage;
+import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
 import fr.pederobien.communication.interfaces.IResponseMessage;
 
 public class ResponseCallbackArgs {
-	private IRequestMessage request;
+	private ICallbackRequestMessage request;
 	private IResponseMessage response;
 	private boolean timeout;
 
-	public ResponseCallbackArgs(IRequestMessage request, IResponseMessage response, boolean timeout) {
+	public ResponseCallbackArgs(ICallbackRequestMessage request, IResponseMessage response, boolean timeout) {
 		this.request = request;
 		this.response = response;
 		this.timeout = timeout;
@@ -17,7 +17,7 @@ public class ResponseCallbackArgs {
 	/**
 	 * @return The initial request message.
 	 */
-	public IRequestMessage getRequest() {
+	public ICallbackRequestMessage getRequest() {
 		return request;
 	}
 

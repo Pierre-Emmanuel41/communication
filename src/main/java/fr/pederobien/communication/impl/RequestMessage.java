@@ -3,9 +3,9 @@ package fr.pederobien.communication.impl;
 import java.util.function.Consumer;
 
 import fr.pederobien.communication.ResponseCallbackArgs;
-import fr.pederobien.communication.interfaces.IRequestMessage;
+import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
 
-public class RequestMessage implements IRequestMessage {
+public class RequestMessage implements ICallbackRequestMessage {
 	private byte[] bytes;
 	private Consumer<ResponseCallbackArgs> callback;
 	private long timeout;

@@ -16,7 +16,7 @@ import fr.pederobien.communication.event.LogEvent.ELogLevel;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
 import fr.pederobien.communication.interfaces.ITcpConnection;
 import fr.pederobien.communication.interfaces.IObsConnection;
-import fr.pederobien.communication.interfaces.IRequestMessage;
+import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.Observable;
 import fr.pederobien.utils.SimpleTimer;
@@ -40,7 +40,7 @@ public class TcpClientConnection implements ITcpConnection {
 	private SimpleTimer timer;
 	private TimerTask receiving, connection;
 	private BlockingQueueTask<byte[]> extractingQueue;
-	private BlockingQueueTask<IRequestMessage> sendingQueue;
+	private BlockingQueueTask<ICallbackRequestMessage> sendingQueue;
 	private String remoteAddress;
 	private int remotePort;
 	private Socket socket;
@@ -60,7 +60,7 @@ public class TcpClientConnection implements ITcpConnection {
 		requestResponseManager = new RequestResponseManager(this, remoteAddress, answersExtractor);
 		observers = new Observable<IObsConnection>();
 
-		sendingQueue = new BlockingQueueTask<IRequestMessage>("Sending_".concat(remoteAddress), message -> startSending(message));
+		sendingQueue = new BlockingQueueTask<ICallbackRequestMessage>("Sending_".concat(remoteAddress), message -> startSending(message));
 		extractingQueue = new BlockingQueueTask<byte[]>("Extracting_".concat(remoteAddress), answer -> startExtracting(answer));
 
 		connectionState = EConnectionState.DISCONNECTED;
@@ -120,7 +120,7 @@ public class TcpClientConnection implements ITcpConnection {
 	}
 
 	@Override
-	public void send(IRequestMessage message) {
+	public void send(ICallbackRequestMessage message) {
 		checkDisposed();
 
 		if (isEnabled || getState() == EConnectionState.CONNECTED)
@@ -224,7 +224,7 @@ public class TcpClientConnection implements ITcpConnection {
 		}
 	}
 
-	private void startSending(IRequestMessage message) {
+	private void startSending(ICallbackRequestMessage message) {
 		try {
 			socket.getOutputStream().write(message.getBytes());
 			socket.getOutputStream().flush();

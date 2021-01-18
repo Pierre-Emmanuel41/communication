@@ -4,7 +4,7 @@ import java.util.function.Consumer;
 
 import fr.pederobien.communication.ResponseCallbackArgs;
 
-public interface IRequestMessage {
+public interface ICallbackRequestMessage {
 
 	/**
 	 * @return The bytes to send to a device.

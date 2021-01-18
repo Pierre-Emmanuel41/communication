@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import fr.pederobien.communication.ResponseCallbackArgs;
 import fr.pederobien.communication.event.UnexpectedDataReceivedEvent;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
-import fr.pederobien.communication.interfaces.IRequestMessage;
+import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
 import fr.pederobien.communication.interfaces.IResponseMessage;
 
 public class RequestResponseManager {
@@ -82,7 +82,7 @@ public class RequestResponseManager {
 	 * 
 	 * @param request The request message to add.
 	 */
-	public void addRequest(IRequestMessage request) {
+	public void addRequest(ICallbackRequestMessage request) {
 		checkIsDisposed();
 
 		int requestOrder = 0;

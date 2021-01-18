@@ -6,16 +6,16 @@ import java.util.function.Consumer;
 
 import fr.pederobien.communication.ResponseCallbackArgs;
 import fr.pederobien.communication.impl.RequestResponseManager.TimeoutCallback;
-import fr.pederobien.communication.interfaces.IRequestMessage;
+import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
 
 public class PendingRequestEntry {
-	private IRequestMessage request;
+	private ICallbackRequestMessage request;
 	private Consumer<ResponseCallbackArgs> callback;
 	private int requestOrder;
 	private Timer timeoutTimer;
 	private AtomicBoolean disposed;
 
-	public PendingRequestEntry(TimeoutCallback timeoutCallback, IRequestMessage request, int requestOrder, Consumer<ResponseCallbackArgs> callback, long timeout) {
+	public PendingRequestEntry(TimeoutCallback timeoutCallback, ICallbackRequestMessage request, int requestOrder, Consumer<ResponseCallbackArgs> callback, long timeout) {
 		this.request = request;
 		this.requestOrder = requestOrder;
 		this.callback = callback;
@@ -41,7 +41,7 @@ public class PendingRequestEntry {
 	/**
 	 * @return Get the request corresponding to the entry.
 	 */
-	public IRequestMessage getRequest() {
+	public ICallbackRequestMessage getRequest() {
 		return request;
 	}
 

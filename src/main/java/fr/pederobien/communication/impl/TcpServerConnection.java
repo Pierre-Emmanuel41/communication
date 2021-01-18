@@ -15,7 +15,7 @@ import fr.pederobien.communication.event.UnexpectedDataReceivedEvent;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
 import fr.pederobien.communication.interfaces.ITcpConnection;
 import fr.pederobien.communication.interfaces.IObsConnection;
-import fr.pederobien.communication.interfaces.IRequestMessage;
+import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.Observable;
 import fr.pederobien.utils.SimpleTimer;
@@ -26,7 +26,7 @@ public class TcpServerConnection implements ITcpConnection {
 	private TimerTask receiving;
 	private BlockingQueueTask<byte[]> extractingQueue;
 	private BlockingQueueTask<UnexpectedDataReceivedEvent> unexpectedQueue;
-	private BlockingQueueTask<IRequestMessage> sendingQueue;
+	private BlockingQueueTask<ICallbackRequestMessage> sendingQueue;
 	private Socket socket;
 	private EConnectionState connectionState;
 	private AtomicBoolean isDisposed;
@@ -96,7 +96,7 @@ public class TcpServerConnection implements ITcpConnection {
 	}
 
 	@Override
-	public void send(IRequestMessage message) {
+	public void send(ICallbackRequestMessage message) {
 		checkDisposed();
 
 		if (getState() == EConnectionState.CONNECTED)
@@ -168,7 +168,7 @@ public class TcpServerConnection implements ITcpConnection {
 		observers.notifyObservers(obs -> obs.onUnexpectedDataReceived(event));
 	}
 
-	private void startSending(IRequestMessage message) {
+	private void startSending(ICallbackRequestMessage message) {
 		try {
 			socket.getOutputStream().write(message.getBytes());
 			socket.getOutputStream().flush();
