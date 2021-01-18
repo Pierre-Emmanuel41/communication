@@ -47,9 +47,9 @@ public class RequestResponseManager {
 	private Map<String, PendingRequestEntry> pendingRequest;
 	private IAnswersExtractor answersExtractors;
 	private AtomicBoolean disposed;
-	private ClientConnection connection;
+	private TcpClientConnection connection;
 
-	public RequestResponseManager(ClientConnection connection, String remoteAddress, IAnswersExtractor answersExtractor) {
+	public RequestResponseManager(TcpClientConnection connection, String remoteAddress, IAnswersExtractor answersExtractor) {
 		this.connection = connection;
 		this.answersExtractors = answersExtractor;
 

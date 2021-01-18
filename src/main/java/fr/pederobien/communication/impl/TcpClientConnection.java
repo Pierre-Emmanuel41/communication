@@ -21,7 +21,7 @@ import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.Observable;
 import fr.pederobien.utils.SimpleTimer;
 
-public class ClientConnection implements IConnection {
+public class TcpClientConnection implements IConnection {
 	/**
 	 * Time in ms to establish the connection to the remote.
 	 */
@@ -50,7 +50,7 @@ public class ClientConnection implements IConnection {
 	private AtomicBoolean isDisposed;
 	private Observable<IObsConnection> observers;
 
-	public ClientConnection(String remoteAddress, int remotePort, IAnswersExtractor answersExtractor, boolean isEnabled) {
+	public TcpClientConnection(String remoteAddress, int remotePort, IAnswersExtractor answersExtractor, boolean isEnabled) {
 		this.remoteAddress = remoteAddress;
 		this.remotePort = remotePort;
 		this.isEnabled = isEnabled;
@@ -66,7 +66,7 @@ public class ClientConnection implements IConnection {
 		connectionState = EConnectionState.DISCONNECTED;
 	}
 
-	public ClientConnection(String remoteAddress, int remotePort, IAnswersExtractor answerExtractor) {
+	public TcpClientConnection(String remoteAddress, int remotePort, IAnswersExtractor answerExtractor) {
 		this(remoteAddress, remotePort, answerExtractor, true);
 	}
 

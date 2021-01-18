@@ -20,7 +20,7 @@ import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.Observable;
 import fr.pederobien.utils.SimpleTimer;
 
-public class ServerConnection implements IConnection {
+public class TcpServerConnection implements IConnection {
 	private IAnswersExtractor answersExtractor;
 	private SimpleTimer timer;
 	private TimerTask receiving;
@@ -33,7 +33,7 @@ public class ServerConnection implements IConnection {
 	private Observable<IObsConnection> observers;
 	private String remoteAddress;
 
-	public ServerConnection(Socket socket, IAnswersExtractor answersExtractor) {
+	public TcpServerConnection(Socket socket, IAnswersExtractor answersExtractor) {
 		this.socket = socket;
 		this.answersExtractor = answersExtractor;
 
