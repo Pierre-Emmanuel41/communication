@@ -14,7 +14,7 @@ import fr.pederobien.communication.event.LogEvent.ELogLevel;
 import fr.pederobien.communication.event.UnexpectedDataReceivedEvent;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
 import fr.pederobien.communication.interfaces.ITcpConnection;
-import fr.pederobien.communication.interfaces.IObsConnection;
+import fr.pederobien.communication.interfaces.IObsTcpConnection;
 import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.Observable;
@@ -30,7 +30,7 @@ public class TcpServerConnection implements ITcpConnection {
 	private Socket socket;
 	private EConnectionState connectionState;
 	private AtomicBoolean isDisposed;
-	private Observable<IObsConnection> observers;
+	private Observable<IObsTcpConnection> observers;
 	private String remoteAddress;
 
 	public TcpServerConnection(Socket socket, IAnswersExtractor answersExtractor) {
@@ -40,7 +40,7 @@ public class TcpServerConnection implements ITcpConnection {
 		remoteAddress = socket.getInetAddress().toString().substring(1);
 
 		isDisposed = new AtomicBoolean(false);
-		observers = new Observable<IObsConnection>();
+		observers = new Observable<IObsTcpConnection>();
 
 		timer = new SimpleTimer("ServerConnection", true);
 		receiving = timer.schedule(() -> startReceiving(), 0);
@@ -128,12 +128,12 @@ public class TcpServerConnection implements ITcpConnection {
 	}
 
 	@Override
-	public void addObserver(IObsConnection obs) {
+	public void addObserver(IObsTcpConnection obs) {
 		observers.addObserver(obs);
 	}
 
 	@Override
-	public void removeObserver(IObsConnection obs) {
+	public void removeObserver(IObsTcpConnection obs) {
 		observers.removeObserver(obs);
 	}
 

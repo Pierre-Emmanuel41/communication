@@ -4,23 +4,20 @@ import fr.pederobien.communication.event.DataReceivedEvent;
 import fr.pederobien.communication.event.LogEvent;
 import fr.pederobien.communication.event.UnexpectedDataReceivedEvent;
 
-public interface IObsConnection {
+public interface IObsTcpConnection {
 
 	/**
 	 * This event shall be raised when the implementation detects that the connection started by Connect() method is complete.
-	 * 
 	 */
 	void onConnectionComplete();
 
 	/**
 	 * This event shall be raised when the implementation detects the dispose of the connection to the remote.
-	 * 
 	 */
 	void onConnectionDisposed();
 
 	/**
 	 * This event shall be raised when the implementation detects the loss of the connection to the remote.
-	 * 
 	 */
 	void onConnectionLost();
 

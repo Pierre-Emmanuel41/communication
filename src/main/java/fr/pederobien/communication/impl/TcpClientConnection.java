@@ -15,7 +15,7 @@ import fr.pederobien.communication.event.LogEvent;
 import fr.pederobien.communication.event.LogEvent.ELogLevel;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
 import fr.pederobien.communication.interfaces.ITcpConnection;
-import fr.pederobien.communication.interfaces.IObsConnection;
+import fr.pederobien.communication.interfaces.IObsTcpConnection;
 import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.Observable;
@@ -48,7 +48,7 @@ public class TcpClientConnection implements ITcpConnection {
 	private RequestResponseManager requestResponseManager;
 	private EConnectionState connectionState;
 	private AtomicBoolean isDisposed;
-	private Observable<IObsConnection> observers;
+	private Observable<IObsTcpConnection> observers;
 
 	public TcpClientConnection(String remoteAddress, int remotePort, IAnswersExtractor answersExtractor, boolean isEnabled) {
 		this.remoteAddress = remoteAddress;
@@ -58,7 +58,7 @@ public class TcpClientConnection implements ITcpConnection {
 		isDisposed = new AtomicBoolean(false);
 
 		requestResponseManager = new RequestResponseManager(this, remoteAddress, answersExtractor);
-		observers = new Observable<IObsConnection>();
+		observers = new Observable<IObsTcpConnection>();
 
 		sendingQueue = new BlockingQueueTask<ICallbackRequestMessage>("Sending_".concat(remoteAddress), message -> startSending(message));
 		extractingQueue = new BlockingQueueTask<byte[]>("Extracting_".concat(remoteAddress), answer -> startExtracting(answer));
@@ -153,19 +153,19 @@ public class TcpClientConnection implements ITcpConnection {
 	}
 
 	@Override
-	public void addObserver(IObsConnection obs) {
+	public void addObserver(IObsTcpConnection obs) {
 		observers.addObserver(obs);
 	}
 
 	@Override
-	public void removeObserver(IObsConnection obs) {
+	public void removeObserver(IObsTcpConnection obs) {
 		observers.removeObserver(obs);
 	}
 
 	/**
 	 * @return The observable object associated to this object.
 	 */
-	public Observable<IObsConnection> getObservers() {
+	public Observable<IObsTcpConnection> getObservers() {
 		return observers;
 	}
 
