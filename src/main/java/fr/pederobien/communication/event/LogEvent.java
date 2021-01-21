@@ -36,4 +36,9 @@ public class LogEvent {
 	public Exception getException() {
 		return exception;
 	}
+
+	@Override
+	public String toString() {
+		return "[" + level + "] " + message;
+	}
 }
