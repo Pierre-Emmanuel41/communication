@@ -2,6 +2,8 @@ package fr.pederobien.communication.interfaces;
 
 import java.net.InetSocketAddress;
 
+import fr.pederobien.communication.EConnectionState;
+
 public interface IConnection<T> {
 
 	/**
@@ -13,6 +15,11 @@ public interface IConnection<T> {
 	 * @return the remote IP address to which this connected is connected, or {@code null} if the socket is not connected.
 	 */
 	InetSocketAddress getAddress();
+
+	/**
+	 * @return The current connection state.
+	 */
+	EConnectionState getState();
 
 	/**
 	 * @return True if the connection can send data to the remote or not. It is independent from the connection with the remote.
