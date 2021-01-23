@@ -1,10 +1,13 @@
 package fr.pederobien.communication.event;
 
-public class UnexpectedDataReceivedEvent {
+import java.net.InetSocketAddress;
+
+public class UnexpectedDataReceivedEvent extends DataEvent {
 	private int identifier;
 	private byte[] answer;
 
-	public UnexpectedDataReceivedEvent(int identifier, byte[] answer) {
+	public UnexpectedDataReceivedEvent(InetSocketAddress address, int identifier, byte[] answer) {
+		super(address);
 		this.identifier = identifier;
 		this.answer = answer;
 	}

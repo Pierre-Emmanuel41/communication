@@ -1,10 +1,13 @@
 package fr.pederobien.communication.event;
 
-public class DataReceivedEvent {
+import java.net.InetSocketAddress;
+
+public class DataReceivedEvent extends DataEvent {
 	private byte[] buffer;
 	private int length;
 
-	public DataReceivedEvent(byte[] buffer, int length) {
+	public DataReceivedEvent(InetSocketAddress address, byte[] buffer, int length) {
+		super(address);
 		this.buffer = buffer;
 		this.length = length;
 	}

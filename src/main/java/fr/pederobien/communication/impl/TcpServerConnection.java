@@ -14,9 +14,9 @@ import fr.pederobien.communication.event.LogEvent;
 import fr.pederobien.communication.event.LogEvent.ELogLevel;
 import fr.pederobien.communication.event.UnexpectedDataReceivedEvent;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
-import fr.pederobien.communication.interfaces.ITcpConnection;
-import fr.pederobien.communication.interfaces.IObsTcpConnection;
 import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
+import fr.pederobien.communication.interfaces.IObsTcpConnection;
+import fr.pederobien.communication.interfaces.ITcpConnection;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.Observable;
 import fr.pederobien.utils.SimpleTimer;
@@ -142,7 +142,7 @@ public class TcpServerConnection implements ITcpConnection {
 		onDataReceivedEvent(answer, answer.length);
 		Map<Integer, byte[]> answers = answersExtractor.extract(answer);
 		for (Map.Entry<Integer, byte[]> entry : answers.entrySet())
-			unexpectedQueue.add(new UnexpectedDataReceivedEvent(entry.getKey(), entry.getValue()));
+			unexpectedQueue.add(new UnexpectedDataReceivedEvent(getAddress(), entry.getKey(), entry.getValue()));
 	}
 
 	private void startReceiving() {
@@ -208,7 +208,7 @@ public class TcpServerConnection implements ITcpConnection {
 	}
 
 	private void onDataReceivedEvent(byte[] answer, int length) {
-		observers.notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(answer, length)));
+		observers.notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(getAddress(), answer, length)));
 	}
 
 	private void onLogEvent(ELogLevel level, Exception exception, String message, Object... parameters) {

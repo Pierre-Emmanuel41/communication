@@ -14,9 +14,9 @@ import fr.pederobien.communication.event.DataReceivedEvent;
 import fr.pederobien.communication.event.LogEvent;
 import fr.pederobien.communication.event.LogEvent.ELogLevel;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
-import fr.pederobien.communication.interfaces.ITcpConnection;
-import fr.pederobien.communication.interfaces.IObsTcpConnection;
 import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
+import fr.pederobien.communication.interfaces.IObsTcpConnection;
+import fr.pederobien.communication.interfaces.ITcpConnection;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.Observable;
 import fr.pederobien.utils.SimpleTimer;
@@ -294,7 +294,7 @@ public class TcpClientConnection implements ITcpConnection {
 	}
 
 	private void onDataReceivedEvent(byte[] buffer, int length) {
-		observers.notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(buffer, length)));
+		observers.notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(getAddress(), buffer, length)));
 	}
 
 	private void cancelTimerTask(TimerTask task) {
