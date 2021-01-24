@@ -131,7 +131,7 @@ public class UdpClientConnection implements IUdpConnection {
 	public void send(IRequestMessage message) {
 		checkDisposed();
 
-		if (isEnabled || getState() == EConnectionState.CONNECTED)
+		if (isEnabled && getState() == EConnectionState.CONNECTED)
 			sendingQueue.add(message);
 	}
 
@@ -167,11 +167,13 @@ public class UdpClientConnection implements IUdpConnection {
 	private void startReceiving() {
 		while (!isDisposed()) {
 			try {
-				byte[] buffer = new byte[1024];
-				DatagramPacket packet = new DatagramPacket(buffer, 1024);
+				byte[] buffer = new byte[2048];
+				DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 				socket.receive(packet);
 
 				extractingQueue.add(ByteWrapper.wrap(packet.getData()).extract(0, packet.getLength()));
+			} catch (SocketException e) {
+				// do nothing
 			} catch (IOException e) {
 				e.printStackTrace();
 				break;

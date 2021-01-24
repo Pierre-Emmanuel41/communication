@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +13,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import fr.pederobien.communication.EConnectionState;
-import fr.pederobien.communication.NonBlockingConsole;
 import fr.pederobien.communication.event.DataReceivedEvent;
 import fr.pederobien.communication.event.LogEvent;
 import fr.pederobien.communication.event.LogEvent.ELogLevel;
@@ -20,6 +20,7 @@ import fr.pederobien.communication.interfaces.IAddressMessage;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
 import fr.pederobien.communication.interfaces.IObsConnection;
 import fr.pederobien.communication.interfaces.IUdpServerConnection;
+import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.Observable;
 import fr.pederobien.utils.SimpleTimer;
 
@@ -27,7 +28,7 @@ public class UdpServerConnection implements IUdpServerConnection {
 	private SimpleTimer timer;
 	private TimerTask receiving;
 	private Supplier<IAnswersExtractor> extractorSupplier;
-	private Map<InetSocketAddress, IAnswersExtractor> extractors;
+	private Map<SocketAddress, IAnswersExtractor> extractors;
 	private BlockingQueueTask<DatagramPacket> extractingQueue;
 	private BlockingQueueTask<DataReceivedEvent> unexpectedQueue;
 	private BlockingQueueTask<IAddressMessage> sendingQueue;
@@ -42,7 +43,7 @@ public class UdpServerConnection implements IUdpServerConnection {
 
 		this.extractorSupplier = extractorSupplier;
 
-		extractors = new HashMap<InetSocketAddress, IAnswersExtractor>();
+		extractors = new HashMap<SocketAddress, IAnswersExtractor>();
 
 		remoteAddress = address.getAddress().toString().substring(1);
 
@@ -147,8 +148,9 @@ public class UdpServerConnection implements IUdpServerConnection {
 		IAnswersExtractor extractor = extractors.get(answer.getSocketAddress());
 		if (extractor == null) {
 			extractor = extractorSupplier.get();
-			extractors.put((InetSocketAddress) answer.getSocketAddress(), extractor);
+			extractors.put(answer.getSocketAddress(), extractor);
 		}
+
 		Map<Integer, byte[]> answers = extractor.extract(answer.getData());
 		for (Map.Entry<Integer, byte[]> entry : answers.entrySet())
 			unexpectedQueue.add(new DataReceivedEvent((InetSocketAddress) answer.getSocketAddress(), entry.getValue(), entry.getValue().length));
@@ -157,11 +159,14 @@ public class UdpServerConnection implements IUdpServerConnection {
 	private void startReceiving() {
 		while (!isDisposed()) {
 			try {
-				byte[] buffer = new byte[1024];
+				byte[] buffer = new byte[2048];
 				DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 				socket.receive(packet);
 
-				extractingQueue.add(packet);
+				byte[] data = ByteWrapper.wrap(packet.getData()).extract(0, packet.getLength());
+				extractingQueue.add(new DatagramPacket(data, data.length, packet.getSocketAddress()));
+			} catch (SocketException e) {
+				// do nothing
 			} catch (IOException e) {
 				e.printStackTrace();
 				break;
@@ -170,7 +175,7 @@ public class UdpServerConnection implements IUdpServerConnection {
 	}
 
 	private void startReceivingUnexpectedData(DataReceivedEvent event) {
-		onDataReceivedEvent(event.getBuffer(), event.getLength());
+		observers.notifyObservers(obs -> obs.onDataReceived(event));
 	}
 
 	private void startSending(IAddressMessage message) {
@@ -194,10 +199,6 @@ public class UdpServerConnection implements IUdpServerConnection {
 	}
 
 	private void onLogEvent(ELogLevel level, Exception exception, String message, Object... parameters) {
-		NonBlockingConsole.println(new LogEvent(level, String.format(message, parameters), exception));
-	}
-
-	private void onDataReceivedEvent(byte[] buffer, int length) {
-		observers.notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(getAddress(), buffer, length)));
+		observers.notifyObservers(obs -> obs.onLog(new LogEvent(level, String.format(message, parameters), exception)));
 	}
 }

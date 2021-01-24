@@ -123,7 +123,7 @@ public class TcpClientConnection implements ITcpConnection {
 	public void send(ICallbackRequestMessage message) {
 		checkDisposed();
 
-		if (isEnabled || getState() == EConnectionState.CONNECTED)
+		if (isEnabled && getState() == EConnectionState.CONNECTED)
 			sendingQueue.add(message);
 	}
 
