@@ -11,7 +11,6 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import fr.pederobien.communication.EConnectionState;
-import fr.pederobien.communication.NonBlockingConsole;
 import fr.pederobien.communication.event.DataReceivedEvent;
 import fr.pederobien.communication.event.LogEvent;
 import fr.pederobien.communication.event.LogEvent.ELogLevel;
@@ -229,7 +228,7 @@ public class UdpClientConnection implements IUdpConnection {
 	}
 
 	private void onLogEvent(ELogLevel level, Exception exception, String message, Object... parameters) {
-		NonBlockingConsole.println(new LogEvent(level, String.format(message, parameters), exception));
+		observers.notifyObservers(obs -> obs.onLog(new LogEvent(level, String.format(message, parameters), exception)));
 	}
 
 	private void onDataReceivedEvent(byte[] buffer, int length) {
