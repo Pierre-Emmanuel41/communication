@@ -37,8 +37,10 @@ public class UdpServerConnection implements IUdpServerConnection {
 	private AtomicBoolean isDisposed;
 	private String remoteAddress;
 	private Observable<IObsConnection> observers;
+	private int receptionBufferSize;
 
-	public UdpServerConnection(InetSocketAddress address, Supplier<IAnswersExtractor> extractorSupplier) throws SocketException {
+	public UdpServerConnection(InetSocketAddress address, int receptionBufferSize, Supplier<IAnswersExtractor> extractorSupplier) throws SocketException {
+		this.receptionBufferSize = receptionBufferSize;
 		socket = new DatagramSocket(address.getPort());
 
 		this.extractorSupplier = extractorSupplier;
@@ -159,7 +161,7 @@ public class UdpServerConnection implements IUdpServerConnection {
 	private void startReceiving() {
 		while (!isDisposed()) {
 			try {
-				byte[] buffer = new byte[2048];
+				byte[] buffer = new byte[receptionBufferSize];
 				DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 				socket.receive(packet);
 

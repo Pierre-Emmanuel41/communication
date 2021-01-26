@@ -36,12 +36,14 @@ public class UdpClientConnection implements IUdpConnection {
 	private int remotePort;
 	private boolean isEnabled;
 	private Observable<IObsConnection> observers;
+	private int receptionBufferSize;
 
-	public UdpClientConnection(String remoteAddress, int remotePort, IAnswersExtractor answersExtractor, boolean isEnabled) {
+	public UdpClientConnection(String remoteAddress, int remotePort, IAnswersExtractor answersExtractor, boolean isEnabled, int receptionBufferSize) {
 		this.remoteAddress = remoteAddress;
 		this.remotePort = remotePort;
 		this.answersExtractor = answersExtractor;
 		this.isEnabled = isEnabled;
+		this.receptionBufferSize = receptionBufferSize;
 
 		isDisposed = new AtomicBoolean(false);
 		observers = new Observable<IObsConnection>();
@@ -166,7 +168,7 @@ public class UdpClientConnection implements IUdpConnection {
 	private void startReceiving() {
 		while (!isDisposed()) {
 			try {
-				byte[] buffer = new byte[2048];
+				byte[] buffer = new byte[receptionBufferSize];
 				DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 				socket.receive(packet);
 
