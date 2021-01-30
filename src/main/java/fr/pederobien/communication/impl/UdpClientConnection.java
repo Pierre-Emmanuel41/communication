@@ -26,7 +26,7 @@ public class UdpClientConnection implements IUdpConnection {
 	private SimpleTimer timer;
 	private TimerTask receiving;
 	private IAnswersExtractor answersExtractor;
-	private BlockingQueueTask<byte[]> extractingQueue;
+	private BlockingQueueTask<DatagramPacket> extractingQueue;
 	private BlockingQueueTask<DataReceivedEvent> unexpectedQueue;
 	private BlockingQueueTask<IRequestMessage> sendingQueue;
 	private DatagramSocket socket;
@@ -159,10 +159,10 @@ public class UdpClientConnection implements IUdpConnection {
 		}
 	}
 
-	private void startExtracting(byte[] answer) {
-		Map<Integer, byte[]> answers = answersExtractor.extract(answer);
+	private void startExtracting(DatagramPacket packet) {
+		Map<Integer, byte[]> answers = answersExtractor.extract(packet.getData());
 		for (Map.Entry<Integer, byte[]> entry : answers.entrySet())
-			unexpectedQueue.add(new DataReceivedEvent(getAddress(), entry.getValue(), entry.getValue().length));
+			unexpectedQueue.add(new DataReceivedEvent((InetSocketAddress) packet.getSocketAddress(), entry.getValue(), entry.getValue().length));
 	}
 
 	private void startReceiving() {
@@ -172,7 +172,8 @@ public class UdpClientConnection implements IUdpConnection {
 				DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 				socket.receive(packet);
 
-				extractingQueue.add(ByteWrapper.wrap(packet.getData()).extract(0, packet.getLength()));
+				byte[] data = ByteWrapper.wrap(packet.getData()).extract(0, packet.getLength());
+				extractingQueue.add(new DatagramPacket(data, data.length, packet.getSocketAddress()));
 			} catch (SocketException e) {
 				// do nothing
 			} catch (IOException e) {
@@ -183,7 +184,7 @@ public class UdpClientConnection implements IUdpConnection {
 	}
 
 	private void startReceivingUnexpectedData(DataReceivedEvent event) {
-		onDataReceivedEvent(event.getBuffer(), event.getLength());
+		observers.notifyObservers(obs -> obs.onDataReceived(event));
 	}
 
 	private void startSending(IRequestMessage message) {
@@ -231,9 +232,5 @@ public class UdpClientConnection implements IUdpConnection {
 
 	private void onLogEvent(ELogLevel level, Exception exception, String message, Object... parameters) {
 		observers.notifyObservers(obs -> obs.onLog(new LogEvent(level, String.format(message, parameters), exception)));
-	}
-
-	private void onDataReceivedEvent(byte[] buffer, int length) {
-		observers.notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(getAddress(), buffer, length)));
 	}
 }
