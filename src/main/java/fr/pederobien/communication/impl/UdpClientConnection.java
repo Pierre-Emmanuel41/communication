@@ -48,6 +48,7 @@ public class UdpClientConnection implements IUdpConnection {
 		isDisposed = new AtomicBoolean(false);
 		observers = new Observable<IObsConnection>();
 
+		timer = new SimpleTimer("UdpClientConnectionTimer_".concat(remoteAddress), true);
 		sendingQueue = new BlockingQueueTask<>("Sending_".concat(remoteAddress), message -> startSending(message));
 		extractingQueue = new BlockingQueueTask<>("Extracting_".concat(remoteAddress), answer -> startExtracting(answer));
 		unexpectedQueue = new BlockingQueueTask<>("UnexpectedData_".concat(remoteAddress), event -> startReceivingUnexpectedData(event));
@@ -85,7 +86,6 @@ public class UdpClientConnection implements IUdpConnection {
 		connectionState = EConnectionState.CONNECTING;
 		onLogEvent(ELogLevel.INFO, null, "%s - Starting connection", remoteAddress);
 
-		timer = new SimpleTimer("ClientConnection", true);
 		startConnect();
 	}
 
@@ -115,6 +115,7 @@ public class UdpClientConnection implements IUdpConnection {
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Disposing connection", remoteAddress);
 
+		timer.cancel();
 		sendingQueue.dispose();
 		extractingQueue.dispose();
 

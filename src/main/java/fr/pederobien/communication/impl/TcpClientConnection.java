@@ -60,6 +60,7 @@ public class TcpClientConnection implements ITcpConnection {
 		requestResponseManager = new RequestResponseManager(this, remoteAddress, answersExtractor);
 		observers = new Observable<IObsTcpConnection>();
 
+		timer = new SimpleTimer("TcpClientConnectionTimer_".concat(remoteAddress), true);
 		sendingQueue = new BlockingQueueTask<ICallbackRequestMessage>("Sending_".concat(remoteAddress), message -> startSending(message));
 		extractingQueue = new BlockingQueueTask<byte[]>("Extracting_".concat(remoteAddress), answer -> startExtracting(answer));
 
@@ -100,7 +101,6 @@ public class TcpClientConnection implements ITcpConnection {
 		connectionState = EConnectionState.CONNECTING;
 		onLogEvent(ELogLevel.INFO, null, "%s - Starting connection", remoteAddress);
 
-		timer = new SimpleTimer("ClientConnection", true);
 		connection = timer.scheduleAtFixedRate(() -> startConnect(), 0, RECONNECTION_IDLE_TIME);
 	}
 

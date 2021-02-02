@@ -52,7 +52,7 @@ public class UdpServerConnection implements IUdpServerConnection {
 		isDisposed = new AtomicBoolean(false);
 		observers = new Observable<IObsConnection>();
 
-		timer = new SimpleTimer("ServerConnection", true);
+		timer = new SimpleTimer("UdpServerConnectionTimer_".concat(remoteAddress), true);
 		receiving = timer.schedule(() -> startReceiving(), 0);
 
 		sendingQueue = new BlockingQueueTask<>("Sending_".concat(remoteAddress), message -> startSending(message));
@@ -115,6 +115,7 @@ public class UdpServerConnection implements IUdpServerConnection {
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Disposing connection", remoteAddress);
 
+		timer.cancel();
 		sendingQueue.dispose();
 		extractingQueue.dispose();
 

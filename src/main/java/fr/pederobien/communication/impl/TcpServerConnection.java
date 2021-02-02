@@ -42,7 +42,7 @@ public class TcpServerConnection implements ITcpConnection {
 		isDisposed = new AtomicBoolean(false);
 		observers = new Observable<IObsTcpConnection>();
 
-		timer = new SimpleTimer("ServerConnection", true);
+		timer = new SimpleTimer("TcpServerConnectionTimer_".concat(remoteAddress), true);
 		receiving = timer.schedule(() -> startReceiving(), 0);
 
 		sendingQueue = new BlockingQueueTask<>("Sending_".concat(remoteAddress), message -> startSending(message));
