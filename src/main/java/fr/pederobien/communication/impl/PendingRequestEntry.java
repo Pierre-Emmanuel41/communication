@@ -1,21 +1,22 @@
 package fr.pederobien.communication.impl;
 
-import java.util.Timer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import fr.pederobien.communication.ResponseCallbackArgs;
 import fr.pederobien.communication.impl.RequestResponseManager.TimeoutCallback;
 import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
+import fr.pederobien.utils.SimpleTimer;
 
 public class PendingRequestEntry {
 	private ICallbackRequestMessage request;
 	private Consumer<ResponseCallbackArgs> callback;
 	private int requestOrder;
-	private Timer timeoutTimer;
+	private SimpleTimer timeoutTimer;
 	private AtomicBoolean disposed;
 
-	public PendingRequestEntry(TimeoutCallback timeoutCallback, ICallbackRequestMessage request, int requestOrder, Consumer<ResponseCallbackArgs> callback, long timeout) {
+	public PendingRequestEntry(TimeoutCallback timeoutCallback, ICallbackRequestMessage request, int requestOrder, Consumer<ResponseCallbackArgs> callback,
+			long timeout) {
 		this.request = request;
 		this.requestOrder = requestOrder;
 		this.callback = callback;
@@ -23,7 +24,7 @@ public class PendingRequestEntry {
 		timeoutCallback.setEntry(this);
 		disposed = new AtomicBoolean(false);
 
-		timeoutTimer = new Timer();
+		timeoutTimer = new SimpleTimer("PendingRequest_".concat("" + request.getUniqueIdentifier()), true);
 		timeoutTimer.schedule(timeoutCallback, timeout);
 	}
 
@@ -32,7 +33,7 @@ public class PendingRequestEntry {
 	}
 
 	public void dispose() {
-		if (disposed.compareAndSet(false, true))
+		if (!disposed.compareAndSet(false, true))
 			return;
 
 		timeoutTimer.cancel();
