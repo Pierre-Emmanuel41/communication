@@ -211,13 +211,11 @@ public class UdpClientConnection implements IUdpConnection {
 		if (connectionState == EConnectionState.DISCONNECTING || connectionState == EConnectionState.DISCONNECTED)
 			return;
 
+		connectionState = EConnectionState.CONNECTED;
 		receiving = timer.schedule(() -> startReceiving(), 0);
-
 		sendingQueue.start();
 		extractingQueue.start();
 		unexpectedQueue.start();
-
-		connectionState = EConnectionState.CONNECTED;
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Connection successfull", remoteAddress);
 

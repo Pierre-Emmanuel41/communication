@@ -259,12 +259,11 @@ public class TcpClientConnection implements ITcpConnection {
 			return;
 
 		cancelTimerTask(connection);
-		receiving = timer.schedule(() -> startReceiving(), 0);
-
-		sendingQueue.start();
-		extractingQueue.start();
 
 		connectionState = EConnectionState.CONNECTED;
+		receiving = timer.schedule(() -> startReceiving(), 0);
+		sendingQueue.start();
+		extractingQueue.start();
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Connection successfull", remoteAddress);
 

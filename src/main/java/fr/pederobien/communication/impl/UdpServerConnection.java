@@ -53,17 +53,17 @@ public class UdpServerConnection implements IUdpServerConnection {
 		observers = new Observable<IObsConnection>();
 
 		timer = new SimpleTimer("UdpServerConnectionTimer_".concat(remoteAddress), true);
-		receiving = timer.schedule(() -> startReceiving(), 0);
 
 		sendingQueue = new BlockingQueueTask<>("Sending_".concat(remoteAddress), message -> startSending(message));
 		extractingQueue = new BlockingQueueTask<>("Extracting_".concat(remoteAddress), answer -> startExtracting(answer));
 		unexpectedQueue = new BlockingQueueTask<>("UnexpectedData_".concat(remoteAddress), event -> startReceivingUnexpectedData(event));
 
+		connectionState = EConnectionState.CONNECTED;
+
 		sendingQueue.start();
 		extractingQueue.start();
 		unexpectedQueue.start();
-
-		connectionState = EConnectionState.CONNECTED;
+		receiving = timer.schedule(() -> startReceiving(), 0);
 	}
 
 	@Override
