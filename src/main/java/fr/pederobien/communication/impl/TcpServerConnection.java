@@ -145,7 +145,7 @@ public class TcpServerConnection implements ITcpConnection {
 	}
 
 	private void startReceiving() {
-		while (!isDisposed()) {
+		while (connectionState == EConnectionState.CONNECTED) {
 			try {
 				byte[] buffer = new byte[1024];
 				int read = socket.getInputStream().read(buffer);
@@ -159,7 +159,6 @@ public class TcpServerConnection implements ITcpConnection {
 			} catch (IOException e) {
 				onLogEvent(ELogLevel.WARNING, e, "%s - Reception failure : %s", remoteAddress, e.getMessage());
 				onConnectionLostEvent();
-				break;
 			}
 		}
 	}

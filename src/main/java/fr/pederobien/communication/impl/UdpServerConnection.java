@@ -160,7 +160,7 @@ public class UdpServerConnection implements IUdpServerConnection {
 	}
 
 	private void startReceiving() {
-		while (!isDisposed()) {
+		while (connectionState == EConnectionState.CONNECTED) {
 			try {
 				byte[] buffer = new byte[receptionBufferSize];
 				DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -171,8 +171,7 @@ public class UdpServerConnection implements IUdpServerConnection {
 			} catch (SocketException e) {
 				// do nothing
 			} catch (IOException e) {
-				e.printStackTrace();
-				break;
+				// do nothing
 			}
 		}
 	}

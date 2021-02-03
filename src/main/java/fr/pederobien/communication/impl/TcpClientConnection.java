@@ -203,7 +203,7 @@ public class TcpClientConnection implements ITcpConnection {
 	}
 
 	private void startReceiving() {
-		while (!isDisposed()) {
+		while (connectionState == EConnectionState.CONNECTED) {
 			try {
 				byte[] buffer = new byte[1024];
 				int read = socket.getInputStream().read(buffer);
