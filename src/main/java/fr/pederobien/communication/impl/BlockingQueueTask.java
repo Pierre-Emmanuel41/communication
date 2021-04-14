@@ -58,7 +58,7 @@ public class BlockingQueueTask<T> {
 		while (!isDisposed()) {
 			try {
 				consumer.accept(queue.take());
-			} catch (InterruptedException e) {
+			} catch (Exception e) {
 				break;
 			}
 		}
