@@ -17,6 +17,7 @@ import fr.pederobien.communication.interfaces.IAnswersExtractor;
 import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
 import fr.pederobien.communication.interfaces.IObsTcpConnection;
 import fr.pederobien.communication.interfaces.ITcpConnection;
+import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.Observable;
 import fr.pederobien.utils.SimpleTimer;

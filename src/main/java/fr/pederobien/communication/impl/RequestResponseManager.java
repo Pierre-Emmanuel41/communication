@@ -11,6 +11,7 @@ import fr.pederobien.communication.event.UnexpectedDataReceivedEvent;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
 import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
 import fr.pederobien.communication.interfaces.IResponseMessage;
+import fr.pederobien.utils.BlockingQueueTask;
 
 public class RequestResponseManager {
 
