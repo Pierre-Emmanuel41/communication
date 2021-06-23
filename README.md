@@ -185,7 +185,7 @@ IUdpServerConnection connection = new UdpServerConnection(address, receptionBuff
 Because of the structure in java of a datagram packet, on the server side, the developer needs to provide an AddressMessage instead of a RequestMessage. This AddressMessage provides the address at which the data needs to be sent.  
 To create such a message :
 
-```
+```java
 // The bytes array to send to the remote
 byte[] bytes = new byte[0];
 
