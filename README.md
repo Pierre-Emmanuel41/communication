@@ -58,7 +58,15 @@ This extractor contains only one method : <code>Map<Integer, byte[]> extract(byt
 
 #### 3.1.3) TcpClientConnection
 
-This object represent the connection with the remote but from the client side.  
+This object represent the connection with the remote but from the client side. There is an observer pattern associated to the connection. Through this connection, it is possible to handle different events :  
+
+- onConnectionComplete (when the connection with the remote succeed)
+- onConnectionDisposed (when the method <code>dispose()</code> has been called)
+- onDataReceived (when data has been received from the remote. The data is raw, it has not been processed by the extractor)
+- onLog (When exception has been catch or when debug message are raised by the connection)
+- onConnectionLost (when the connection with the remote has been lost)
+- onUnexpectedDataReceived (thrown after the onDataReceived event, but the data has been processed by the extractor).
+
 To create such a connection :
 
 ```java
@@ -76,13 +84,13 @@ boolean isEnabled = true;
 ITcpConnection connection = new TcpClientConnection(remoteAddress, remotePort, answersExtractor, isEnabled);
 ```
 
-And finally, to send a request to the remote :
+And finally, before trying to send a message to the remote, the developer needs to call method connect in order to operate the connection with the remote. Once the connection is successful, it notify each connection observer through the method <code>onConnectionComplete</code>. While this event is not raised, it is useless to try and send messages.  
+
+To send a message to the remote:
 
 ```java
 connection.send(callback);
 ```
-
-It is possible for the server to send request to the client without responding to a previous request. In order to handle those request, the developer should observe the connection. There is an implemented observer pattern with the interface <code>IObsTcpConnection</code> and methods <code>addObserver(IObsTcpConnection obs)</code> and <code>removeObserver(IObsTcpConnection obs)</code>.
 
 #### 3.1.4) TcpServerConnection
 
@@ -106,7 +114,16 @@ IAnswersExtractor answersExtractor = /*your class here*/;
 ITcpConnection clientConnection = new TcpServerConnection(clientSocket, answersExtractor);
 ```
 
-Just like the TcpClientConnection, it possible to observer the connection in order to handle data received from the client in order to interpret and answer.
+Just like the TcpClientConnection, there is also an observer pattern associated to this connection, it is possible to handle different events :  
+
+- onConnectionComplete (when the connection with the remote succeed)
+- onConnectionDisposed (when the method <code>dispose()</code> has been called)
+- onDataReceived (when data has been received from the remote. The data is raw, it has not been processed by the extractor)
+- onLog (When exception has been catch or when debug message are raised by the connection)
+- onConnectionLost (when the connection with the remote has been lost)
+- onUnexpectedDataReceived (thrown after the onDataReceived event, but the data has been processed by the extractor).
+
+There is no need to call method connect (first because it will throw an <code>UnsupportedOperationException</code>, then because when creating a TcpServerConnection the socket given to the constructor is connected to the remote).
 
 ### 3.2) UDP protocol
 
@@ -133,7 +150,13 @@ This extractor contains only one method : <code>Map<Integer, byte[]> extract(byt
 
 #### 3.2.3) UdpClientConnection
 
-The object represent the connection with the remote but from the client side.  
+The object represent the connection with the remote but from the client side. There is an observer pattern associated to the connection. Through this connection, it is possible to handle different events :  
+
+- onConnectionComplete (when the connection with the remote succeed)
+- onConnectionDisposed (when the method <code>dispose()</code> has been called)
+- onDataReceived (when data has been received from the remote. The data is raw, it has not been processed by the extractor)
+- onLog (When exception has been catch or when debug message are raised by the connection)
+
 To create such a connection:
 
 ```java
@@ -154,7 +177,9 @@ int receptionBufferSize = 2048;
 UdpClientConnection connection = new UdpClientConnection(remoteAddress, remotePort, answersExtractor, isEnabled, receptionBufferSize);
 ```
 
-And finally, to send a request to the remote :
+And finally, before trying to send a message to the remote, the developer needs to call method connect in order to operate the connection with the remote. Once the connection is successful, it notify each connection observer through the method <code>onConnectionComplete</code>. While this event is not raised, it is useless to try and send messages.  
+
+To send a message to the remote:
 
 ```java
 connection.send(message);
@@ -164,7 +189,13 @@ It is possible for the server to send request to the client without responding t
 
 #### 3.2.4) UdpServerConnection
 
-The object represent the connection with the remote but from the server side.  
+The object represent the connection with the remote but from the server side. There is an observer pattern associated to the connection. Through this connection, it is possible to handle different events :  
+
+- onConnectionComplete (when the connection with the remote succeed)
+- onConnectionDisposed (when the method <code>dispose()</code> has been called)
+- onDataReceived (when data has been received from the remote. The data is raw, it has not been processed by the extractor)
+- onLog (When exception has been catch or when debug message are raised by the connection)
+
 To create such a connection:
 
 ```java
@@ -203,5 +234,3 @@ Finally, to send a message to the remote from the server side :
 ```java
 connection.send(message);
 ```
-
-Just like the UdpClientConnection, it possible to observer the connection in order to handle data received from the client in order to interpret and answer.
