@@ -1,6 +1,6 @@
 # 1) Presentation
 
-When developers work on a client/server application, they always need to send and receive data from the remote. One simple way to do so, is to use directly sockets provided by java.net package. However, if the request needs to be sent sent from another thread in order not to freeze the client graphical user interface, then the developer needs to develop its own asynchronous API.
+When developers work on a client/server application, they always need to send and receive data from the remote. One simple way to do so is to use directly sockets provided by java.net package. However, if the request needs to be sent from another thread in order not to freeze the client graphical user interface, then the developer needs to develop its own asynchronous API.
 This project has been created in order to send bytes to a remote and to receive bytes from the remote in an asynchronous way.
 
 This API support TCP/IP and UDP protocol.
@@ -84,7 +84,7 @@ boolean isEnabled = true;
 ITcpConnection connection = new TcpClientConnection(remoteAddress, remotePort, answersExtractor, isEnabled);
 ```
 
-And finally, before trying to send a message to the remote, the developer needs to call method connect in order to operate the connection with the remote. Once the connection is successful, it notify each connection observer through the method <code>onConnectionComplete</code>. While this event is not raised, it is useless to try and send messages.  
+And finally, before trying to send a message to the remote, the developer needs to call method connect in order to operate the connection with the remote. Once the connection is successful, it will notify each connection observer through the method <code>onConnectionComplete</code>. While this event is not raised, it is useless to try and send messages.  
 
 To send a message to the remote:
 
@@ -114,7 +114,7 @@ IAnswersExtractor answersExtractor = /*your class here*/;
 ITcpConnection clientConnection = new TcpServerConnection(clientSocket, answersExtractor);
 ```
 
-Just like the TcpClientConnection, there is also an observer pattern associated to this connection, it is possible to handle different events :  
+Just like the TcpClientConnection, there is also an observer pattern associated to this connection so it is possible to handle different events :
 
 - onConnectionComplete (when the connection with the remote succeed)
 - onConnectionDisposed (when the method <code>dispose()</code> has been called)
@@ -177,7 +177,7 @@ int receptionBufferSize = 2048;
 UdpClientConnection connection = new UdpClientConnection(remoteAddress, remotePort, answersExtractor, isEnabled, receptionBufferSize);
 ```
 
-And finally, before trying to send a message to the remote, the developer needs to call method connect in order to operate the connection with the remote. Once the connection is successful, it notify each connection observer through the method <code>onConnectionComplete</code>. While this event is not raised, it is useless to try and send messages.  
+And finally, before trying to send a message to the remote, the developer needs to call the method <code>connect</code> in order to operate the connection with the remote. Once the connection is successful, it notify each connection observer through the method <code>onConnectionComplete</code>. While this event is not raised, it is useless to try to send messages.  
 
 To send a message to the remote:
 
