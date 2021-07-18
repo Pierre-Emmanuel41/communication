@@ -1,3 +1,5 @@
 [submodule "utils"]
 	path = utils
 	url = https://github.com/Pierre-Emmanuel41/utils.git
+	update = rebase
+	branch = master
