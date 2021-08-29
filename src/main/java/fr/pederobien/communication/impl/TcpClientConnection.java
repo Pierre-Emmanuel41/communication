@@ -290,11 +290,11 @@ public class TcpClientConnection implements ITcpConnection {
 	}
 
 	private void onLogEvent(ELogLevel level, Exception exception, String message, Object... parameters) {
-		observers.notifyObservers(obs -> obs.onLog(new LogEvent(level, String.format(message, parameters), exception)));
+		observers.notifyObservers(obs -> obs.onLog(new LogEvent(this, level, String.format(message, parameters), exception)));
 	}
 
 	private void onDataReceivedEvent(byte[] buffer, int length) {
-		observers.notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(getAddress(), buffer, length)));
+		observers.notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(this, buffer, length)));
 	}
 
 	private void cancelTimerTask(TimerTask task) {

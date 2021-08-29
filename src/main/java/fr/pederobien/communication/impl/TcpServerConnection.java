@@ -142,7 +142,7 @@ public class TcpServerConnection implements ITcpConnection {
 		onDataReceivedEvent(answer, answer.length);
 		Map<Integer, byte[]> answers = answersExtractor.extract(answer);
 		for (Map.Entry<Integer, byte[]> entry : answers.entrySet())
-			unexpectedQueue.add(new UnexpectedDataReceivedEvent(getAddress(), entry.getKey(), entry.getValue()));
+			unexpectedQueue.add(new UnexpectedDataReceivedEvent(this, entry.getKey(), entry.getValue()));
 	}
 
 	private void startReceiving() {
@@ -207,11 +207,11 @@ public class TcpServerConnection implements ITcpConnection {
 	}
 
 	private void onDataReceivedEvent(byte[] answer, int length) {
-		observers.notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(getAddress(), answer, length)));
+		observers.notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(this, answer, length)));
 	}
 
 	private void onLogEvent(ELogLevel level, Exception exception, String message, Object... parameters) {
-		observers.notifyObservers(obs -> obs.onLog(new LogEvent(level, String.format(message, parameters), exception)));
+		observers.notifyObservers(obs -> obs.onLog(new LogEvent(this, level, String.format(message, parameters), exception)));
 	}
 
 	private void cancelTimerTask(TimerTask task) {

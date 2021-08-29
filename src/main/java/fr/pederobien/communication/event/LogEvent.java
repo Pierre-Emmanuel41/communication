@@ -1,6 +1,8 @@
 package fr.pederobien.communication.event;
 
-public class LogEvent {
+import fr.pederobien.communication.interfaces.IConnection;
+
+public class LogEvent extends ConnectionEvent {
 
 	public enum ELogLevel {
 		DEBUG, INFO, WARNING, ERROR
@@ -10,7 +12,16 @@ public class LogEvent {
 	private String message;
 	private Exception exception;
 
-	public LogEvent(ELogLevel level, String message, Exception exception) {
+	/**
+	 * Creates a log event.
+	 * 
+	 * @param connection The connection source involved in this event.
+	 * @param level      The log level.
+	 * @param message    The log message.
+	 * @param exception  The exception source of the log message.
+	 */
+	public LogEvent(IConnection<?> connection, ELogLevel level, String message, Exception exception) {
+		super(connection);
 		this.level = level;
 		this.message = message;
 		this.exception = exception;

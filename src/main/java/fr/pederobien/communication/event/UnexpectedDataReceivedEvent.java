@@ -2,12 +2,35 @@ package fr.pederobien.communication.event;
 
 import java.net.InetSocketAddress;
 
+import fr.pederobien.communication.interfaces.IConnection;
+
 public class UnexpectedDataReceivedEvent extends DataEvent {
 	private int identifier;
 	private byte[] answer;
 
-	public UnexpectedDataReceivedEvent(InetSocketAddress address, int identifier, byte[] answer) {
-		super(address);
+	/**
+	 * Creates a data received event.
+	 * 
+	 * @param connection The connection that received data.
+	 * @param buffer     The buffer that contains the bytes of a response received from the remote.
+	 * @param length     The length of the raw data received from the remote.
+	 */
+	public UnexpectedDataReceivedEvent(IConnection<?> connection, int identifier, byte[] answer) {
+		super(connection);
+		this.identifier = identifier;
+		this.answer = answer;
+	}
+
+	/**
+	 * Creates a data received event.
+	 * 
+	 * @param connection The connection that received data.
+	 * @param address    The address from which the data has been received.
+	 * @param buffer     The buffer that contains the bytes of a response received from the remote.
+	 * @param length     The length of the raw data received from the remote.
+	 */
+	public UnexpectedDataReceivedEvent(IConnection<?> connection, InetSocketAddress address, int identifier, byte[] answer) {
+		super(connection, address);
 		this.identifier = identifier;
 		this.answer = answer;
 	}

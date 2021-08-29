@@ -157,7 +157,7 @@ public class UdpServerConnection implements IUdpServerConnection {
 
 		Map<Integer, byte[]> answers = extractor.extract(answer.getData());
 		for (Map.Entry<Integer, byte[]> entry : answers.entrySet())
-			unexpectedQueue.add(new DataReceivedEvent((InetSocketAddress) answer.getSocketAddress(), entry.getValue(), entry.getValue().length));
+			unexpectedQueue.add(new DataReceivedEvent(this, (InetSocketAddress) answer.getSocketAddress(), entry.getValue(), entry.getValue().length));
 	}
 
 	private void startReceiving() {
@@ -202,6 +202,6 @@ public class UdpServerConnection implements IUdpServerConnection {
 	}
 
 	private void onLogEvent(ELogLevel level, Exception exception, String message, Object... parameters) {
-		observers.notifyObservers(obs -> obs.onLog(new LogEvent(level, String.format(message, parameters), exception)));
+		observers.notifyObservers(obs -> obs.onLog(new LogEvent(this, level, String.format(message, parameters), exception)));
 	}
 }
