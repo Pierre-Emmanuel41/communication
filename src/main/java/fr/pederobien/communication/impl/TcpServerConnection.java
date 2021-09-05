@@ -109,7 +109,7 @@ public class TcpServerConnection implements ITcpConnection {
 		if (getState() != EConnectionState.DISCONNECTED)
 			disconnect();
 
-		if (isDisposed.compareAndSet(false, true))
+		if (!isDisposed.compareAndSet(false, true))
 			return;
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Disposing connection", remoteAddress);
@@ -117,6 +117,7 @@ public class TcpServerConnection implements ITcpConnection {
 		timer.cancel();
 		sendingQueue.dispose();
 		extractingQueue.dispose();
+		unexpectedQueue.dispose();
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Connection disposed", remoteAddress);
 

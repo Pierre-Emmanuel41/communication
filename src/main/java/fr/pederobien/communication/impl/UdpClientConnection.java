@@ -119,6 +119,7 @@ public class UdpClientConnection implements IUdpConnection {
 		timer.cancel();
 		sendingQueue.dispose();
 		extractingQueue.dispose();
+		unexpectedQueue.dispose();
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Connection disposed", remoteAddress);
 
