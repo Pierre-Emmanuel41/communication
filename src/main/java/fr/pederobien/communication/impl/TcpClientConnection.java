@@ -10,17 +10,19 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import fr.pederobien.communication.EConnectionState;
+import fr.pederobien.communication.event.ConnectionCompleteEvent;
+import fr.pederobien.communication.event.ConnectionDisposedEvent;
+import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.DataReceivedEvent;
 import fr.pederobien.communication.event.LogEvent;
 import fr.pederobien.communication.event.LogEvent.ELogLevel;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
 import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
-import fr.pederobien.communication.interfaces.IObsTcpConnection;
 import fr.pederobien.communication.interfaces.ITcpConnection;
 import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.ByteWrapper;
-import fr.pederobien.utils.Observable;
 import fr.pederobien.utils.SimpleTimer;
+import fr.pederobien.utils.event.EventManager;
 
 public class TcpClientConnection implements ITcpConnection {
 	/**
@@ -49,7 +51,6 @@ public class TcpClientConnection implements ITcpConnection {
 	private RequestResponseManager requestResponseManager;
 	private EConnectionState connectionState;
 	private AtomicBoolean isDisposed;
-	private Observable<IObsTcpConnection> observers;
 
 	public TcpClientConnection(String remoteAddress, int remotePort, IAnswersExtractor answersExtractor, boolean isEnabled) {
 		this.remoteAddress = remoteAddress;
@@ -59,7 +60,6 @@ public class TcpClientConnection implements ITcpConnection {
 		isDisposed = new AtomicBoolean(false);
 
 		requestResponseManager = new RequestResponseManager(this, remoteAddress, answersExtractor);
-		observers = new Observable<IObsTcpConnection>();
 
 		timer = new SimpleTimer("TcpClientConnectionTimer_".concat(remoteAddress), true);
 		sendingQueue = new BlockingQueueTask<ICallbackRequestMessage>("Sending_".concat(remoteAddress), message -> startSending(message));
@@ -144,30 +144,12 @@ public class TcpClientConnection implements ITcpConnection {
 		requestResponseManager.dispose();
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Connection disposed", remoteAddress);
-
-		observers.notifyObservers(obs -> obs.onConnectionDisposed());
+		EventManager.callEvent(new ConnectionDisposedEvent(this));
 	}
 
 	@Override
 	public boolean isDisposed() {
 		return isDisposed.get();
-	}
-
-	@Override
-	public void addObserver(IObsTcpConnection obs) {
-		observers.addObserver(obs);
-	}
-
-	@Override
-	public void removeObserver(IObsTcpConnection obs) {
-		observers.removeObserver(obs);
-	}
-
-	/**
-	 * @return The observable object associated to this object.
-	 */
-	public Observable<IObsTcpConnection> getObservers() {
-		return observers;
 	}
 
 	private void startConnect() {
@@ -274,7 +256,7 @@ public class TcpClientConnection implements ITcpConnection {
 			return;
 		}
 
-		observers.notifyObservers(obs -> obs.onConnectionComplete());
+		EventManager.callEvent(new ConnectionCompleteEvent(this));
 	}
 
 	private void onConnectionLostEvent() {
@@ -283,18 +265,18 @@ public class TcpClientConnection implements ITcpConnection {
 
 		closeSocket();
 
-		observers.notifyObservers(obs -> obs.onConnectionLost());
+		EventManager.callEvent(new ConnectionLostEvent(this));
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Starting automatic reconnection", remoteAddress);
 		connect();
 	}
 
 	private void onLogEvent(ELogLevel level, Exception exception, String message, Object... parameters) {
-		observers.notifyObservers(obs -> obs.onLog(new LogEvent(this, level, String.format(message, parameters), exception)));
+		EventManager.callEvent(new LogEvent(this, level, String.format(message, parameters), exception));
 	}
 
 	private void onDataReceivedEvent(byte[] buffer, int length) {
-		observers.notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(this, buffer, length)));
+		EventManager.callEvent(new DataReceivedEvent(this, buffer, length));
 	}
 
 	private void cancelTimerTask(TimerTask task) {

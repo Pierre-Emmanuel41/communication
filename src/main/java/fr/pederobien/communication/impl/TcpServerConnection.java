@@ -8,18 +8,19 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import fr.pederobien.communication.EConnectionState;
+import fr.pederobien.communication.event.ConnectionDisposedEvent;
+import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.DataReceivedEvent;
 import fr.pederobien.communication.event.LogEvent;
 import fr.pederobien.communication.event.LogEvent.ELogLevel;
 import fr.pederobien.communication.event.UnexpectedDataReceivedEvent;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
 import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
-import fr.pederobien.communication.interfaces.IObsTcpConnection;
 import fr.pederobien.communication.interfaces.ITcpConnection;
 import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.ByteWrapper;
-import fr.pederobien.utils.Observable;
 import fr.pederobien.utils.SimpleTimer;
+import fr.pederobien.utils.event.EventManager;
 
 public class TcpServerConnection implements ITcpConnection {
 	private IAnswersExtractor answersExtractor;
@@ -31,7 +32,6 @@ public class TcpServerConnection implements ITcpConnection {
 	private Socket socket;
 	private EConnectionState connectionState;
 	private AtomicBoolean isDisposed;
-	private Observable<IObsTcpConnection> observers;
 	private String remoteAddress;
 
 	public TcpServerConnection(Socket socket, IAnswersExtractor answersExtractor) {
@@ -41,13 +41,12 @@ public class TcpServerConnection implements ITcpConnection {
 		remoteAddress = socket.getInetAddress().toString().substring(1);
 
 		isDisposed = new AtomicBoolean(false);
-		observers = new Observable<IObsTcpConnection>();
 
 		timer = new SimpleTimer("TcpServerConnectionTimer_".concat(remoteAddress), true);
 
 		sendingQueue = new BlockingQueueTask<>("Sending_".concat(remoteAddress), message -> startSending(message));
 		extractingQueue = new BlockingQueueTask<>("Extracting_".concat(remoteAddress), answer -> startExtracting(answer));
-		unexpectedQueue = new BlockingQueueTask<>("UnexpectedData_".concat(remoteAddress), event -> startReceivingUnexpectedData(event));
+		unexpectedQueue = new BlockingQueueTask<>("UnexpectedData_".concat(remoteAddress), event -> EventManager.callEvent(event));
 
 		connectionState = EConnectionState.CONNECTED;
 
@@ -120,23 +119,12 @@ public class TcpServerConnection implements ITcpConnection {
 		unexpectedQueue.dispose();
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Connection disposed", remoteAddress);
-
-		observers.notifyObservers(obs -> obs.onConnectionDisposed());
+		EventManager.callEvent(new ConnectionDisposedEvent(this));
 	}
 
 	@Override
 	public boolean isDisposed() {
 		return isDisposed.get();
-	}
-
-	@Override
-	public void addObserver(IObsTcpConnection obs) {
-		observers.addObserver(obs);
-	}
-
-	@Override
-	public void removeObserver(IObsTcpConnection obs) {
-		observers.removeObserver(obs);
 	}
 
 	private void startExtracting(byte[] answer) {
@@ -163,10 +151,6 @@ public class TcpServerConnection implements ITcpConnection {
 				onConnectionLostEvent();
 			}
 		}
-	}
-
-	private void startReceivingUnexpectedData(UnexpectedDataReceivedEvent event) {
-		observers.notifyObservers(obs -> obs.onUnexpectedDataReceived(event));
 	}
 
 	private void startSending(ICallbackRequestMessage message) {
@@ -204,15 +188,15 @@ public class TcpServerConnection implements ITcpConnection {
 		closeSocket();
 		cancelTimerTask(receiving);
 
-		observers.notifyObservers(obs -> obs.onConnectionLost());
+		EventManager.callEvent(new ConnectionLostEvent(this));
 	}
 
 	private void onDataReceivedEvent(byte[] answer, int length) {
-		observers.notifyObservers(obs -> obs.onDataReceived(new DataReceivedEvent(this, answer, length)));
+		EventManager.callEvent(new DataReceivedEvent(this, answer, length));
 	}
 
 	private void onLogEvent(ELogLevel level, Exception exception, String message, Object... parameters) {
-		observers.notifyObservers(obs -> obs.onLog(new LogEvent(this, level, String.format(message, parameters), exception)));
+		EventManager.callEvent(new LogEvent(this, level, String.format(message, parameters), exception));
 	}
 
 	private void cancelTimerTask(TimerTask task) {

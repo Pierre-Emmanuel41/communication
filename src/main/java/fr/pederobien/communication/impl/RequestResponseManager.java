@@ -12,6 +12,7 @@ import fr.pederobien.communication.interfaces.IAnswersExtractor;
 import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
 import fr.pederobien.communication.interfaces.IResponseMessage;
 import fr.pederobien.utils.BlockingQueueTask;
+import fr.pederobien.utils.event.EventManager;
 
 public class RequestResponseManager {
 
@@ -203,7 +204,7 @@ public class RequestResponseManager {
 	}
 
 	private void startUnexpectedDataReceived(Map.Entry<Integer, byte[]> entry) {
-		connection.getObservers().notifyObservers(obs -> obs.onUnexpectedDataReceived(new UnexpectedDataReceivedEvent(connection, entry.getKey(), entry.getValue())));
+		EventManager.callEvent(new UnexpectedDataReceivedEvent(connection, entry.getKey(), entry.getValue()));
 	}
 
 	private boolean isDisposed() {

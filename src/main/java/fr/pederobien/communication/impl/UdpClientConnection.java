@@ -11,17 +11,18 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import fr.pederobien.communication.EConnectionState;
+import fr.pederobien.communication.event.ConnectionCompleteEvent;
+import fr.pederobien.communication.event.ConnectionDisposedEvent;
 import fr.pederobien.communication.event.DataReceivedEvent;
 import fr.pederobien.communication.event.LogEvent;
 import fr.pederobien.communication.event.LogEvent.ELogLevel;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
-import fr.pederobien.communication.interfaces.IObsConnection;
 import fr.pederobien.communication.interfaces.IRequestMessage;
 import fr.pederobien.communication.interfaces.IUdpConnection;
 import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.ByteWrapper;
-import fr.pederobien.utils.Observable;
 import fr.pederobien.utils.SimpleTimer;
+import fr.pederobien.utils.event.EventManager;
 
 public class UdpClientConnection implements IUdpConnection {
 	private SimpleTimer timer;
@@ -36,7 +37,6 @@ public class UdpClientConnection implements IUdpConnection {
 	private String remoteAddress;
 	private int remotePort;
 	private boolean isEnabled;
-	private Observable<IObsConnection> observers;
 	private int receptionBufferSize;
 
 	public UdpClientConnection(String remoteAddress, int remotePort, IAnswersExtractor answersExtractor, boolean isEnabled, int receptionBufferSize) {
@@ -47,12 +47,11 @@ public class UdpClientConnection implements IUdpConnection {
 		this.receptionBufferSize = receptionBufferSize;
 
 		isDisposed = new AtomicBoolean(false);
-		observers = new Observable<IObsConnection>();
 
 		timer = new SimpleTimer("UdpClientConnectionTimer_".concat(remoteAddress), true);
 		sendingQueue = new BlockingQueueTask<>("Sending_".concat(remoteAddress), message -> startSending(message));
 		extractingQueue = new BlockingQueueTask<>("Extracting_".concat(remoteAddress), answer -> startExtracting(answer));
-		unexpectedQueue = new BlockingQueueTask<>("UnexpectedData_".concat(remoteAddress), event -> startReceivingUnexpectedData(event));
+		unexpectedQueue = new BlockingQueueTask<>("UnexpectedData_".concat(remoteAddress), event -> EventManager.callEvent(event));
 
 		connectionState = EConnectionState.DISCONNECTED;
 	}
@@ -122,8 +121,7 @@ public class UdpClientConnection implements IUdpConnection {
 		unexpectedQueue.dispose();
 
 		onLogEvent(ELogLevel.INFO, null, "%s - Connection disposed", remoteAddress);
-
-		observers.notifyObservers(obs -> obs.onConnectionDisposed());
+		EventManager.callEvent(new ConnectionDisposedEvent(this));
 	}
 
 	@Override
@@ -137,16 +135,6 @@ public class UdpClientConnection implements IUdpConnection {
 
 		if (isEnabled && getState() == EConnectionState.CONNECTED)
 			sendingQueue.add(message);
-	}
-
-	@Override
-	public void addObserver(IObsConnection obs) {
-		observers.addObserver(obs);
-	}
-
-	@Override
-	public void removeObserver(IObsConnection obs) {
-		observers.removeObserver(obs);
 	}
 
 	private void startConnect() {
@@ -183,10 +171,6 @@ public class UdpClientConnection implements IUdpConnection {
 				// do nothing
 			}
 		}
-	}
-
-	private void startReceivingUnexpectedData(DataReceivedEvent event) {
-		observers.notifyObservers(obs -> obs.onDataReceived(event));
 	}
 
 	private void startSending(IRequestMessage message) {
@@ -227,10 +211,10 @@ public class UdpClientConnection implements IUdpConnection {
 			return;
 		}
 
-		observers.notifyObservers(obs -> obs.onConnectionComplete());
+		EventManager.callEvent(new ConnectionCompleteEvent(this));
 	}
 
 	private void onLogEvent(ELogLevel level, Exception exception, String message, Object... parameters) {
-		observers.notifyObservers(obs -> obs.onLog(new LogEvent(this, level, String.format(message, parameters), exception)));
+		EventManager.callEvent(new LogEvent(this, level, String.format(message, parameters), exception));
 	}
 }
