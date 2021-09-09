@@ -58,14 +58,14 @@ This extractor contains only one method : <code>Map<Integer, byte[]> extract(byt
 
 #### 3.1.3) TcpClientConnection
 
-This object represent the connection with the remote but from the client side. There is an observer pattern associated to the connection. Through this connection, it is possible to handle different events :  
+This object represent the connection with the remote but from the client side. It throws several events :   
 
-- onConnectionComplete (when the connection with the remote succeed)
-- onConnectionDisposed (when the method <code>dispose()</code> has been called)
-- onDataReceived (when data has been received from the remote. The data is raw, it has not been processed by the extractor)
-- onLog (When exception has been catch or when debug message are raised by the connection)
-- onConnectionLost (when the connection with the remote has been lost)
-- onUnexpectedDataReceived (thrown after the onDataReceived event, but the data has been processed by the extractor).
+- [ConnectionCompleteEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionCompleteEvent.java)
+- [ConnectionDisposedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionDisposedEvent.java)
+- [DataReceivedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/DataReceivedEvent.java)
+- [LogEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/LogEvent.java)
+- [ConnectionLostEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionLostEvent.java)
+- [UnexpectedDataReceivedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/UnexpectedDataReceivedEvent.java)
 
 To create such a connection :
 
@@ -114,14 +114,14 @@ IAnswersExtractor answersExtractor = /*your class here*/;
 ITcpConnection clientConnection = new TcpServerConnection(clientSocket, answersExtractor);
 ```
 
-Just like the TcpClientConnection, there is also an observer pattern associated to this connection so it is possible to handle different events :
+Just like the TcpClientConnection, it throws different events :  
 
-- onConnectionComplete (when the connection with the remote succeed)
-- onConnectionDisposed (when the method <code>dispose()</code> has been called)
-- onDataReceived (when data has been received from the remote. The data is raw, it has not been processed by the extractor)
-- onLog (When exception has been catch or when debug message are raised by the connection)
-- onConnectionLost (when the connection with the remote has been lost)
-- onUnexpectedDataReceived (thrown after the onDataReceived event, but the data has been processed by the extractor).
+- [ConnectionCompleteEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionCompleteEvent.java)
+- [ConnectionDisposedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionDisposedEvent.java)
+- [DataReceivedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/DataReceivedEvent.java)
+- [LogEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/LogEvent.java)
+- [ConnectionLostEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionLostEvent.java)
+- [UnexpectedDataReceivedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/UnexpectedDataReceivedEvent.java)
 
 There is no need to call method connect (first because it will throw an <code>UnsupportedOperationException</code>, then because when creating a TcpServerConnection the socket given to the constructor is connected to the remote).
 
@@ -150,12 +150,12 @@ This extractor contains only one method : <code>Map<Integer, byte[]> extract(byt
 
 #### 3.2.3) UdpClientConnection
 
-The object represent the connection with the remote but from the client side. There is an observer pattern associated to the connection. Through this connection, it is possible to handle different events :  
+The object represent the connection with the remote but from the client side. It throws different events :  
 
-- onConnectionComplete (when the connection with the remote succeed)
-- onConnectionDisposed (when the method <code>dispose()</code> has been called)
-- onDataReceived (when data has been received from the remote. The data is raw, it has not been processed by the extractor)
-- onLog (When exception has been catch or when debug message are raised by the connection)
+- [ConnectionCompleteEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionCompleteEvent.java)
+- [ConnectionDisposedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionDisposedEvent.java)
+- [DataReceivedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/DataReceivedEvent.java)
+- [LogEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/LogEvent.java)
 
 To create such a connection:
 
@@ -189,12 +189,12 @@ It is possible for the server to send request to the client without responding t
 
 #### 3.2.4) UdpServerConnection
 
-The object represent the connection with the remote but from the server side. There is an observer pattern associated to the connection. Through this connection, it is possible to handle different events :  
+The object represent the connection with the remote but from the server side. It throws different events :  
 
-- onConnectionComplete (when the connection with the remote succeed)
-- onConnectionDisposed (when the method <code>dispose()</code> has been called)
-- onDataReceived (when data has been received from the remote. The data is raw, it has not been processed by the extractor)
-- onLog (When exception has been catch or when debug message are raised by the connection)
+- [ConnectionCompleteEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionCompleteEvent.java)
+- [ConnectionDisposedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionDisposedEvent.java)
+- [DataReceivedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/DataReceivedEvent.java)
+- [LogEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/LogEvent.java)
 
 To create such a connection:
 
@@ -233,4 +233,32 @@ Finally, to send a message to the remote from the server side :
 
 ```java
 connection.send(message);
+```
+
+### 3.3) Observing connections
+
+In order to catch event thrown by the different connections we have seen above, we need to create a class that implements [IEventListener](https://github.com/Pierre-Emmanuel41/utils/blob/master/src/main/java/fr/pederobien/utils/event/IEventListener.java) and then annotates each methods has event handler:
+
+```
+public class ConnectionEventListener implements IEventListener {
+
+	public ConnectionEventListener() {
+		EventManager.registerListener(this);
+	}
+
+	@EventHandler
+	private void onConnectionCompleteEvent(ConnectionCompleteEvent event) {
+
+	}
+
+	@EventHandler
+	private void onConnectionDisposedEvent(ConnectionDisposedEvent event) {
+
+	}
+
+	@EventHandler
+	private void onDataReceivedEvent(DataReceivedEvent event) {
+
+	}
+}
 ```
