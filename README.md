@@ -239,7 +239,7 @@ connection.send(message);
 
 In order to catch event thrown by the different connections we have seen above, we need to create a class that implements [IEventListener](https://github.com/Pierre-Emmanuel41/utils/blob/master/src/main/java/fr/pederobien/utils/event/IEventListener.java) and then annotates each methods has event handler:
 
-```
+``` java
 public class ConnectionEventListener implements IEventListener {
 
 	public ConnectionEventListener() {
