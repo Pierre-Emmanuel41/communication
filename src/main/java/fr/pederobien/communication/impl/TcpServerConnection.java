@@ -33,12 +33,14 @@ public class TcpServerConnection implements ITcpConnection {
 	private EConnectionState connectionState;
 	private AtomicBoolean isDisposed;
 	private String remoteAddress;
+	private int remotePort;
 
 	public TcpServerConnection(Socket socket, IAnswersExtractor answersExtractor) {
 		this.socket = socket;
 		this.answersExtractor = answersExtractor;
 
 		remoteAddress = socket.getInetAddress().toString().substring(1);
+		remotePort = socket.getLocalPort();
 
 		isDisposed = new AtomicBoolean(false);
 
@@ -86,13 +88,13 @@ public class TcpServerConnection implements ITcpConnection {
 
 		connectionState = EConnectionState.DISCONNECTING;
 
-		onLogEvent(ELogLevel.INFO, null, "%s - closing connection", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "closing connection");
 		closeSocket();
 
 		cancelTimerTask(receiving);
 
 		connectionState = EConnectionState.DISCONNECTED;
-		onLogEvent(ELogLevel.INFO, null, "%s - Connection closed", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Connection closed");
 	}
 
 	@Override
@@ -111,14 +113,14 @@ public class TcpServerConnection implements ITcpConnection {
 		if (!isDisposed.compareAndSet(false, true))
 			return;
 
-		onLogEvent(ELogLevel.INFO, null, "%s - Disposing connection", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Disposing connection");
 
 		timer.cancel();
 		sendingQueue.dispose();
 		extractingQueue.dispose();
 		unexpectedQueue.dispose();
 
-		onLogEvent(ELogLevel.INFO, null, "%s - Connection disposed", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Connection disposed");
 		EventManager.callEvent(new ConnectionDisposedEvent(this));
 	}
 
@@ -147,7 +149,7 @@ public class TcpServerConnection implements ITcpConnection {
 
 				extractingQueue.add(ByteWrapper.wrap(buffer).extract(0, read));
 			} catch (IOException e) {
-				onLogEvent(ELogLevel.WARNING, e, "%s - Reception failure : %s", remoteAddress, e.getMessage());
+				onLogEvent(ELogLevel.WARNING, e, "Reception failure : " + e.getMessage());
 				onConnectionLostEvent();
 			}
 		}
@@ -158,7 +160,7 @@ public class TcpServerConnection implements ITcpConnection {
 			socket.getOutputStream().write(message.getBytes());
 			socket.getOutputStream().flush();
 		} catch (IOException e) {
-			onLogEvent(ELogLevel.WARNING, e, "%s - Send failure : %s", remoteAddress, e.getMessage());
+			onLogEvent(ELogLevel.WARNING, e, "Send failure : " + e.getMessage());
 			onConnectionLostEvent();
 		}
 	}
@@ -183,7 +185,7 @@ public class TcpServerConnection implements ITcpConnection {
 
 	private void onConnectionLostEvent() {
 		connectionState = EConnectionState.CONNECTION_LOST;
-		onLogEvent(ELogLevel.INFO, null, "%s - Connection lost", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Connection lost");
 
 		closeSocket();
 		cancelTimerTask(receiving);
@@ -195,8 +197,8 @@ public class TcpServerConnection implements ITcpConnection {
 		EventManager.callEvent(new DataReceivedEvent(this, answer, length));
 	}
 
-	private void onLogEvent(ELogLevel level, Exception exception, String message, Object... parameters) {
-		EventManager.callEvent(new LogEvent(this, level, String.format(message, parameters), exception));
+	private void onLogEvent(ELogLevel level, Exception exception, String message) {
+		EventManager.callEvent(new LogEvent(this, level, String.format("[TcpClient][%s:%s] %s", remoteAddress, remotePort, message), exception));
 	}
 
 	private void cancelTimerTask(TimerTask task) {

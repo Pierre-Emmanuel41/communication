@@ -37,6 +37,7 @@ public class UdpServerConnection implements IUdpServerConnection {
 	private EConnectionState connectionState;
 	private AtomicBoolean isDisposed;
 	private String remoteAddress;
+	private int remotePort;
 	private int receptionBufferSize;
 
 	public UdpServerConnection(InetSocketAddress address, int receptionBufferSize, Supplier<IAnswersExtractor> extractorSupplier) throws SocketException {
@@ -48,6 +49,7 @@ public class UdpServerConnection implements IUdpServerConnection {
 		extractors = new HashMap<SocketAddress, IAnswersExtractor>();
 
 		remoteAddress = address.getAddress().toString().substring(1);
+		remotePort = address.getPort();
 
 		isDisposed = new AtomicBoolean(false);
 
@@ -95,13 +97,13 @@ public class UdpServerConnection implements IUdpServerConnection {
 
 		connectionState = EConnectionState.DISCONNECTING;
 
-		onLogEvent(ELogLevel.INFO, null, "%s - Closing connection", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Closing connection");
 		closeSocket();
 		if (receiving != null)
 			receiving.cancel();
 
 		connectionState = EConnectionState.DISCONNECTED;
-		onLogEvent(ELogLevel.INFO, null, "%s - Connection closed", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Connection closed");
 	}
 
 	@Override
@@ -112,14 +114,14 @@ public class UdpServerConnection implements IUdpServerConnection {
 		if (!isDisposed.compareAndSet(false, true))
 			return;
 
-		onLogEvent(ELogLevel.INFO, null, "%s - Disposing connection", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Disposing connection");
 
 		timer.cancel();
 		sendingQueue.dispose();
 		extractingQueue.dispose();
 		unexpectedQueue.dispose();
 
-		onLogEvent(ELogLevel.INFO, null, "%s - Connection disposed", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Connection disposed");
 		EventManager.callEvent(new ConnectionDisposedEvent(this));
 	}
 
@@ -185,7 +187,7 @@ public class UdpServerConnection implements IUdpServerConnection {
 			throw new UnsupportedOperationException("Object disposed");
 	}
 
-	private void onLogEvent(ELogLevel level, Exception exception, String message, Object... parameters) {
-		EventManager.callEvent(new LogEvent(this, level, String.format(message, parameters), exception));
+	private void onLogEvent(ELogLevel level, Exception exception, String message) {
+		EventManager.callEvent(new LogEvent(this, level, String.format("[TcpClient][%s:%s] %s", remoteAddress, remotePort, message), exception));
 	}
 }

@@ -100,7 +100,7 @@ public class TcpClientConnection implements ITcpConnection {
 			return;
 
 		connectionState = EConnectionState.CONNECTING;
-		onLogEvent(ELogLevel.INFO, null, "%s - Starting connection", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Starting connection");
 
 		connection = timer.scheduleAtFixedRate(() -> startConnect(), 0, RECONNECTION_IDLE_TIME);
 	}
@@ -111,13 +111,13 @@ public class TcpClientConnection implements ITcpConnection {
 
 		connectionState = EConnectionState.DISCONNECTING;
 
-		onLogEvent(ELogLevel.INFO, null, "%s - Closing connection", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Closing connection");
 		closeSocket();
 		cancelTimerTask(connection);
 		cancelTimerTask(receiving);
 
 		connectionState = EConnectionState.DISCONNECTED;
-		onLogEvent(ELogLevel.INFO, null, "%s - Connection closed", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Connection closed");
 	}
 
 	@Override
@@ -136,14 +136,14 @@ public class TcpClientConnection implements ITcpConnection {
 		if (!isDisposed.compareAndSet(false, true))
 			return;
 
-		onLogEvent(ELogLevel.INFO, null, "%s - Disposing connection", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Disposing connection");
 
 		timer.cancel();
 		sendingQueue.dispose();
 		extractingQueue.dispose();
 		requestResponseManager.dispose();
 
-		onLogEvent(ELogLevel.INFO, null, "%s - Connection disposed", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Connection disposed");
 		EventManager.callEvent(new ConnectionDisposedEvent(this));
 	}
 
@@ -164,7 +164,7 @@ public class TcpClientConnection implements ITcpConnection {
 				onConnectionCompleteEvent();
 			} catch (SocketTimeoutException e) {
 				socket.close();
-				onLogEvent(ELogLevel.INFO, null, "%s - Connection timeout. Retry.", remoteAddress);
+				onLogEvent(ELogLevel.INFO, null, "Connection timeout. Retry.");
 			} catch (IOException e) {
 				connection.cancel();
 				connection = timer.scheduleAtFixedRate(() -> startConnect(), SOCKET_ERROR_RETRY_MS, RECONNECTION_IDLE_TIME);
@@ -181,7 +181,7 @@ public class TcpClientConnection implements ITcpConnection {
 		try {
 			requestResponseManager.handleResponse(answer);
 		} catch (UnsupportedOperationException e) {
-			onLogEvent(ELogLevel.ERROR, e, "%s - Exception when retrieving answer : %s", remoteAddress, e.getMessage());
+			onLogEvent(ELogLevel.ERROR, e, "Exception when retrieving answer : " + e.getMessage());
 		}
 	}
 
@@ -200,7 +200,7 @@ public class TcpClientConnection implements ITcpConnection {
 				if (getState() == EConnectionState.DISCONNECTING || getState() == EConnectionState.DISCONNECTED)
 					return;
 
-				onLogEvent(ELogLevel.WARNING, e, "%s - Reception failure : %s", remoteAddress, e.getMessage());
+				onLogEvent(ELogLevel.WARNING, e, "Reception failure : " + e.getMessage());
 				onConnectionLostEvent();
 				break;
 			}
@@ -213,7 +213,7 @@ public class TcpClientConnection implements ITcpConnection {
 			socket.getOutputStream().flush();
 			requestResponseManager.addRequest(message);
 		} catch (SocketException e) {
-			onLogEvent(ELogLevel.WARNING, e, "%s - Send failure : %s", remoteAddress, e.getMessage());
+			onLogEvent(ELogLevel.WARNING, e, "Send failure : " + e.getMessage());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -248,7 +248,7 @@ public class TcpClientConnection implements ITcpConnection {
 		sendingQueue.start();
 		extractingQueue.start();
 
-		onLogEvent(ELogLevel.INFO, null, "%s - Connection successfull", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Connection successfull");
 
 		try {
 			Thread.sleep(200);
@@ -261,18 +261,18 @@ public class TcpClientConnection implements ITcpConnection {
 
 	private void onConnectionLostEvent() {
 		connectionState = EConnectionState.CONNECTION_LOST;
-		onLogEvent(ELogLevel.INFO, null, "%s - Connection lost", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Connection lost");
 
 		closeSocket();
 
 		EventManager.callEvent(new ConnectionLostEvent(this));
 
-		onLogEvent(ELogLevel.INFO, null, "%s - Starting automatic reconnection", remoteAddress);
+		onLogEvent(ELogLevel.INFO, null, "Starting automatic reconnection");
 		connect();
 	}
 
-	private void onLogEvent(ELogLevel level, Exception exception, String message, Object... parameters) {
-		EventManager.callEvent(new LogEvent(this, level, String.format(message, parameters), exception));
+	private void onLogEvent(ELogLevel level, Exception exception, String message) {
+		EventManager.callEvent(new LogEvent(this, level, String.format("[TcpClient][%s:%s] %s", remoteAddress, remotePort, message), exception));
 	}
 
 	private void onDataReceivedEvent(byte[] buffer, int length) {
