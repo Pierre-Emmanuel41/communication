@@ -198,7 +198,7 @@ public class TcpServerConnection implements ITcpConnection {
 	}
 
 	private void onLogEvent(ELogLevel level, Exception exception, String message) {
-		EventManager.callEvent(new LogEvent(this, level, String.format("[TcpClient][%s:%s] %s", remoteAddress, remotePort, message), exception));
+		EventManager.callEvent(new LogEvent(this, level, String.format("[TcpServer][%s:%s] %s", remoteAddress, remotePort, message), exception));
 	}
 
 	private void cancelTimerTask(TimerTask task) {
