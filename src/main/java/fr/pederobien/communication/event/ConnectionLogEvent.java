@@ -1,8 +1,10 @@
 package fr.pederobien.communication.event;
 
+import java.util.StringJoiner;
+
 import fr.pederobien.communication.interfaces.IConnection;
 
-public class LogEvent extends ConnectionEvent {
+public class ConnectionLogEvent extends ConnectionEvent {
 
 	public enum ELogLevel {
 		DEBUG, INFO, WARNING, ERROR
@@ -20,7 +22,7 @@ public class LogEvent extends ConnectionEvent {
 	 * @param message    The log message.
 	 * @param exception  The exception source of the log message.
 	 */
-	public LogEvent(IConnection<?> connection, ELogLevel level, String message, Exception exception) {
+	public ConnectionLogEvent(IConnection<?> connection, ELogLevel level, String message, Exception exception) {
 		super(connection);
 		this.level = level;
 		this.message = message;
@@ -50,6 +52,11 @@ public class LogEvent extends ConnectionEvent {
 
 	@Override
 	public String toString() {
-		return "[" + level + "] " + message;
+		StringJoiner joiner = new StringJoiner(",", "{", "}");
+		joiner.add("connection=" + getConnection());
+		joiner.add("level=" + getLevel());
+		joiner.add("message=" + getMessage());
+		joiner.add("Exception=" + getException());
+		return "LogEvent_" + joiner.toString();
 	}
 }

@@ -1,6 +1,7 @@
 package fr.pederobien.communication.event;
 
 import java.net.InetSocketAddress;
+import java.util.StringJoiner;
 
 import fr.pederobien.communication.interfaces.IConnection;
 
@@ -47,5 +48,14 @@ public class UnexpectedDataReceivedEvent extends DataEvent {
 	 */
 	public byte[] getAnswer() {
 		return answer;
+	}
+
+	@Override
+	public String toString() {
+		StringJoiner joiner = new StringJoiner(",", "{", "}");
+		joiner.add("connection=" + getConnection());
+		joiner.add("identifier=" + getIdentifier());
+		joiner.add("Length=" + getAnswer().length);
+		return "UnexpectedDataReceivedEvent_" + joiner.toString();
 	}
 }

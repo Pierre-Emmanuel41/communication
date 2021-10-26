@@ -1,6 +1,7 @@
 package fr.pederobien.communication.event;
 
 import java.net.InetSocketAddress;
+import java.util.StringJoiner;
 
 import fr.pederobien.communication.interfaces.IConnection;
 
@@ -47,5 +48,14 @@ public class DataReceivedEvent extends DataEvent {
 	 */
 	public int getLength() {
 		return length;
+	}
+
+	@Override
+	public String toString() {
+		StringJoiner joiner = new StringJoiner(",", "{", "}");
+		joiner.add("connection=" + getConnection());
+		joiner.add("address=" + getAddress().toString());
+		joiner.add("length=" + getLength());
+		return "DataReceivedEvent_" + joiner.toString();
 	}
 }

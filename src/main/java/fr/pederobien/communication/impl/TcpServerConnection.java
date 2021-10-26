@@ -11,8 +11,8 @@ import fr.pederobien.communication.EConnectionState;
 import fr.pederobien.communication.event.ConnectionDisposedEvent;
 import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.DataReceivedEvent;
-import fr.pederobien.communication.event.LogEvent;
-import fr.pederobien.communication.event.LogEvent.ELogLevel;
+import fr.pederobien.communication.event.ConnectionLogEvent;
+import fr.pederobien.communication.event.ConnectionLogEvent.ELogLevel;
 import fr.pederobien.communication.event.UnexpectedDataReceivedEvent;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
 import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
@@ -129,6 +129,11 @@ public class TcpServerConnection implements ITcpConnection {
 		return isDisposed.get();
 	}
 
+	@Override
+	public String toString() {
+		return String.format("TcpServerConnection_%s:%s", remoteAddress, remotePort);
+	}
+
 	private void startExtracting(byte[] answer) {
 		onDataReceivedEvent(answer, answer.length);
 		Map<Integer, byte[]> answers = answersExtractor.extract(answer);
@@ -198,7 +203,7 @@ public class TcpServerConnection implements ITcpConnection {
 	}
 
 	private void onLogEvent(ELogLevel level, Exception exception, String message) {
-		EventManager.callEvent(new LogEvent(this, level, String.format("[TcpServer][%s:%s] %s", remoteAddress, remotePort, message), exception));
+		EventManager.callEvent(new ConnectionLogEvent(this, level, String.format("[TcpServer][%s:%s] %s", remoteAddress, remotePort, message), exception));
 	}
 
 	private void cancelTimerTask(TimerTask task) {

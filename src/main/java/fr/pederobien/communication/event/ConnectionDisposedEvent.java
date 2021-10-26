@@ -1,5 +1,7 @@
 package fr.pederobien.communication.event;
 
+import java.util.StringJoiner;
+
 import fr.pederobien.communication.interfaces.IConnection;
 
 public class ConnectionDisposedEvent extends ConnectionEvent {
@@ -11,5 +13,12 @@ public class ConnectionDisposedEvent extends ConnectionEvent {
 	 */
 	public ConnectionDisposedEvent(IConnection<?> connection) {
 		super(connection);
+	}
+
+	@Override
+	public String toString() {
+		StringJoiner joiner = new StringJoiner(",", "{", "}");
+		joiner.add("connection=" + getConnection());
+		return "ConnectionDisposedEvent_" + joiner.toString();
 	}
 }
