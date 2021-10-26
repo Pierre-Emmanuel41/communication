@@ -54,7 +54,7 @@ public class DataReceivedEvent extends DataEvent {
 	public String toString() {
 		StringJoiner joiner = new StringJoiner(",", "{", "}");
 		joiner.add("connection=" + getConnection());
-		joiner.add("address=" + getAddress().toString());
+		joiner.add("address=" + getAddress());
 		joiner.add("length=" + getLength());
 		return String.format("%s_%s", getName(), joiner);
 	}
