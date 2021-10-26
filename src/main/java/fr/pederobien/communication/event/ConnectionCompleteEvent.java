@@ -19,6 +19,6 @@ public class ConnectionCompleteEvent extends ConnectionEvent {
 	public String toString() {
 		StringJoiner joiner = new StringJoiner(",", "{", "}");
 		joiner.add("connection=" + getConnection());
-		return "ConnectionCompleteEvent_" + joiner.toString();
+		return String.format("%s_%s", getName(), joiner);
 	}
 }

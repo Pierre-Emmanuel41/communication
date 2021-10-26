@@ -34,5 +34,4 @@ public class DataEvent extends ConnectionEvent {
 	public InetSocketAddress getAddress() {
 		return address;
 	}
-
 }

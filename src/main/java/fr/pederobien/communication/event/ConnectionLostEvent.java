@@ -19,6 +19,6 @@ public class ConnectionLostEvent extends ConnectionEvent {
 	public String toString() {
 		StringJoiner joiner = new StringJoiner(",", "{", "}");
 		joiner.add("connection=" + getConnection());
-		return "ConnectionLost_" + joiner.toString();
+		return String.format("%s_%s", getName(), joiner);
 	}
 }

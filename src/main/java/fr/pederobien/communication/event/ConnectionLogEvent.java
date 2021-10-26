@@ -57,6 +57,6 @@ public class ConnectionLogEvent extends ConnectionEvent {
 		joiner.add("level=" + getLevel());
 		joiner.add("message=" + getMessage());
 		joiner.add("Exception=" + getException());
-		return "LogEvent_" + joiner.toString();
+		return String.format("%s_%s", getName(), joiner);
 	}
 }

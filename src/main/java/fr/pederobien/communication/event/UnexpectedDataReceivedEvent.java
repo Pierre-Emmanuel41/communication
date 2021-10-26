@@ -56,6 +56,6 @@ public class UnexpectedDataReceivedEvent extends DataEvent {
 		joiner.add("connection=" + getConnection());
 		joiner.add("identifier=" + getIdentifier());
 		joiner.add("Length=" + getAnswer().length);
-		return "UnexpectedDataReceivedEvent_" + joiner.toString();
+		return String.format("%s_%s", getName(), joiner);
 	}
 }

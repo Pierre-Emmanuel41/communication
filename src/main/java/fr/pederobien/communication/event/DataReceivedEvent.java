@@ -56,6 +56,6 @@ public class DataReceivedEvent extends DataEvent {
 		joiner.add("connection=" + getConnection());
 		joiner.add("address=" + getAddress().toString());
 		joiner.add("length=" + getLength());
-		return "DataReceivedEvent_" + joiner.toString();
+		return String.format("%s_%s", getName(), joiner);
 	}
 }
