@@ -14,9 +14,9 @@ import java.util.function.Supplier;
 
 import fr.pederobien.communication.EConnectionState;
 import fr.pederobien.communication.event.ConnectionDisposedEvent;
-import fr.pederobien.communication.event.DataReceivedEvent;
 import fr.pederobien.communication.event.ConnectionLogEvent;
 import fr.pederobien.communication.event.ConnectionLogEvent.ELogLevel;
+import fr.pederobien.communication.event.DataReceivedEvent;
 import fr.pederobien.communication.interfaces.IAddressMessage;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
 import fr.pederobien.communication.interfaces.IUdpServerConnection;
@@ -193,6 +193,6 @@ public class UdpServerConnection implements IUdpServerConnection {
 	}
 
 	private void onLogEvent(ELogLevel level, Exception exception, String message) {
-		EventManager.callEvent(new ConnectionLogEvent(this, level, String.format("[UdpServer][%s:%s] %s", remoteAddress, remotePort, message), exception));
+		EventManager.callEvent(new ConnectionLogEvent(this, level, message, exception));
 	}
 }
