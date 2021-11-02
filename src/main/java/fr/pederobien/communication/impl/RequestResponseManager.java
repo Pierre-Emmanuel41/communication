@@ -10,6 +10,7 @@ import fr.pederobien.communication.ResponseCallbackArgs;
 import fr.pederobien.communication.event.UnexpectedDataReceivedEvent;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
 import fr.pederobien.communication.interfaces.ICallbackRequestMessage;
+import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IResponseMessage;
 import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.event.EventManager;
@@ -49,9 +50,9 @@ public class RequestResponseManager {
 	private Map<String, PendingRequestEntry> pendingRequest;
 	private IAnswersExtractor answersExtractors;
 	private AtomicBoolean disposed;
-	private TcpClientConnection connection;
+	private IConnection connection;
 
-	public RequestResponseManager(TcpClientConnection connection, String remoteAddress, IAnswersExtractor answersExtractor) {
+	public RequestResponseManager(IConnection connection, String remoteAddress, IAnswersExtractor answersExtractor) {
 		this.connection = connection;
 		this.answersExtractors = answersExtractor;
 
