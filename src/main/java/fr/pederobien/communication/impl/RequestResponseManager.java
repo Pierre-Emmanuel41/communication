@@ -200,7 +200,8 @@ public class RequestResponseManager {
 	}
 
 	private void startCallBack(CallbackManagement callback) {
-		callback.callback.accept(new ResponseCallbackArgs(callback.entry.getRequest(), callback.response, callback.timeout));
+		if (callback.callback != null)
+			callback.callback.accept(new ResponseCallbackArgs(callback.entry.getRequest(), callback.response, callback.timeout));
 	}
 
 	private void startUnexpectedDataReceived(Map.Entry<Integer, byte[]> entry) {

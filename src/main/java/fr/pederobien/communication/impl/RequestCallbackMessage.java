@@ -34,6 +34,16 @@ public class RequestCallbackMessage extends RequestMessage implements ICallbackR
 		this(bytes, uniqueIdentifier, callback, 1000);
 	}
 
+	/**
+	 * Create a request message to be send to a remote with the default timeout of 1000ms and without callback.
+	 * 
+	 * @param bytes            The byte array to send to the remote.
+	 * @param uniqueIdentifier The request identifier.
+	 */
+	public RequestCallbackMessage(byte[] bytes, int uniqueIdentifier) {
+		this(bytes, uniqueIdentifier, null);
+	}
+
 	@Override
 	public Consumer<ResponseCallbackArgs> getCallback() {
 		return callback;
