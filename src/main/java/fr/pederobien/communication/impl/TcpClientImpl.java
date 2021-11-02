@@ -38,7 +38,7 @@ public class TcpClientImpl extends TcpImpl implements ITcpConnection {
 	private SimpleTimer timer;
 	private TimerTask receiving, connection;
 
-	protected TcpClientImpl(String address, int port, IAnswersExtractor extractor) {
+	public TcpClientImpl(String address, int port, IAnswersExtractor extractor) {
 		super(Mode.CLIENT, address, extractor);
 		this.address = address;
 		this.port = port;
