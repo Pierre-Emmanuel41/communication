@@ -4,7 +4,7 @@ import java.net.InetSocketAddress;
 
 import fr.pederobien.communication.EConnectionState;
 
-public interface IConnection<T> {
+public interface IConnection {
 
 	/**
 	 * Returns the address to which the connection is connected.
@@ -54,12 +54,4 @@ public interface IConnection<T> {
 	 * @return True if the connection is disposed and cannot be used any more.
 	 */
 	boolean isDisposed();
-
-	/**
-	 * The implementation shall send the provided data **asynchronously**. That is to say that the method is not expecting to block
-	 * any time. Error sending data may be reported with the event LogEvent.
-	 * 
-	 * @param message the message to send to the remote.
-	 */
-	void send(T message);
 }

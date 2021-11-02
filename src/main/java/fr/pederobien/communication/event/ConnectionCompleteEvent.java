@@ -11,7 +11,7 @@ public class ConnectionCompleteEvent extends ConnectionEvent {
 	 * 
 	 * @param connection The connection that is now connection with its remote.
 	 */
-	public ConnectionCompleteEvent(IConnection<?> connection) {
+	public ConnectionCompleteEvent(IConnection connection) {
 		super(connection);
 	}
 

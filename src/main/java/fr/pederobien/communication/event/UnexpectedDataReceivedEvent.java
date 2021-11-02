@@ -16,7 +16,7 @@ public class UnexpectedDataReceivedEvent extends DataEvent {
 	 * @param buffer     The buffer that contains the bytes of a response received from the remote.
 	 * @param length     The length of the raw data received from the remote.
 	 */
-	public UnexpectedDataReceivedEvent(IConnection<?> connection, int identifier, byte[] answer) {
+	public UnexpectedDataReceivedEvent(IConnection connection, int identifier, byte[] answer) {
 		super(connection);
 		this.identifier = identifier;
 		this.answer = answer;
@@ -30,7 +30,7 @@ public class UnexpectedDataReceivedEvent extends DataEvent {
 	 * @param buffer     The buffer that contains the bytes of a response received from the remote.
 	 * @param length     The length of the raw data received from the remote.
 	 */
-	public UnexpectedDataReceivedEvent(IConnection<?> connection, InetSocketAddress address, int identifier, byte[] answer) {
+	public UnexpectedDataReceivedEvent(IConnection connection, InetSocketAddress address, int identifier, byte[] answer) {
 		super(connection, address);
 		this.identifier = identifier;
 		this.answer = answer;

@@ -12,7 +12,7 @@ public class DataEvent extends ConnectionEvent {
 	 * 
 	 * @param connection The connection that received data.
 	 */
-	public DataEvent(IConnection<?> connection) {
+	public DataEvent(IConnection connection) {
 		super(connection);
 		this.address = connection.getAddress();
 	}
@@ -23,7 +23,7 @@ public class DataEvent extends ConnectionEvent {
 	 * @param connection The connection that received data.
 	 * @param address    The address from which the data has been received.
 	 */
-	public DataEvent(IConnection<?> connection, InetSocketAddress address) {
+	public DataEvent(IConnection connection, InetSocketAddress address) {
 		super(connection);
 		this.address = address;
 	}

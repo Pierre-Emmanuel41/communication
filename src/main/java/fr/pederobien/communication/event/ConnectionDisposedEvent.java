@@ -11,7 +11,7 @@ public class ConnectionDisposedEvent extends ConnectionEvent {
 	 * 
 	 * @param connection The connection that is now disposed.
 	 */
-	public ConnectionDisposedEvent(IConnection<?> connection) {
+	public ConnectionDisposedEvent(IConnection connection) {
 		super(connection);
 	}
 

@@ -11,7 +11,7 @@ public class ConnectionLostEvent extends ConnectionEvent {
 	 * 
 	 * @param connection The connection which is no more connected with its remote.
 	 */
-	public ConnectionLostEvent(IConnection<?> connection) {
+	public ConnectionLostEvent(IConnection connection) {
 		super(connection);
 	}
 

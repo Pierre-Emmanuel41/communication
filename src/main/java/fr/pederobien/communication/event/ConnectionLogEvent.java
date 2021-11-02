@@ -22,7 +22,7 @@ public class ConnectionLogEvent extends ConnectionEvent {
 	 * @param message    The log message.
 	 * @param exception  The exception source of the log message.
 	 */
-	public ConnectionLogEvent(IConnection<?> connection, ELogLevel level, String message, Exception exception) {
+	public ConnectionLogEvent(IConnection connection, ELogLevel level, String message, Exception exception) {
 		super(connection);
 		this.level = level;
 		this.message = message;

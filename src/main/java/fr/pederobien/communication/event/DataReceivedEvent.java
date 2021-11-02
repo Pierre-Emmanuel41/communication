@@ -16,7 +16,7 @@ public class DataReceivedEvent extends DataEvent {
 	 * @param buffer     The raw buffer that contains the bytes received from the remote.
 	 * @param length     The length of the raw data received from the remote.
 	 */
-	public DataReceivedEvent(IConnection<?> connection, byte[] buffer, int length) {
+	public DataReceivedEvent(IConnection connection, byte[] buffer, int length) {
 		super(connection);
 		this.buffer = buffer;
 		this.length = length;
@@ -30,7 +30,7 @@ public class DataReceivedEvent extends DataEvent {
 	 * @param buffer     The raw buffer that contains the bytes received from the remote.
 	 * @param length     The length of the raw data received from the remote.
 	 */
-	public DataReceivedEvent(IConnection<?> connection, InetSocketAddress address, byte[] buffer, int length) {
+	public DataReceivedEvent(IConnection connection, InetSocketAddress address, byte[] buffer, int length) {
 		super(connection, address);
 		this.buffer = buffer;
 		this.length = length;
