@@ -2,6 +2,7 @@ package fr.pederobien.communication.interfaces;
 
 import java.util.Map;
 
+@FunctionalInterface
 public interface IAnswersExtractor {
 
 	/**

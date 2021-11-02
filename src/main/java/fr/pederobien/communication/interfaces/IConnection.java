@@ -24,15 +24,15 @@ public interface IConnection {
 	/**
 	 * @return True if the connection can send data to the remote or not. It is independent from the connection with the remote.
 	 */
-	boolean isEnabled();
+	boolean isEnable();
 
 	/**
 	 * Set if this connection can send data to the remote or not. If this connection is not allowed to send data to the remote, then
 	 * calling method {@link #send(IRequestMessage)} will not stores the message.
 	 * 
-	 * @param isEnabled True to allow this connection to send data to remote.
+	 * @param isEnable True to allow this connection to send data to remote.
 	 */
-	void setIsEnabled(boolean isEnabled);
+	void setEnable(boolean isEnable);
 
 	/**
 	 * The implementation shall try establishing the connection only when this method is called. The class is expected to retry

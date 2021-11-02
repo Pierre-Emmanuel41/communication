@@ -83,12 +83,12 @@ public class TcpClientConnection implements ITcpConnection {
 	}
 
 	@Override
-	public boolean isEnabled() {
+	public boolean isEnable() {
 		return isEnabled;
 	}
 
 	@Override
-	public void setIsEnabled(boolean isEnabled) {
+	public void setEnable(boolean isEnabled) {
 		this.isEnabled = isEnabled;
 	}
 

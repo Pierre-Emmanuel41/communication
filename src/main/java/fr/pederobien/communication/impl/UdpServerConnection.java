@@ -78,12 +78,12 @@ public class UdpServerConnection implements IUdpServerConnection {
 	}
 
 	@Override
-	public boolean isEnabled() {
+	public boolean isEnable() {
 		return true;
 	}
 
 	@Override
-	public void setIsEnabled(boolean isEnabled) {
+	public void setEnable(boolean isEnable) {
 	}
 
 	@Override

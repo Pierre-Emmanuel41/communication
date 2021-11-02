@@ -36,14 +36,14 @@ public class UdpClientConnection implements IUdpConnection {
 	private AtomicBoolean isDisposed;
 	private String remoteAddress;
 	private int remotePort;
-	private boolean isEnabled;
+	private boolean isEnable;
 	private int receptionBufferSize;
 
-	public UdpClientConnection(String remoteAddress, int remotePort, IAnswersExtractor answersExtractor, boolean isEnabled, int receptionBufferSize) {
+	public UdpClientConnection(String remoteAddress, int remotePort, IAnswersExtractor answersExtractor, boolean isEnable, int receptionBufferSize) {
 		this.remoteAddress = remoteAddress;
 		this.remotePort = remotePort;
 		this.answersExtractor = answersExtractor;
-		this.isEnabled = isEnabled;
+		this.isEnable = isEnable;
 		this.receptionBufferSize = receptionBufferSize;
 
 		isDisposed = new AtomicBoolean(false);
@@ -67,13 +67,13 @@ public class UdpClientConnection implements IUdpConnection {
 	}
 
 	@Override
-	public boolean isEnabled() {
-		return isEnabled;
+	public boolean isEnable() {
+		return isEnable;
 	}
 
 	@Override
-	public void setIsEnabled(boolean isEnabled) {
-		this.isEnabled = isEnabled;
+	public void setEnable(boolean isEnable) {
+		this.isEnable = isEnable;
 	}
 
 	@Override
@@ -133,7 +133,7 @@ public class UdpClientConnection implements IUdpConnection {
 	public void send(IRequestMessage message) {
 		checkDisposed();
 
-		if (isEnabled && getState() == EConnectionState.CONNECTED)
+		if (isEnable && getState() == EConnectionState.CONNECTED)
 			sendingQueue.add(message);
 	}
 
