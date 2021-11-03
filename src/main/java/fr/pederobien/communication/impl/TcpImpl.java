@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.TimerTask;
 
 import fr.pederobien.communication.EConnectionState;
 import fr.pederobien.communication.event.ConnectionLogEvent.ELogLevel;
@@ -17,15 +16,13 @@ import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.event.EventManager;
 
 public abstract class TcpImpl extends ConnectionOperation implements ITcpConnection {
-	private Mode mode;
 	private Socket socket;
 	private boolean isEnable;
 	private RequestResponseManager requestResponseManager;
 	private BlockingQueueTask<byte[]> extractingQueue;
 	private BlockingQueueTask<ICallbackRequestMessage> sendingQueue;
 
-	protected TcpImpl(Mode mode, String address, IAnswersExtractor extractor) {
-		this.mode = mode;
+	protected TcpImpl(String address, IAnswersExtractor extractor) {
 		isEnable = true;
 
 		requestResponseManager = new RequestResponseManager(this, address, extractor);
@@ -35,7 +32,7 @@ public abstract class TcpImpl extends ConnectionOperation implements ITcpConnect
 
 	@Override
 	public InetSocketAddress getAddress() {
-		return socket == null ? null : mode == Mode.CLIENT ? (InetSocketAddress) socket.getRemoteSocketAddress() : (InetSocketAddress) socket.getLocalSocketAddress();
+		return socket == null ? null : (InetSocketAddress) socket.getRemoteSocketAddress();
 	}
 
 	@Override
@@ -109,7 +106,7 @@ public abstract class TcpImpl extends ConnectionOperation implements ITcpConnect
 	}
 
 	/**
-	 * @return The socket used to send data through the nework.
+	 * @return The socket used to send data through the network.
 	 */
 	protected Socket getSocket() {
 		return socket;
@@ -122,16 +119,6 @@ public abstract class TcpImpl extends ConnectionOperation implements ITcpConnect
 	 */
 	protected void setSocket(Socket socket) {
 		this.socket = socket;
-	}
-
-	/**
-	 * Cancel the specified task if not null.
-	 * 
-	 * @param task The task to cancel.
-	 */
-	protected void cancel(TimerTask task) {
-		if (task != null)
-			task.cancel();
 	}
 
 	protected void closeSocket() {

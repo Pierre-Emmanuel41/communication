@@ -15,7 +15,7 @@ public class TcpClientServerImpl extends TcpImpl {
 	private TimerTask receiving;
 
 	public TcpClientServerImpl(Socket socket, IAnswersExtractor extractor) {
-		super(Mode.SERVER, socket.getLocalAddress().getHostAddress(), extractor);
+		super(socket.getLocalAddress().getHostAddress(), extractor);
 		setSocket(socket);
 		setState(EConnectionState.CONNECTED);
 

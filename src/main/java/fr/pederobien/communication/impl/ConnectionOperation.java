@@ -1,5 +1,6 @@
 package fr.pederobien.communication.impl;
 
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import fr.pederobien.communication.EConnectionState;
@@ -99,6 +100,16 @@ public abstract class ConnectionOperation implements IConnectionOperation {
 	 */
 	protected void onDataReceivedEvent(IConnection connection, byte[] buffer, int length) {
 		EventManager.callEvent(new DataReceivedEvent(connection, buffer, length));
+	}
+
+	/**
+	 * Cancel the specified task if not null.
+	 * 
+	 * @param task The task to cancel.
+	 */
+	protected void cancel(TimerTask task) {
+		if (task != null)
+			task.cancel();
 	}
 
 	protected enum Mode {
