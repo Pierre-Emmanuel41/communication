@@ -88,6 +88,10 @@ public class RequestResponseManager {
 	public void addRequest(ICallbackRequestMessage request) {
 		checkIsDisposed();
 
+		// Registering the request if and only if there is a callback
+		if (request.getCallback() == null)
+			return;
+
 		int requestOrder = 0;
 
 		synchronized (lock) {
@@ -201,8 +205,7 @@ public class RequestResponseManager {
 	}
 
 	private void startCallBack(CallbackManagement callback) {
-		if (callback.callback != null)
-			callback.callback.accept(new ResponseCallbackArgs(callback.entry.getRequest(), callback.response, callback.timeout));
+		callback.callback.accept(new ResponseCallbackArgs(callback.entry.getRequest(), callback.response, callback.timeout));
 	}
 
 	private void startUnexpectedDataReceived(Map.Entry<Integer, byte[]> entry) {
