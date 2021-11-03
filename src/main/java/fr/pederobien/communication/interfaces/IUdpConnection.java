@@ -8,6 +8,6 @@ public interface IUdpConnection extends IConnection {
 	 * 
 	 * @param message the message to send to the remote.
 	 */
-	void send(IRequestMessage message);
+	void send(IAddressMessage message);
 
 }

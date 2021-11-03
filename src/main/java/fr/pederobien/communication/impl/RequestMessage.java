@@ -11,8 +11,6 @@ public class RequestMessage implements IRequestMessage {
 	 * 
 	 * @param bytes            The byte array to send to the remote.
 	 * @param uniqueIdentifier The request identifier.
-	 * @param callback         The callback to run when a response has been received before the timeout.
-	 * @param timeout          The request timeout.
 	 */
 	public RequestMessage(byte[] bytes, int uniqueIdentifier) {
 		this.bytes = bytes;
