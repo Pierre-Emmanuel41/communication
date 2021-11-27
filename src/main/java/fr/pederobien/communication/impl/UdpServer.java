@@ -7,17 +7,28 @@ import java.util.function.Supplier;
 import fr.pederobien.communication.event.NewTcpClientEvent;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
 import fr.pederobien.communication.interfaces.IUdpConnection;
+import fr.pederobien.utils.event.EventManager;
+import fr.pederobien.utils.event.LogEvent;
 
 public class UdpServer {
+	private String name;
 	private int port;
 	private Supplier<IAnswersExtractor> extractor;
 	private Thread reception;
 	private IUdpConnection server;
 
-	public UdpServer(int port, Supplier<IAnswersExtractor> extractor) {
+	/**
+	 * Creates a not connected UDP server.
+	 * 
+	 * @param name      The server name.
+	 * @param port      The server port.
+	 * @param extractor The supplier use to handle requests received from the client.
+	 */
+	public UdpServer(String name, int port, Supplier<IAnswersExtractor> extractor) {
+		this.name = name;
 		this.port = port;
 		this.extractor = extractor;
-		reception = new Thread(() -> server.connect(), String.format("UdpServer_%s", port));
+		reception = new Thread(() -> server.connect(), String.format("[UdpServer] %s_*:%s", name, port));
 	}
 
 	/**
@@ -27,6 +38,7 @@ public class UdpServer {
 	public void connect() {
 		try {
 			server = new UdpServerImpl(new InetSocketAddress(port), extractor);
+			EventManager.callEvent(new LogEvent("Starting %s UDP server on *:%s", name, port));
 			reception.start();
 		} catch (IOException e) {
 			e.printStackTrace();

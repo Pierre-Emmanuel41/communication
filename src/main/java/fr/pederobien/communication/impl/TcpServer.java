@@ -7,17 +7,27 @@ import java.util.function.Supplier;
 import fr.pederobien.communication.event.NewTcpClientEvent;
 import fr.pederobien.communication.interfaces.IAnswersExtractor;
 import fr.pederobien.utils.event.EventManager;
+import fr.pederobien.utils.event.LogEvent;
 
 public class TcpServer {
+	private String name;
 	private int port;
 	private Supplier<IAnswersExtractor> extractor;
 	private Thread reception;
 	private ServerSocket server;
 
-	public TcpServer(int port, Supplier<IAnswersExtractor> extractor) {
+	/**
+	 * Creates a not connected UDP server.
+	 * 
+	 * @param name      The server name.
+	 * @param port      The server port.
+	 * @param extractor The supplier use to handle requests received from the client.
+	 */
+	public TcpServer(String name, int port, Supplier<IAnswersExtractor> extractor) {
+		this.name = name;
 		this.port = port;
 		this.extractor = extractor;
-		reception = new Thread(() -> waitForClient(), String.format("TcpServer_%s", port));
+		reception = new Thread(() -> waitForClient(), String.format("[TcpServer] %s_*:%s", name, port));
 	}
 
 	/**
@@ -27,6 +37,7 @@ public class TcpServer {
 	public void connect() {
 		try {
 			server = new ServerSocket(port);
+			EventManager.callEvent(new LogEvent("Starting %s TCP server on *:%s", name, port));
 			reception.start();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -38,6 +49,7 @@ public class TcpServer {
 	 */
 	public void disconnect() {
 		try {
+			EventManager.callEvent(new LogEvent("Stopping %s TCP Server", name));
 			server.close();
 		} catch (IOException e) {
 			e.printStackTrace();
