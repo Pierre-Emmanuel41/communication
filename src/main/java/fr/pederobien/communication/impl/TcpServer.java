@@ -49,7 +49,7 @@ public class TcpServer {
 	 */
 	public void disconnect() {
 		try {
-			EventManager.callEvent(new LogEvent("Stopping %s TCP Server", name));
+			EventManager.callEvent(new LogEvent("Stopping %s TCP Server on *:%s", name, port));
 			server.close();
 		} catch (IOException e) {
 			e.printStackTrace();
