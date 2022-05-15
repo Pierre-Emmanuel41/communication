@@ -66,4 +66,18 @@ public class TcpServer {
 			}
 		}
 	}
+
+	/**
+	 * @return The server's name.
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * @return The server's port number.
+	 */
+	public int getPort() {
+		return port;
+	}
 }

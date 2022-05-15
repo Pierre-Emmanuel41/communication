@@ -1,5 +1,7 @@
 package fr.pederobien.communication.event;
 
+import java.util.StringJoiner;
+
 import fr.pederobien.communication.impl.TcpServer;
 import fr.pederobien.communication.interfaces.ITcpConnection;
 
@@ -27,5 +29,13 @@ public class NewTcpClientEvent extends ConnectionEvent {
 	 */
 	public TcpServer getServer() {
 		return server;
+	}
+
+	@Override
+	public String toString() {
+		StringJoiner joiner = new StringJoiner(", ", "{", "}");
+		joiner.add(String.format("server=%s_*:%s", getServer().getName(), getServer().getPort()));
+		joiner.add("tcpConnection=" + getConnection());
+		return String.format("%s_%s", getName(), joiner);
 	}
 }
