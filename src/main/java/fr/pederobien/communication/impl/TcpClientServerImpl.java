@@ -1,5 +1,6 @@
 package fr.pederobien.communication.impl;
 
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.TimerTask;
 
@@ -14,8 +15,15 @@ public class TcpClientServerImpl extends TcpImpl {
 	private SimpleTimer timer;
 	private TimerTask receiving;
 
-	public TcpClientServerImpl(Socket socket, IAnswersExtractor extractor) {
-		super(socket.getLocalAddress().getHostAddress(), extractor);
+	/**
+	 * Creates a connection with a remote.
+	 * 
+	 * @param socket           The underlying socket created by a {@link ServerSocket} to send/receive data with the remote.
+	 * @param answersExtractor An object responsible to extract several answers from a bytes buffer.
+	 * @param ignoreTimeout    True in order to ignore remote answers whose the requests have thrown a timeout.
+	 */
+	public TcpClientServerImpl(Socket socket, IAnswersExtractor extractor, boolean ignoreTimeout) {
+		super(socket.getLocalAddress().getHostAddress(), extractor, ignoreTimeout);
 		setSocket(socket);
 		setState(EConnectionState.CONNECTED);
 

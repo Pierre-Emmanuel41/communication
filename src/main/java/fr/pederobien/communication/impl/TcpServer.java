@@ -15,18 +15,21 @@ public class TcpServer {
 	private Supplier<IAnswersExtractor> extractor;
 	private Thread reception;
 	private ServerSocket server;
+	private boolean ignoreTimeout;
 
 	/**
 	 * Creates a not connected UDP server.
 	 * 
-	 * @param name      The server name.
-	 * @param port      The server port.
-	 * @param extractor The supplier use to handle requests received from the client.
+	 * @param name          The server name.
+	 * @param port          The server port.
+	 * @param extractor     The supplier use to handle requests received from the client.
+	 * @param ignoreTimeout True in order to ignore remote answers whose the requests have thrown a timeout.
 	 */
-	public TcpServer(String name, int port, Supplier<IAnswersExtractor> extractor) {
+	public TcpServer(String name, int port, Supplier<IAnswersExtractor> extractor, boolean ignoreTimeout) {
 		this.name = name;
 		this.port = port;
 		this.extractor = extractor;
+		this.ignoreTimeout = ignoreTimeout;
 		reception = new Thread(() -> waitForClient(), String.format("[TcpServer] %s_*:%s", name, port));
 	}
 
@@ -60,7 +63,7 @@ public class TcpServer {
 	private void waitForClient() {
 		while (!server.isClosed()) {
 			try {
-				EventManager.callEvent(new NewTcpClientEvent(new TcpClientServerImpl(server.accept(), extractor.get()), this));
+				EventManager.callEvent(new NewTcpClientEvent(new TcpClientServerImpl(server.accept(), extractor.get(), ignoreTimeout), this));
 			} catch (IOException e) {
 				break;
 			}

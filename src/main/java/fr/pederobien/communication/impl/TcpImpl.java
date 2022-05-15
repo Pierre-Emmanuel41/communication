@@ -22,10 +22,17 @@ public abstract class TcpImpl extends ConnectionOperation implements ITcpConnect
 	private BlockingQueueTask<byte[]> extractingQueue;
 	private BlockingQueueTask<ICallbackRequestMessage> sendingQueue;
 
-	protected TcpImpl(String address, IAnswersExtractor extractor) {
+	/**
+	 * Creates a connection with a remote.
+	 * 
+	 * @param address          The address of the remote.
+	 * @param answersExtractor An object responsible to extract several answers from a bytes buffer.
+	 * @param ignoreTimeout    True in order to ignore remote answers whose the requests have thrown a timeout.
+	 */
+	protected TcpImpl(String address, IAnswersExtractor extractor, boolean ignoreTimeout) {
 		isEnable = true;
 
-		requestResponseManager = new RequestResponseManager(this, address, extractor);
+		requestResponseManager = new RequestResponseManager(this, address, extractor, ignoreTimeout);
 		sendingQueue = new BlockingQueueTask<ICallbackRequestMessage>("Sending_".concat(address), message -> startSending(message));
 		extractingQueue = new BlockingQueueTask<byte[]>("Extracting_".concat(address), answer -> startExtracting(answer));
 	}

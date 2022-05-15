@@ -1,7 +1,9 @@
 package fr.pederobien.communication.impl;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -48,11 +50,21 @@ public class RequestResponseManager {
 	private BlockingQueueTask<Map.Entry<Integer, byte[]>> unexpectedDataReceivedQueue;
 	private Object lock;
 	private Map<String, PendingRequestEntry> pendingRequest;
+	private Set<String> timeoutKeys;
 	private IAnswersExtractor answersExtractors;
 	private AtomicBoolean disposed;
 	private IConnection connection;
+	private boolean ignoreTimeout;
 
-	public RequestResponseManager(IConnection connection, String remoteAddress, IAnswersExtractor answersExtractor) {
+	/**
+	 * Creates a manager responsible to store alive requests waiting for an answer.
+	 * 
+	 * @param connection       The connection that send and receive data from the remote.
+	 * @param remoteAddress    the address of the remote.
+	 * @param answersExtractor An object responsible to extract several answers from a bytes buffer.
+	 * @param ignoreTimeout    True in order to ignore remote answers whose the requests have thrown a timeout.
+	 */
+	public RequestResponseManager(IConnection connection, String remoteAddress, IAnswersExtractor answersExtractor, boolean ignoreTimeout) {
 		this.connection = connection;
 		this.answersExtractors = answersExtractor;
 
@@ -60,6 +72,7 @@ public class RequestResponseManager {
 
 		disposed = new AtomicBoolean(false);
 		pendingRequest = new HashMap<String, PendingRequestEntry>();
+		timeoutKeys = new HashSet<String>();
 
 		callbackQueue = new BlockingQueueTask<>("Callback_".concat(remoteAddress), callback -> startCallBack(callback));
 		callbackQueue.start();
@@ -121,8 +134,10 @@ public class RequestResponseManager {
 				PendingRequestEntry entry = pendingRequest.get(key);
 				if (entry != null)
 					handleSingleResponse(entry, key, new ResponseMessage(identifier.getKey(), identifier.getValue()));
-				else
-					notExpected.put(identifier.getKey(), identifier.getValue());
+				else {
+					if (!timeoutKeys.remove(key) || timeoutKeys.remove(key) && !ignoreTimeout)
+						notExpected.put(identifier.getKey(), identifier.getValue());
+				}
 			}
 
 			if (!notExpected.isEmpty())
@@ -155,6 +170,7 @@ public class RequestResponseManager {
 		synchronized (lock) {
 			String key = generateKey(target.getRequest().getUniqueIdentifier(), target.getRequestOrder());
 			entry = pendingRequest.get(key);
+			timeoutKeys.add(key);
 			if (entry != null) {
 				callback = entry.getCallback();
 				pendingRequest.remove(key);

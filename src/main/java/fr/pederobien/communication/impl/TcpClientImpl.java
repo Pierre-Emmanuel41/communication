@@ -38,8 +38,16 @@ public class TcpClientImpl extends TcpImpl implements ITcpConnection {
 	private SimpleTimer timer;
 	private TimerTask receiving, connection;
 
-	public TcpClientImpl(String address, int port, IAnswersExtractor extractor) {
-		super(address, extractor);
+	/**
+	 * Creates a connection with a remote as a client.
+	 * 
+	 * @param address          The address of the remote.
+	 * @param port             The remote's port.
+	 * @param answersExtractor An object responsible to extract several answers from a bytes buffer.
+	 * @param ignoreTimeout    True in order to ignore remote answers whose the requests have thrown a timeout.
+	 */
+	public TcpClientImpl(String address, int port, IAnswersExtractor extractor, boolean ignoreTimeout) {
+		super(address, extractor, ignoreTimeout);
 		this.address = address;
 		this.port = port;
 
