@@ -96,10 +96,9 @@ public abstract class ConnectionOperation implements IConnectionOperation {
 	 * 
 	 * @param connection The connection that received data.
 	 * @param buffer     The raw buffer that contains the bytes received from the remote.
-	 * @param length     The length of the raw data received from the remote.
 	 */
-	protected void onDataReceivedEvent(IConnection connection, byte[] buffer, int length) {
-		EventManager.callEvent(new DataReceivedEvent(connection, buffer, length));
+	protected void onDataReceivedEvent(IConnection connection, byte[] buffer) {
+		EventManager.callEvent(new DataReceivedEvent(connection, buffer));
 	}
 
 	/**

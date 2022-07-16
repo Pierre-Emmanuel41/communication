@@ -5,21 +5,19 @@ import java.util.StringJoiner;
 
 import fr.pederobien.communication.interfaces.IConnection;
 
-public class UnexpectedDataReceivedEvent extends DataEvent {
+public class UnexpectedDataReceivedEvent extends DataReceivedEvent {
 	private int identifier;
-	private byte[] answer;
 
 	/**
 	 * Creates a data received event.
 	 * 
 	 * @param connection The connection that received data.
 	 * @param buffer     The buffer that contains the bytes of a response received from the remote.
-	 * @param length     The length of the raw data received from the remote.
+	 * @param identifier The identifier of the unexpected message.
 	 */
-	public UnexpectedDataReceivedEvent(IConnection connection, int identifier, byte[] answer) {
-		super(connection);
+	public UnexpectedDataReceivedEvent(IConnection connection, byte[] buffer, int identifier) {
+		super(connection, buffer);
 		this.identifier = identifier;
-		this.answer = answer;
 	}
 
 	/**
@@ -30,10 +28,9 @@ public class UnexpectedDataReceivedEvent extends DataEvent {
 	 * @param buffer     The buffer that contains the bytes of a response received from the remote.
 	 * @param length     The length of the raw data received from the remote.
 	 */
-	public UnexpectedDataReceivedEvent(IConnection connection, InetSocketAddress address, int identifier, byte[] answer) {
-		super(connection, address);
+	public UnexpectedDataReceivedEvent(IConnection connection, InetSocketAddress address, byte[] buffer, int identifier) {
+		super(connection, address, buffer);
 		this.identifier = identifier;
-		this.answer = answer;
 	}
 
 	/**
@@ -43,19 +40,12 @@ public class UnexpectedDataReceivedEvent extends DataEvent {
 		return identifier;
 	}
 
-	/**
-	 * @return The byte array that correspond to a not expected data.
-	 */
-	public byte[] getAnswer() {
-		return answer;
-	}
-
 	@Override
 	public String toString() {
 		StringJoiner joiner = new StringJoiner(",", "{", "}");
 		joiner.add("connection=" + getConnection());
 		joiner.add("identifier=" + getIdentifier());
-		joiner.add("Length=" + getAnswer().length);
+		joiner.add("Length=" + getBuffer().length);
 		return String.format("%s_%s", getName(), joiner);
 	}
 }

@@ -78,6 +78,6 @@ public class UdpServerImpl extends UdpImpl {
 
 		Map<Integer, byte[]> answers = answerExtractor.extract(packet.getData());
 		for (Map.Entry<Integer, byte[]> entry : answers.entrySet())
-			getUnexpectedQueue().add(new DataReceivedEvent(this, (InetSocketAddress) packet.getSocketAddress(), entry.getValue(), entry.getValue().length));
+			getUnexpectedQueue().add(new DataReceivedEvent(this, (InetSocketAddress) packet.getSocketAddress(), entry.getValue()));
 	}
 }

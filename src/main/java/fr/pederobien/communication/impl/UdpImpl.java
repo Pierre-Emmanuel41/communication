@@ -133,7 +133,7 @@ public abstract class UdpImpl extends ConnectionOperation implements IUdpConnect
 	protected void startExtracting(DatagramPacket packet) {
 		Map<Integer, byte[]> answers = extractor.extract(packet.getData());
 		for (Map.Entry<Integer, byte[]> entry : answers.entrySet())
-			unexpectedQueue.add(new DataReceivedEvent(this, (InetSocketAddress) packet.getSocketAddress(), entry.getValue(), entry.getValue().length));
+			unexpectedQueue.add(new DataReceivedEvent(this, (InetSocketAddress) packet.getSocketAddress(), entry.getValue()));
 	}
 
 	private void startSending(IAddressMessage message) {

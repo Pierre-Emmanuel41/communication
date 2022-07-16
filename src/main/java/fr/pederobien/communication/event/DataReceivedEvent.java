@@ -7,19 +7,16 @@ import fr.pederobien.communication.interfaces.IConnection;
 
 public class DataReceivedEvent extends DataEvent {
 	private byte[] buffer;
-	private int length;
 
 	/**
 	 * Creates a data received event.
 	 * 
 	 * @param connection The connection that received data.
 	 * @param buffer     The raw buffer that contains the bytes received from the remote.
-	 * @param length     The length of the raw data received from the remote.
 	 */
-	public DataReceivedEvent(IConnection connection, byte[] buffer, int length) {
+	public DataReceivedEvent(IConnection connection, byte[] buffer) {
 		super(connection);
 		this.buffer = buffer;
-		this.length = length;
 	}
 
 	/**
@@ -28,12 +25,10 @@ public class DataReceivedEvent extends DataEvent {
 	 * @param connection The connection that received data.
 	 * @param address    The address from which the data has been received.
 	 * @param buffer     The raw buffer that contains the bytes received from the remote.
-	 * @param length     The length of the raw data received from the remote.
 	 */
-	public DataReceivedEvent(IConnection connection, InetSocketAddress address, byte[] buffer, int length) {
+	public DataReceivedEvent(IConnection connection, InetSocketAddress address, byte[] buffer) {
 		super(connection, address);
 		this.buffer = buffer;
-		this.length = length;
 	}
 
 	/**
@@ -43,19 +38,12 @@ public class DataReceivedEvent extends DataEvent {
 		return buffer;
 	}
 
-	/**
-	 * @return The data length in the buffer.
-	 */
-	public int getLength() {
-		return length;
-	}
-
 	@Override
 	public String toString() {
 		StringJoiner joiner = new StringJoiner(",", "{", "}");
 		joiner.add("connection=" + getConnection());
 		joiner.add("address=" + getAddress());
-		joiner.add("length=" + getLength());
+		joiner.add("length=" + getBuffer().length);
 		return String.format("%s_%s", getName(), joiner);
 	}
 }

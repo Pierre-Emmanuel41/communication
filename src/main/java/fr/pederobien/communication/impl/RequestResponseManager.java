@@ -225,7 +225,7 @@ public class RequestResponseManager {
 	}
 
 	private void startUnexpectedDataReceived(Map.Entry<Integer, byte[]> entry) {
-		EventManager.callEvent(new UnexpectedDataReceivedEvent(connection, entry.getKey(), entry.getValue()));
+		EventManager.callEvent(new UnexpectedDataReceivedEvent(connection, entry.getValue(), entry.getKey()));
 	}
 
 	private boolean isDisposed() {

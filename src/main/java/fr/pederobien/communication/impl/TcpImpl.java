@@ -143,7 +143,7 @@ public abstract class TcpImpl extends ConnectionOperation implements ITcpConnect
 
 	private void startExtracting(byte[] answer) {
 		// publish message
-		onDataReceivedEvent(this, answer, answer.length);
+		onDataReceivedEvent(this, answer);
 
 		try {
 			requestResponseManager.handleResponse(answer);
