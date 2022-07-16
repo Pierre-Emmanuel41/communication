@@ -49,6 +49,7 @@ public class UdpServer {
 	 * Interrupt the internal thread waiting for clients and close the server socket.
 	 */
 	public void disconnect() {
+		EventManager.callEvent(new LogEvent("Stopping %s UDP Server on *:%s", name, port));
 		server.dispose();
 		reception.interrupt();
 	}
