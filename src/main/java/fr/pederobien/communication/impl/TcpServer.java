@@ -15,7 +15,7 @@ public class TcpServer {
 	private Supplier<IAnswersExtractor> extractor;
 	private Thread reception;
 	private ServerSocket server;
-	private boolean ignoreTimeout;
+	private boolean ignoreTimeout, isConnected;
 
 	/**
 	 * Creates a not connected UDP server.
@@ -42,6 +42,7 @@ public class TcpServer {
 			server = new ServerSocket(port);
 			EventManager.callEvent(new LogEvent("Starting %s TCP server on *:%s", name, port));
 			reception.start();
+			isConnected = true;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -54,10 +55,18 @@ public class TcpServer {
 		try {
 			EventManager.callEvent(new LogEvent("Stopping %s TCP Server on *:%s", name, port));
 			server.close();
+			isConnected = false;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		reception.interrupt();
+	}
+
+	/**
+	 * @return True if this server is waiting for client, false otherwise.
+	 */
+	public boolean isConnected() {
+		return isConnected;
 	}
 
 	private void waitForClient() {

@@ -16,6 +16,7 @@ public class UdpServer {
 	private Supplier<IAnswersExtractor> extractor;
 	private Thread reception;
 	private IUdpConnection server;
+	private boolean isConnected;
 
 	/**
 	 * Creates a not connected UDP server.
@@ -40,6 +41,7 @@ public class UdpServer {
 			server = new UdpServerImpl(new InetSocketAddress(port), extractor);
 			EventManager.callEvent(new LogEvent("Starting %s UDP server on *:%s", name, port));
 			reception.start();
+			isConnected = true;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -52,6 +54,7 @@ public class UdpServer {
 		EventManager.callEvent(new LogEvent("Stopping %s UDP Server on *:%s", name, port));
 		server.dispose();
 		reception.interrupt();
+		isConnected = false;
 	}
 
 	/**
@@ -59,5 +62,12 @@ public class UdpServer {
 	 */
 	public IUdpConnection getConnection() {
 		return server;
+	}
+
+	/**
+	 * @return True if the server is waiting for datagram packet, false otherwose.
+	 */
+	public boolean isConnected() {
+		return isConnected;
 	}
 }
