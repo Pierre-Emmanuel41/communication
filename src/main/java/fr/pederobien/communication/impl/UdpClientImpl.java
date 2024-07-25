@@ -1,27 +1,20 @@
 package fr.pederobien.communication.impl;
 
-import java.net.DatagramSocket;
-import java.net.SocketException;
-import java.util.TimerTask;
-
-import fr.pederobien.communication.EConnectionState;
-import fr.pederobien.communication.event.ConnectionCompleteEvent;
-import fr.pederobien.communication.event.ConnectionDisposedEvent;
-import fr.pederobien.communication.event.ConnectionLogEvent.ELogLevel;
-import fr.pederobien.communication.interfaces.IAnswersExtractor;
-import fr.pederobien.utils.SimpleTimer;
-import fr.pederobien.utils.event.EventManager;
-
 public class UdpClientImpl extends UdpImpl {
+	/*
 	private SimpleTimer timer;
 	private TimerTask receiving;
+	*/
 
-	public UdpClientImpl(String address, int port, IAnswersExtractor extractor) {
+	public UdpClientImpl() {
+		/*
 		super(Mode.CLIENT, address, port, extractor);
 		timer = new SimpleTimer(String.format("UdpClientTimer_%s", address), true);
 		setState(EConnectionState.DISCONNECTED);
+		*/
 	}
 
+	/*
 	@Override
 	public void connect() {
 		checkDisposed();
@@ -98,4 +91,5 @@ public class UdpClientImpl extends UdpImpl {
 
 		EventManager.callEvent(new ConnectionCompleteEvent(this));
 	}
+	*/
 }

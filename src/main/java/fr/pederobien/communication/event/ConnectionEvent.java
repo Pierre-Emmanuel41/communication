@@ -1,9 +1,8 @@
 package fr.pederobien.communication.event;
 
 import fr.pederobien.communication.interfaces.IConnection;
-import fr.pederobien.utils.event.Event;
 
-public class ConnectionEvent extends Event {
+public class ConnectionEvent extends CommunicationEvent {
 	private IConnection connection;
 
 	/**
