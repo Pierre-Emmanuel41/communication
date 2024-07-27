@@ -25,11 +25,6 @@ public class CustomClient extends Client {
 	}
 
 	@Override
-	protected void disconnectImpl() {
-		implementation.disconnectImpl();
-	}
-
-	@Override
 	protected IConnection onConnectionComplete(IClientConfig config) {
 		return implementation.onConnectionComplete(config);
 	}

@@ -3,6 +3,7 @@ package fr.pederobien.communication.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.pederobien.communication.event.ConnectionUnstableEvent;
 import fr.pederobien.communication.event.NewClientEvent;
 import fr.pederobien.communication.event.ServerUnstableEvent;
 import fr.pederobien.communication.interfaces.IConnection;
@@ -11,7 +12,9 @@ import fr.pederobien.communication.interfaces.IServerConfig;
 import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
+import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
+import fr.pederobien.utils.event.IEventListener;
 import fr.pederobien.utils.event.LogEvent;
 
 public abstract class Server implements IServer {
@@ -22,6 +25,7 @@ public abstract class Server implements IServer {
 	private BlockingQueueTask<Object> clientQueue;
 	private List<IConnection> connections;
 	private IDisposable disposable;
+	private ConnectionListener listener;
 	private int newClientExceptionCounter;
 	
 	/**
@@ -35,8 +39,10 @@ public abstract class Server implements IServer {
 		clientQueue = new BlockingQueueTask<Object>(String.format("%s[WaitForClient]", toString()), object -> waitForClient(object));
 		connections = new ArrayList<IConnection>();
 		disposable = new Disposable();
+		listener = new ConnectionListener();
 		
 		newClientExceptionCounter = 0;
+		
 	}
 
 	@Override
@@ -50,6 +56,7 @@ public abstract class Server implements IServer {
 			
 			isOpened = true;
 
+			listener.start();
 			clientQueue.add(new Object());
 			clientQueue.start();
 
@@ -65,6 +72,8 @@ public abstract class Server implements IServer {
 
 		try {
 			onLogEvent("Closing server");
+
+			listener.stop();
 
 			connections.forEach(connection -> connection.dispose());
 
@@ -130,11 +139,10 @@ public abstract class Server implements IServer {
 
 			if (!isOpened())
 				return;
-
+			
 			connection.initialise();
 			
-			// Adding connections to a list in order to close the remaining opened connection when the server
-			// is closed.
+			// Adding connections to a list in order to close the remaining opened connection when the server is closed.
 			connections.add(connection);
 			
 			EventManager.callEvent(new NewClientEvent(connection, this));
@@ -150,6 +158,30 @@ public abstract class Server implements IServer {
 			// Wait for another client if the server is opened.
 			if (isOpened())
 				clientQueue.add(object);
+		}
+	}
+	
+	private class ConnectionListener implements IEventListener {
+		
+		/**
+		 * Start monitoring the underlying connection.
+		 */
+		public void start() {
+			EventManager.registerListener(this);
+		}
+		
+		/**
+		 * Stop monitoring the underlying connection.
+		 */
+		public void stop() {
+			EventManager.unregisterListener(this);
+		}
+		
+		@EventHandler
+		private void onConnectionUnstable(ConnectionUnstableEvent event) {
+			for (IConnection connection : connections)
+				if (connection == event.getConnection())
+					connection.dispose();
 		}
 	}
 }

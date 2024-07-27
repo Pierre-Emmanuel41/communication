@@ -48,7 +48,7 @@ public abstract class Client implements IClient {
 		disposable.checkDisposed();
 
 		if (state == EState.CONNECTION_LOST || state == EState.DISCONNECTED) {
-			onLogEvent("Starting connection to the remote");
+			onLogEvent("Connecting to the remote");
 
 			state = EState.CONNECTING;			
 			
@@ -63,13 +63,11 @@ public abstract class Client implements IClient {
 		
 		if (state != EState.DISCONNECTING && state != EState.DISCONNECTED) {
 			state = EState.DISCONNECTING;
-			onLogEvent("Starting disconnection with the remote");
+			onLogEvent("Disconnecting from the remote");
 			
 			getConnection().setEnabled(false);
 			getConnection().dispose();
 			
-			// Connection specific implementation
-			disconnectImpl();
 			state = EState.DISCONNECTED;
 
 			onLogEvent("Disconnected from the remote");
@@ -145,11 +143,6 @@ public abstract class Client implements IClient {
 	protected abstract void connectImpl(String address, int port, int connectionTimeout) throws Exception;
 	
 	/**
-	 * Client implementation specific to disconnect from the remote.
-	 */
-	protected abstract void disconnectImpl();
-	
-	/**
 	 * A connected client does not mean it should open a connection with the remote.
 	 * If while waiting for connection with the remote, the disconnect method is called, then the
 	 * connection process must aborted.
@@ -191,7 +184,7 @@ public abstract class Client implements IClient {
 			
 			listener.start();
 			
-			onLogEvent("Connection established with the remote");
+			onLogEvent("Connected to the remote");
 			
 			// Notifying observers that the client is connected
 			EventManager.callEvent(new ConnectionCompleteEvent(getConnection()));
@@ -245,7 +238,7 @@ public abstract class Client implements IClient {
 		private void startReconnection(IConnection connection) {
 			if (connection == getConnection())
 			{
-				connection.dispose();
+				disconnect();
 				stop();
 				
 				if (config.isAutomaticReconnection()) {

@@ -3,6 +3,7 @@ package fr.pederobien.communication.impl;
 import fr.pederobien.communication.impl.layer.SimpleLayer;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.ILayer;
+import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
 
 public class ClientConfigBuilder {
 	private String address;
@@ -13,6 +14,7 @@ public class ClientConfigBuilder {
 	private int receivingBufferSize;
 	private boolean allowUnexpectedRequest;
 	private ILayer layer;
+	private IRequestReceivedHandler handler;
 	
 	/**
 	 * Creates a builder in order to configure a client.
@@ -30,6 +32,7 @@ public class ClientConfigBuilder {
 		receivingBufferSize = 1024;
 		allowUnexpectedRequest = false;
 		layer = new SimpleLayer();
+		handler = new SimpleRequestReceivedHandler();
 	}
 	
 	/**
@@ -160,13 +163,32 @@ public class ClientConfigBuilder {
 	}
 	
 	/**
+	 * Set the handler to execute when an unexpected request has been received from the remote.
+	 * 
+	 * @param handler The handler to execute.
+	 * 
+	 * @return This builder.
+	 */
+	public ClientConfigBuilder setRequestReceivedHandler(IRequestReceivedHandler handler) {
+		this.handler = handler;
+		return this;
+	}
+	
+	/**
+	 * @return The handler to execute when an unexpected request has been received from the remote.
+	 */
+	private IRequestReceivedHandler getRequestReceivedHandler() {
+		return handler;
+	}
+	
+	/**
 	 * @return The configuration to use for a client.
 	 */
 	public IClientConfig build() {
 		return new ClientConfig(this);
 	}
 	
-	private class ClientConfig extends CommonConfig implements IClientConfig {
+	private class ClientConfig implements IClientConfig {
 		private ClientConfigBuilder builder;
 		
 		/**
@@ -175,8 +197,27 @@ public class ClientConfigBuilder {
 		 * @param builder The builder that contains all the client configuration parameters.
 		 */
 		public ClientConfig(ClientConfigBuilder builder) {
-			super(builder.getReceivingBufferSize(), builder.isAllowUnexpectedRequest(), builder.getLayer());
 			this.builder = builder;
+		}
+
+		@Override
+		public int getReceivingBufferSize() {
+			return builder.getReceivingBufferSize();
+		}
+
+		@Override
+		public boolean isAllowUnexpectedRequest() {
+			return builder.isAllowUnexpectedRequest();
+		}
+
+		@Override
+		public ILayer getLayer() {
+			return builder.getLayer();
+		}
+
+		@Override
+		public IRequestReceivedHandler getRequestReceivedHandler() {
+			return builder.getRequestReceivedHandler();
 		}
 
 		@Override

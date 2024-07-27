@@ -1,6 +1,5 @@
 package fr.pederobien.communication.impl;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -25,20 +24,6 @@ public class TcpClientImpl implements IClientImpl {
 		Socket socket = new Socket();
 		socket.connect(new InetSocketAddress(InetAddress.getByName(address), port), connectionTimeout);
 		this.socket = socket;
-	}
-
-	@Override
-	public void disconnectImpl() {
-		try {
-			if (socket == null)
-				return;
-
-			socket.shutdownInput();
-			socket.shutdownOutput();
-			socket.close();
-		} catch (IOException e) {
-			// Do nothing
-		}
 	}
 
 	@Override

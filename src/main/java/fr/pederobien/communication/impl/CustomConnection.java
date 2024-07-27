@@ -28,4 +28,9 @@ public class CustomConnection extends Connection {
 	protected byte[] receiveImpl(int receivingBufferSize) throws Exception {
 		return implementation.receiveImpl(receivingBufferSize);
 	}
+	
+	@Override
+	protected void disposeImpl() {
+		implementation.disposeImpl();
+	}
 }

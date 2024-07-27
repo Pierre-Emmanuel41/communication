@@ -17,4 +17,9 @@ public interface IConnectionImpl {
 	 * @param receivingBufferSize The size of the bytes array used to receive data from the remote.
 	 */
 	byte[] receiveImpl(int receivingBufferSize) throws Exception;
+	
+	/**
+	 * Close definitively the connection with the remote.
+	 */
+	void disposeImpl();
 }

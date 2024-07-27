@@ -14,11 +14,6 @@ public interface IClientImpl {
 	void connectImpl(String address, int port, int connectionTimeout) throws Exception;
 
 	/**
-	 * Client implementation specific to disconnect from the remote.
-	 */
-	void disconnectImpl();
-
-	/**
 	 * A connected client does not mean it should open a connection with the remote.
 	 * If while waiting for connection with the remote, the disconnect method is called, then the
 	 * connection process must aborted.

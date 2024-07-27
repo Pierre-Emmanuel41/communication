@@ -2,6 +2,7 @@ package fr.pederobien.communication.impl;
 
 import fr.pederobien.communication.impl.layer.SimpleLayer;
 import fr.pederobien.communication.interfaces.ILayer;
+import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
 import fr.pederobien.communication.interfaces.IServerConfig;
 
 public class ServerConfigBuilder {
@@ -10,6 +11,7 @@ public class ServerConfigBuilder {
 	private int receivingBufferSize;
 	private boolean allowUnexpectedRequest;
 	private ILayer layer;
+	private IRequestReceivedHandler handler;
 	
 	/**
 	 * Creates a builder in order to a configuration a server.
@@ -24,6 +26,7 @@ public class ServerConfigBuilder {
 		receivingBufferSize = 1024;
 		allowUnexpectedRequest = true;
 		layer = new SimpleLayer();
+		handler = new SimpleRequestReceivedHandler();
 	}
 	
 	/**
@@ -98,18 +101,56 @@ public class ServerConfigBuilder {
 	}
 	
 	/**
+	 * Set the handler to execute when an unexpected request has been received from the remote.
+	 * 
+	 * @param handler The handler to execute.
+	 * 
+	 * @return This builder.
+	 */
+	public ServerConfigBuilder setRequestReceivedHandler(IRequestReceivedHandler handler) {
+		this.handler = handler;
+		return this;
+	}
+	
+	/**
+	 * @return The handler to execute when an unexpected request has been received from the remote.
+	 */
+	private IRequestReceivedHandler getRequestReceivedHandler() {
+		return handler;
+	}
+	
+	/**
 	 * @return The configuration to use for a server.
 	 */
 	public IServerConfig build() {
 		return new ServerConfig(this);
 	}
 	
-	private class ServerConfig extends CommonConfig implements IServerConfig {
+	private class ServerConfig implements IServerConfig {
 		private ServerConfigBuilder builder;
 		
 		public ServerConfig(ServerConfigBuilder builder) {
-			super(builder.getReceivingBufferSize(), builder.isAllowUnexpectedRequest(), builder.getLayer());
 			this.builder = builder;
+		}
+
+		@Override
+		public int getReceivingBufferSize() {
+			return builder.getReceivingBufferSize();
+		}
+
+		@Override
+		public boolean isAllowUnexpectedRequest() {
+			return builder.isAllowUnexpectedRequest();
+		}
+
+		@Override
+		public ILayer getLayer() {
+			return builder.getLayer();
+		}
+
+		@Override
+		public IRequestReceivedHandler getRequestReceivedHandler() {
+			return builder.getRequestReceivedHandler();
 		}
 
 		@Override

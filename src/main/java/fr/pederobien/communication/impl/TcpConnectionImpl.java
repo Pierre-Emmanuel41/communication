@@ -1,5 +1,6 @@
 package fr.pederobien.communication.impl;
 
+import java.io.IOException;
 import java.net.Socket;
 
 import fr.pederobien.communication.interfaces.IConnectionImpl;
@@ -29,5 +30,19 @@ public class TcpConnectionImpl implements IConnectionImpl {
 		int read = socket.getInputStream().read(buffer);
 		
 		return read == -1 ? null : ByteWrapper.wrap(buffer).extract(0, read);
+	}
+	
+	@Override
+	public void disposeImpl() {
+		if (socket == null)
+			return;
+
+		try {
+			socket.shutdownInput();
+			socket.shutdownOutput();
+			socket.close();
+		} catch (IOException e) {
+			// Do nothing
+		}
 	}
 }

@@ -16,4 +16,9 @@ public interface ICommonConfig {
 	 * @return The layer responsible to encode/decode data.
 	 */
 	ILayer getLayer();
+	
+	/**
+	 * @return The handler to execute when an unexpected request has been received from the remote.
+	 */
+	IRequestReceivedHandler getRequestReceivedHandler();
 }

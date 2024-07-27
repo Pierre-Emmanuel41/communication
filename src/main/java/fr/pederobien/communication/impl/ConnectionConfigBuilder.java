@@ -3,6 +3,7 @@ package fr.pederobien.communication.impl;
 import fr.pederobien.communication.interfaces.ICommonConfig;
 import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.ILayer;
+import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
 
 public class ConnectionConfigBuilder {
 	private String address;
@@ -80,6 +81,11 @@ public class ConnectionConfigBuilder {
 		@Override
 		public ILayer getLayer() {
 			return builder.getConfig().getLayer();
+		}
+		
+		@Override
+		public IRequestReceivedHandler getRequestReceivedHandler() {
+			return builder.getConfig().getRequestReceivedHandler();
 		}
 	}
 }
