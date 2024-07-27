@@ -1,5 +1,7 @@
 package fr.pederobien.communication.impl;
 
+import java.util.function.Supplier;
+
 import fr.pederobien.communication.impl.layer.SimpleLayer;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.ILayer;
@@ -14,7 +16,7 @@ public class ClientConfigBuilder {
 	private int receivingBufferSize;
 	private boolean allowUnexpectedRequest;
 	private ILayer layer;
-	private IRequestReceivedHandler handler;
+	private Supplier<IRequestReceivedHandler> handler;
 	
 	/**
 	 * Creates a builder in order to configure a client.
@@ -32,7 +34,7 @@ public class ClientConfigBuilder {
 		receivingBufferSize = 1024;
 		allowUnexpectedRequest = false;
 		layer = new SimpleLayer();
-		handler = new SimpleRequestReceivedHandler();
+		handler = () -> new SimpleRequestReceivedHandler();
 	}
 	
 	/**
@@ -163,13 +165,14 @@ public class ClientConfigBuilder {
 	}
 	
 	/**
-	 * Set the handler to execute when an unexpected request has been received from the remote.
+	 * Set the supplier of an handler in order to get a new instance each time a new client is connected.
+	 * This handler will be executed each time an unexpected request is received from the remote.
 	 * 
-	 * @param handler The handler to execute.
+	 * @param handler The handler used to get a new instance.
 	 * 
 	 * @return This builder.
 	 */
-	public ClientConfigBuilder setRequestReceivedHandler(IRequestReceivedHandler handler) {
+	public ClientConfigBuilder setRequestReceivedHandler(Supplier<IRequestReceivedHandler> handler) {
 		this.handler = handler;
 		return this;
 	}
@@ -177,7 +180,7 @@ public class ClientConfigBuilder {
 	/**
 	 * @return The handler to execute when an unexpected request has been received from the remote.
 	 */
-	private IRequestReceivedHandler getRequestReceivedHandler() {
+	private Supplier<IRequestReceivedHandler> getRequestReceivedHandler() {
 		return handler;
 	}
 	
@@ -217,7 +220,7 @@ public class ClientConfigBuilder {
 
 		@Override
 		public IRequestReceivedHandler getRequestReceivedHandler() {
-			return builder.getRequestReceivedHandler();
+			return builder.getRequestReceivedHandler().get();
 		}
 
 		@Override

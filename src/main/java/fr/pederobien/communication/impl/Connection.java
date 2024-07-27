@@ -15,6 +15,7 @@ import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.IMessage;
+import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
 import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
@@ -26,6 +27,7 @@ public abstract class Connection implements IConnection {
 	private static final int MAX_EXCEPTION_NUMBER = 10;
 	private IConnectionConfig config;
 	private String name;
+	private IRequestReceivedHandler handler;
 	private BlockingQueueTask<HeaderMessage> sendingQueue;
 	private BlockingQueueTask<Object> receivingQueue;
 	private BlockingQueueTask<byte[]> extractingQueue;
@@ -53,6 +55,7 @@ public abstract class Connection implements IConnection {
 	protected Connection(IConnectionConfig config, Mode mode) {
 		this.config = config;
 		name = mode == Mode.CLIENT_TO_SERVER ? "Client" : "Server";
+		handler = config.getRequestReceivedHandler();
 		
 		sendingQueue = new BlockingQueueTask<HeaderMessage>(String.format("%s[send]", toString()), message -> sendMessage(message));
 		receivingQueue = new BlockingQueueTask<Object>(String.format("%s[receive]", toString()), object -> receiveMessage(object));
@@ -102,16 +105,16 @@ public abstract class Connection implements IConnection {
 				argument = args;
 				semaphore.release();
 			});
-			
+
 			// Sending asynchronously the message to the remote
 			send(internalMessage);
-			
+
 			// Wait until the callback has been executed
 			semaphore.acquire();
-			
+
 			// Executing callback
 			message.getCallback().accept(argument);
-			
+
 		} catch (Exception e) {
 			message.getCallback().accept(new CallbackArgs(null, true));
 		} finally {
@@ -268,7 +271,7 @@ public abstract class Connection implements IConnection {
 				checkUnstable(receivingExceptionCounter, "receive");
 			} finally {
 				// If connection is not lost
-				if (raw != null ) {
+				if (isEnabled() && (raw != null)) {
 					// Waiting again for the reception
 					receivingQueue.add(new Object());
 				}
@@ -347,7 +350,7 @@ public abstract class Connection implements IConnection {
 		if (isEnabled()) {
 			try {
 				RequestReceivedEvent event = new RequestReceivedEvent(this, config.getAddress(), config.getPort(), unexpectedEvent.getPayload());
-				config.getRequestReceivedHandler().onRequestReceivedEvent(event);
+				handler.onRequestReceivedEvent(event);
 				if (event.getCallbackResponse() != null)
 					sendCallbackRequest(unexpectedEvent.getID(), event.getCallbackResponse());
 				else if (event.getSimpleResponse() != null)

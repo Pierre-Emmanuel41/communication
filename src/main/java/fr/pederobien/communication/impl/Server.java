@@ -149,8 +149,10 @@ public abstract class Server implements IServer {
 			
 			connection.initialise();
 			
-			// Adding connections to a list in order to close the remaining opened connection when the server is closed.
-			connections.add(connection);
+			// A connection can be removed/added at the same time.
+			synchronized (this) {
+				connections.add(connection);
+			}
 			
 			EventManager.callEvent(new NewClientEvent(connection, this));
 			
@@ -186,6 +188,13 @@ public abstract class Server implements IServer {
 		
 		@EventHandler
 		private void onConnectionUnstable(ConnectionUnstableEvent event) {
+			List<IConnection> connections;
+
+			// A connection can be removed/added at the same time.
+			synchronized (this) {
+				connections = new ArrayList<IConnection>(Server.this.connections);
+			}
+
 			for (IConnection connection : connections)
 				if (connection == event.getConnection())
 					connection.dispose();
