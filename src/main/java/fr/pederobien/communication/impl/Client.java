@@ -173,9 +173,8 @@ public abstract class Client implements IClient {
 			connectImpl(getAddress(), getPort(), getConnectionTimeout());
 			
 			// But checking if connection has been canceled
-			if (state == EState.DISCONNECTING || state == EState.DISCONNECTED) {
+			if (state == EState.DISCONNECTING || state == EState.DISCONNECTED)
 				return;
-			}
 			
 			state = EState.CONNECTED;
 			connection = onConnectionComplete(config);
