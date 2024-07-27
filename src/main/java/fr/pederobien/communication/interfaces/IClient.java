@@ -71,7 +71,7 @@ public interface IClient {
 	int getReconnectionDelay();
 
 	/**
-	 * @return The current connection state.
+	 * @return The current state of the client.
 	 */
 	EState getState();
 	
