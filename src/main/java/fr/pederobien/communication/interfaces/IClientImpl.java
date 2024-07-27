@@ -21,4 +21,10 @@ public interface IClientImpl {
 	 * @param config The configuration of the client.
 	 */
 	IConnection onConnectionComplete(IClientConfig config);
+	
+	/**
+	 * Method called after having the connection fully initialized but before throwing
+	 * a connection complete event.
+	 */
+	void postInitialise();
 }

@@ -152,6 +152,12 @@ public abstract class Client implements IClient {
 	protected abstract IConnection onConnectionComplete(IClientConfig config);
 	
 	/**
+	 * Method called after having the connection fully initialized but before throwing
+	 * a connection complete event.
+	 */
+	protected abstract void postInitialise();
+	
+	/**
 	 * Throw a LogEvent.
 	 * 
 	 * @param message The message of the event.
@@ -178,10 +184,9 @@ public abstract class Client implements IClient {
 			
 			state = EState.CONNECTED;
 			connection = onConnectionComplete(config);
-			
 			connection.initialise();
-			
 			listener.start();
+			postInitialise();
 			
 			onLogEvent("Connected to the remote");
 			
