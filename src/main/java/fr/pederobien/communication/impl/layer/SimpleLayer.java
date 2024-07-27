@@ -1,8 +1,9 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.layer;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.pederobien.communication.impl.HeaderMessage;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;
@@ -10,7 +11,7 @@ import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.ReadableByteWrapper;
 
 public class SimpleLayer implements ILayer {
-	private LayerHelper helper;
+	private Encapsuler encapsuler;
 	
 	@Override
 	public void initialise(IConnection connection) {
@@ -21,7 +22,7 @@ public class SimpleLayer implements ILayer {
 	 * Creates a layer in order to extract several responses from raw data received from the remote.
 	 */
 	public SimpleLayer() {
-		helper = new LayerHelper("(~@=", "#.?)");
+		encapsuler = new Encapsuler("(~@=", "#.?)");
 	}
 
 	@Override
@@ -31,14 +32,14 @@ public class SimpleLayer implements ILayer {
 		wrapper.putInt(message.getRequestID());
 		wrapper.putInt(message.getBytes().length);
 		wrapper.put(message.getBytes());
-		return helper.pack(wrapper.get());
+		return encapsuler.pack(wrapper.get());
 	}
 
 	@Override
 	public List<IHeaderMessage> unpack(byte[] raw) throws Exception {
 		List<IHeaderMessage> requests = new ArrayList<IHeaderMessage>();
 
-		List<byte[]> messages = helper.unpack(raw);	
+		List<byte[]> messages = encapsuler.unpack(raw);	
 		for (byte[] message : messages) {
 			// Structure of a message:
 			// bytes 0 -> 3: ID

@@ -1,4 +1,4 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.layer;
 
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -8,13 +8,14 @@ import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 import javax.crypto.Cipher;
 
+import fr.pederobien.communication.impl.HeaderMessage;
+import fr.pederobien.communication.impl.Message;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;
@@ -24,10 +25,8 @@ import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.LogEvent;
 
 public class RSALayer implements ILayer {
-	private static final int MAX_PACKET_SIZE = 200;
-
-	private Map<Integer, ByteWrapper> remaining;
-	private LayerHelper helper;
+	private Encapsuler encapsuler;
+	private Splitter splitter;
 	private ILayer implementation, notInitialised, initialised;
 	private PrivateKey privateKey;
 	private PublicKey publicKey, otherKey;
@@ -43,11 +42,10 @@ public class RSALayer implements ILayer {
 			privateKey = keyPair.getPrivate();
 			publicKey = keyPair.getPublic();
 
-			helper = new LayerHelper("(~@=", "#.?)");
+			encapsuler = new Encapsuler("(~@=", "#.?)");
+			splitter = new Splitter(200);
 			notInitialised = new NotInitialisedLayer();
 			initialised = new InitialisedLayer();
-			
-			remaining = new HashMap<Integer, ByteWrapper>();
 			
 			implementation = notInitialised;
 		} catch (Exception e) {
@@ -56,7 +54,7 @@ public class RSALayer implements ILayer {
 	}
 	
 	public byte[] initialise() {
-		return helper.pack(publicKey.getEncoded());
+		return encapsuler.pack(publicKey.getEncoded());
 	}
 	
 	@Override
@@ -89,13 +87,13 @@ public class RSALayer implements ILayer {
 
 		@Override
 		public byte[] pack(IHeaderMessage message) throws Exception {
-			return helper.pack(ByteWrapper.create().put(message.getBytes()).get());
+			return encapsuler.pack(ByteWrapper.create().put(message.getBytes()).get());
 		}
 
 		@Override
 		public List<IHeaderMessage> unpack(byte[] raw) throws Exception {
 			List<IHeaderMessage> requests = new ArrayList<IHeaderMessage>();
-			List<byte[]> messages = helper.unpack(raw);		
+			List<byte[]> messages = encapsuler.unpack(raw);		
 			for (byte[] message : messages) {
 				try {
 					otherKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(message));
@@ -121,65 +119,44 @@ public class RSALayer implements ILayer {
 
 		@Override
 		public byte[] pack(IHeaderMessage message) throws Exception {
-			ReadableByteWrapper wrapper = ReadableByteWrapper.wrap(message.getBytes());
-			int fullPacketNumber = message.getBytes().length / MAX_PACKET_SIZE;
-			int numberOfByteInLastPacket = message.getBytes().length % MAX_PACKET_SIZE;
-			int total = fullPacketNumber + (numberOfByteInLastPacket > 0 ? 1 : 0);
-
-			ByteWrapper toSend = ByteWrapper.create();
-			for (int current = 0; current < total; current++) {
-				ByteWrapper packet = ByteWrapper.create();
-				packet.putInt(message.getID());
-				packet.putInt(message.getRequestID());
-				packet.putInt(total);
-				packet.putInt(current);
-				int length = current < total - 1 ? MAX_PACKET_SIZE : numberOfByteInLastPacket;
-				packet.putInt(length);
-				packet.put(wrapper.next(length));
-				toSend.put(helper.pack(encrypt(packet.get())));
-			}
-
-			return toSend.get();
+			// Step 1: Splitting message in packets
+			byte[] payload = ByteWrapper.create().putInt(message.getRequestID()).put(message.getBytes()).get();
+			List<byte[]> packets = splitter.pack(message.getID(), payload);
+			
+			// Step 2: Encrypting packets
+			List<byte[]> encrypted = new ArrayList<byte[]>();
+			for (byte[] packet : packets)
+				encrypted.add(encrypt(packet));
+			
+			// Step 3: Encapsulating each packet
+			ByteWrapper wrapper = ByteWrapper.create();
+			encrypted.forEach(data -> wrapper.put(encapsuler.pack(data)));
+			return wrapper.get();
 		}
 
 		@Override
 		public List<IHeaderMessage> unpack(byte[] raw) throws Exception {
 			List<IHeaderMessage> requests = new ArrayList<IHeaderMessage>();
 
-			// Step 1: Unpacking the raw buffer to get messages entirely received
-			List<byte[]> messages = helper.unpack(raw);
+			// Step 1: Unpacking the raw buffer to get packets entirely received
+			List<byte[]> unpacked = encapsuler.unpack(raw);
 			
-			// Step 2: Concatenating messages into requests
-			for (byte[] message : messages) {
-				// Structure of a message:
-				ReadableByteWrapper messageWrapper = ReadableByteWrapper.wrap(decrypt(message));
+			// Step 2: Decrypting each packet
+			List<byte[]> decrypted = new ArrayList<byte[]>();
+			for (byte[] packet : unpacked)
+				decrypted.add(decrypt(packet));
+			
+			// Step 3: Concatenating decrypted packet in one message
+			Map<Integer, ReadableByteWrapper> messages = splitter.unpack(decrypted);
+			
+			// Step 4: Updating list of requests
+			for (Map.Entry<Integer, ReadableByteWrapper> entry : messages.entrySet()) {
+				ReadableByteWrapper wrapper = entry.getValue();
 				
-				// bytes 0 -> 3: ID
-				int ID = messageWrapper.nextInt();
+				// bytes 0 -> 3: requestID
+				int requestID = wrapper.nextInt();
 				
-				// bytes 4 -> 7: requestID
-				int requestID = messageWrapper.nextInt();
-
-				// bytes 8 -> 11: total
-				int total = messageWrapper.nextInt();
-
-				// bytes 12 -> 15: current
-				int current = messageWrapper.nextInt();
-
-				// bytes 16 -> 19: length
-				int length = messageWrapper.nextInt();
-				
-				// bytes 20 -> 20 + length: payload
-				byte[] payload = messageWrapper.next(length);
-				
-				// Original request to split in different packets
-				if (total == 1)
-					requests.add(new HeaderMessage(ID, requestID, payload));
-				else {
-					IHeaderMessage request = registerRequest(ID, requestID, total, current, payload);
-					if (request != null)
-						requests.add(request);
-				}
+				requests.add(new HeaderMessage(entry.getKey(), requestID, wrapper.next(-1)));
 			}
 			
 			return requests;
@@ -207,36 +184,6 @@ public class RSALayer implements ILayer {
 			Cipher cipher = Cipher.getInstance("RSA");
 			cipher.init(Cipher.DECRYPT_MODE, privateKey);
 			return cipher.doFinal(Base64.getDecoder().decode(data));
-		}
-		
-		/**
-		 * If a request is already registered for the given ID, the payload is added at the end of the previous payload.
-		 * When the value of current correspond to total - 1, all the packets have been received. The request has been
-		 * received entirely and can be used.
-		 * If no request has been received for the given ID, the payload will be stored until a new packet is received.
-		 * 
-		 * @param ID The identifier of this request.
-		 * @param requestID The identifier of the request associated to this response.
-		 * @param total The number of packets to receive in order to receive a full request.
-		 * @param current The current packet number.
-		 * @param payload The payload of the request.
-		 */
-		private IHeaderMessage registerRequest(int ID, int requestID, int total, int current, byte[] payload) {
-			ByteWrapper wrapper = remaining.get(ID);
-			
-			// No request is registered
-			if (wrapper == null)
-				remaining.put(ID, ByteWrapper.wrap(payload));
-			else {
-				wrapper.put(payload);
-				
-				// Request received entirely
-				if (current == total - 1) {
-					return new HeaderMessage(ID, requestID, wrapper.get());
-				}
-			}
-			
-			return null;
 		}
 	}
 }

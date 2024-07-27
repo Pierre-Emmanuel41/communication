@@ -1,5 +1,6 @@
 package fr.pederobien.communication.impl;
 
+import fr.pederobien.communication.impl.layer.SimpleLayer;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.ILayer;
 

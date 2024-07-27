@@ -1,4 +1,4 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.layer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.List;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.ReadableByteWrapper;
 
-public class LayerHelper {
+public class Encapsuler {
 	private byte[] beginWord, endWord;
 	private byte[] remaining;
 	
@@ -17,7 +17,7 @@ public class LayerHelper {
 	 * @param begin The word to use at the begin of a request
 	 * @param end The word to use at the end of the request.
 	 */
-	public LayerHelper(String begin, String end) {
+	public Encapsuler(String begin, String end) {
 		remaining = new byte[0];
 		this.beginWord = begin.getBytes();
 		this.endWord = end.getBytes();
