@@ -3,7 +3,6 @@ package fr.pederobien.communication.impl;
 import fr.pederobien.communication.interfaces.IClient;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.IClientImpl;
-import fr.pederobien.communication.interfaces.ICommonConfig;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.IConnectionConfig;
@@ -21,7 +20,18 @@ public class Communication {
 	 * @param port The port number of the remote.
 	 * @param config The object that holds common connection parameters.
 	 */
-	public static final ConnectionConfigBuilder createConnectionConfigBuilder(String address, int port, ICommonConfig config) {
+	public static final ConnectionConfigBuilder createConnectionConfigBuilder(String address, int port, IClientConfig config) {
+		return new ConnectionConfigBuilder(address, port, config);
+	}
+	
+	/**
+	 * Creates a builder in order to configure a connection.
+	 * 
+	 * @param address The IP address of the remote.
+	 * @param port The port number of the remote.
+	 * @param config The object that holds common connection parameters.
+	 */
+	public static final ConnectionConfigBuilder createConnectionConfigBuilder(String address, int port, IServerConfig config) {
 		return new ConnectionConfigBuilder(address, port, config);
 	}
 	
