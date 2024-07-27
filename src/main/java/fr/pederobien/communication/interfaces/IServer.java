@@ -1,6 +1,28 @@
 package fr.pederobien.communication.interfaces;
 
 public interface IServer {
+	
+	public enum EState {
+		/**
+		 * Trying to open the server following an open() command.
+		 */
+		OPENING,
+		
+		/**
+		 * The server is opened.
+		 */
+		OPENED,
+		
+		/**
+		 * Trying to close the server following a close() command.
+		 */
+		CLOSING,
+		
+		/**
+		 * The server is closed.
+		 */
+		CLOSED
+	}
 
 	/**
 	 * Start the server and wait for a client to be connected.
@@ -18,7 +40,7 @@ public interface IServer {
 	void dispose();
 	
 	/**
-	 * @return True if the server is opened and is waiting for a client.
+	 * @return The current state of the server.
 	 */
-	boolean isOpened();
+	EState getState();
 }

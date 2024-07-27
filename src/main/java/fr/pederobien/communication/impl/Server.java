@@ -21,7 +21,7 @@ public abstract class Server implements IServer {
 	private static final int MAX_EXCEPTION_NUMBER = 10;
 
 	private IServerConfig config;
-	private boolean isOpened; 
+	private EState state; 
 	private BlockingQueueTask<Object> clientQueue;
 	private List<IConnection> connections;
 	private IDisposable disposable;
@@ -42,27 +42,30 @@ public abstract class Server implements IServer {
 		listener = new ConnectionListener();
 		
 		newClientExceptionCounter = 0;
-		
+		state = EState.CLOSED;
 	}
 
 	@Override
 	public void open() {
 		disposable.checkDisposed();
+		
+		if (state == EState.CLOSED) {
+			try {
+				state = EState.OPENING;
+				onLogEvent("Opening server");
 
-		try {
-			onLogEvent("Opening server");
+				openImpl(config.getPort());
+				
+				listener.start();
+				
+				state = EState.OPENED;
+				onLogEvent("Server opened");
 
-			openImpl(config.getPort());
-			
-			isOpened = true;
-
-			listener.start();
-			clientQueue.add(new Object());
-			clientQueue.start();
-
-			onLogEvent("Server opened");
-		} catch (Exception e) {
-			e.printStackTrace();
+				clientQueue.add(new Object());
+				clientQueue.start();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -70,20 +73,22 @@ public abstract class Server implements IServer {
 	public void close() {
 		disposable.checkDisposed();
 
-		try {
-			onLogEvent("Closing server");
+		if (state == EState.OPENED) {
+			try {
+				state = EState.CLOSING;
+				onLogEvent("Closing server");
 
-			listener.stop();
+				listener.stop();
 
-			connections.forEach(connection -> connection.dispose());
+				connections.forEach(connection -> connection.dispose());
+				
+				closeImpl();
 
-			closeImpl();
-
-			isOpened = false;
-			
-			onLogEvent("Server closed");
-		} catch (Exception e) {
-			e.printStackTrace();
+				state = EState.CLOSED;
+				onLogEvent("Server closed");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -96,8 +101,8 @@ public abstract class Server implements IServer {
 	}
 
 	@Override
-	public boolean isOpened() {
-		return isOpened;
+	public EState getState() {
+		return state;
 	}
 	
 	@Override
@@ -137,8 +142,10 @@ public abstract class Server implements IServer {
 		try {
 			IConnection connection = waitForClientImpl(config);
 
-			if (!isOpened())
+			if (state != EState.OPENED) {
+				connection.dispose();
 				return;
+			}
 			
 			connection.initialise();
 			
@@ -156,7 +163,7 @@ public abstract class Server implements IServer {
 			}
 		} finally {
 			// Wait for another client if the server is opened.
-			if (isOpened())
+			if (state == EState.OPENED)
 				clientQueue.add(object);
 		}
 	}
