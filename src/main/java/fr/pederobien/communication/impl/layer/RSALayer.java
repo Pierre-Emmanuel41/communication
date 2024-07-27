@@ -53,10 +53,6 @@ public class RSALayer implements ILayer {
 		}
 	}
 	
-	public byte[] initialise() {
-		return encapsuler.pack(publicKey.getEncoded());
-	}
-	
 	@Override
 	public void initialise(IConnection connection) throws Exception {
 		implementation.initialise(connection);
