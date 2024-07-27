@@ -1,6 +1,6 @@
 package fr.pederobien.communication.impl;
 
-import fr.pederobien.communication.event.ConnectionCompleteEvent;
+import fr.pederobien.communication.event.ClientConnectedEvent;
 import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.ConnectionUnstableEvent;
 import fr.pederobien.communication.interfaces.IClient;
@@ -65,8 +65,10 @@ public abstract class Client implements IClient {
 			state = EState.DISCONNECTING;
 			onLogEvent("Disconnecting from the remote");
 			
-			getConnection().setEnabled(false);
-			getConnection().dispose();
+			if (getConnection() != null) {
+				getConnection().setEnabled(false);
+				getConnection().dispose();
+			}
 			
 			state = EState.DISCONNECTED;
 
@@ -154,8 +156,10 @@ public abstract class Client implements IClient {
 	/**
 	 * Method called after having the connection fully initialized but before throwing
 	 * a connection complete event.
+	 * 
+	 * @param connection The initialized connection of this client.
 	 */
-	protected abstract void postInitialise();
+	protected abstract boolean postInitialise(IConnection connection);
 	
 	/**
 	 * Throw a LogEvent.
@@ -183,15 +187,19 @@ public abstract class Client implements IClient {
 				return;
 			
 			state = EState.CONNECTED;
-			connection = onConnectionComplete(config);
+			IConnection connection = onConnectionComplete(config);
 			connection.initialise();
 			listener.start();
-			postInitialise();
-			
-			onLogEvent("Connected to the remote");
-			
-			// Notifying observers that the client is connected
-			EventManager.callEvent(new ConnectionCompleteEvent(getConnection()));
+			if (!postInitialise(connection))
+				connection.dispose();
+			else {
+				this.connection = connection;
+				onLogEvent("Connected to the remote");
+
+				// Notifying observers that the client is connected
+				EventManager.callEvent(new ClientConnectedEvent(this));
+			}
+				
 		} catch (Exception e) {
 			try {
 				// Wait before trying to reconnect to the remote

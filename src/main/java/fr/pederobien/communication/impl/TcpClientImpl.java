@@ -38,7 +38,7 @@ public class TcpClientImpl implements IClientImpl {
 	}
 	
 	@Override
-	public void postInitialise() {
-		// Do nothing	
+	public boolean postInitialise(IConnection connection) {
+		return true;
 	}
 }

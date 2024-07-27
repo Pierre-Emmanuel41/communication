@@ -30,7 +30,7 @@ public class CustomClient extends Client {
 	}
 	
 	@Override
-	protected void postInitialise() {
-		implementation.postInitialise();
+	protected boolean postInitialise(IConnection connection) {
+		return implementation.postInitialise(connection);
 	}
 }
