@@ -1,7 +1,5 @@
 package fr.pederobien.communication.impl;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import fr.pederobien.communication.event.ConnectionCompleteEvent;
 import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.ConnectionUnstableEvent;
@@ -9,6 +7,8 @@ import fr.pederobien.communication.interfaces.IClient;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.utils.BlockingQueueTask;
+import fr.pederobien.utils.Disposable;
+import fr.pederobien.utils.IDisposable;
 import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;
@@ -17,7 +17,7 @@ import fr.pederobien.utils.event.LogEvent;
 public abstract class Client implements IClient {
 	private IClientConfig config;
 	private EState state;
-	private AtomicBoolean isDisposed;
+	private IDisposable disposable;
 	private BlockingQueueTask<Object> connectionQueue;
 	private String clientName;
 	private IConnection connection;
@@ -35,7 +35,7 @@ public abstract class Client implements IClient {
 		clientName = String.format("[Client %s:%s]", config.getAddress(), config.getPort());
 		state = EState.DISCONNECTED;
 
-		isDisposed = new AtomicBoolean(false);
+		disposable = new Disposable();
 		
 		String name = String.format("%s[reconnect]", clientName, config.getPort());
 		connectionQueue = new BlockingQueueTask<Object>(name, object -> startConnect(object));
@@ -45,7 +45,7 @@ public abstract class Client implements IClient {
 	
 	@Override
 	public void connect() {
-		checkDisposed();
+		disposable.checkDisposed();
 
 		if (state == EState.CONNECTION_LOST || state == EState.DISCONNECTED) {
 			onLogEvent("Starting connection to the remote");
@@ -59,7 +59,7 @@ public abstract class Client implements IClient {
 	
 	@Override
 	public void disconnect() {
-		checkDisposed();
+		disposable.checkDisposed();
 		
 		if (state != EState.DISCONNECTING && state != EState.DISCONNECTED) {
 			state = EState.DISCONNECTING;
@@ -78,14 +78,15 @@ public abstract class Client implements IClient {
 
 	@Override
 	public void dispose() {
-		if (isDisposed.compareAndSet(false, true)) {
+		if (disposable.dispose()) {
+			disconnect();
 			connectionQueue.dispose();
 		}
 	}
 
 	@Override
 	public boolean isDisposed() {
-		return isDisposed.get();
+		return disposable.isDisposed();
 	}
 	
 	@Override
@@ -164,14 +165,6 @@ public abstract class Client implements IClient {
 	 */
 	protected void onLogEvent(String message) {
 		EventManager.callEvent(new LogEvent("%s - %s", clientName, message));
-	}
-	
-	/**
-	 * Throws an {@link IllegalStateException} if the connection is disposed. Do nothing otherwise.
-	 */
-	private void checkDisposed() {
-		if (isDisposed())
-			throw new IllegalStateException("Object disposed");
 	}
 	
 	/**

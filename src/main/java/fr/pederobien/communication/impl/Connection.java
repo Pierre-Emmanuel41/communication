@@ -2,7 +2,6 @@ package fr.pederobien.communication.impl;
 
 import java.util.List;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import fr.pederobien.communication.event.ConnectionDisposedEvent;
 import fr.pederobien.communication.event.ConnectionEnableChangedEvent;
@@ -17,6 +16,8 @@ import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.IMessage;
 import fr.pederobien.utils.BlockingQueueTask;
+import fr.pederobien.utils.Disposable;
+import fr.pederobien.utils.IDisposable;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.LogEvent;
 
@@ -29,7 +30,7 @@ public abstract class Connection implements IConnection {
 	private BlockingQueueTask<Object> receivingQueue;
 	private BlockingQueueTask<CallbackManagement> callbackQueue;
 	private CallbackMessageManager messageManager;
-	private AtomicBoolean isDisposed;
+	private IDisposable disposable;
 	private boolean isEnabled;
 	private int sendingExceptionCounter, receivingExceptionCounter, extractingExceptionCounter;
 	
@@ -53,14 +54,14 @@ public abstract class Connection implements IConnection {
 		callbackQueue = new BlockingQueueTask<CallbackManagement>(String.format("%s[callback]", toString()), management -> callbackMessage(management));
 
 		messageManager = new CallbackMessageManager(this);
-		isDisposed = new AtomicBoolean(false);
+		disposable = new Disposable();
 
 		sendingExceptionCounter = 0;
 		receivingExceptionCounter = 0;
 		extractingExceptionCounter = 0;
 		isEnabled = true;
 		
-		semaphore = new Semaphore(1);
+		semaphore = new Semaphore(0);
 	}
 	
 	@Override
@@ -85,9 +86,6 @@ public abstract class Connection implements IConnection {
 	@Override
 	public void sendSync(ICallbackMessage message) {
 		try {
-			// Decrementing by 1 the number of permits of the semaphore
-			semaphore.acquire();
-			
 			// Creating a layer to force the current thread to wait for the response from the remote.
 			ICallbackMessage internalMessage = new CallbackMessage(message.getBytes(), message.getTimeout(), args -> {
 				argument = args;
@@ -113,7 +111,7 @@ public abstract class Connection implements IConnection {
 	
 	@Override
 	public void send(IMessage message) {
-		checkDisposed();
+		disposable.checkDisposed();
 
 		if (isEnabled())
 			sendingQueue.add(new HeaderMessage(message));
@@ -121,7 +119,7 @@ public abstract class Connection implements IConnection {
 	
 	@Override
 	public void send(ICallbackMessage message) {
-		checkDisposed();
+		disposable.checkDisposed();
 		
 		if (isEnabled())
 			sendCallbackRequest(0, message);
@@ -143,7 +141,7 @@ public abstract class Connection implements IConnection {
 	
 	@Override
 	public void dispose() {
-		if (isDisposed.compareAndSet(false, true)) {
+		if (disposable.dispose()) {
 			sendingQueue.dispose();
 			receivingQueue.dispose();
 			extractingQueue.dispose();
@@ -182,14 +180,6 @@ public abstract class Connection implements IConnection {
 	 * @param receivingBufferSize The size of the bytes array used to receive data from the remote.
 	 */
 	protected abstract byte[] receiveImpl(int receivingBufferSize) throws Exception;
-	
-	/**
-	 * Throws an {@link IllegalStateException} if the connection is disposed. Do nothing otherwise.
-	 */
-	protected void checkDisposed() {
-		if (isDisposed.get())
-			throw new IllegalStateException("Object disposed");
-	}
 	
 	/**
 	 * Throw an UnstableConnectionEvent.

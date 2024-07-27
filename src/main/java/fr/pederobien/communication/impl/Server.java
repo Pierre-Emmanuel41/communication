@@ -2,7 +2,6 @@ package fr.pederobien.communication.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import fr.pederobien.communication.event.NewClientEvent;
 import fr.pederobien.communication.event.ServerUnstableEvent;
@@ -10,6 +9,8 @@ import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IServer;
 import fr.pederobien.communication.interfaces.IServerConfig;
 import fr.pederobien.utils.BlockingQueueTask;
+import fr.pederobien.utils.Disposable;
+import fr.pederobien.utils.IDisposable;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.LogEvent;
 
@@ -20,7 +21,7 @@ public abstract class Server implements IServer {
 	private boolean isOpened; 
 	private BlockingQueueTask<Object> clientQueue;
 	private List<IConnection> connections;
-	private AtomicBoolean isDisposed;
+	private IDisposable disposable;
 	private int newClientExceptionCounter;
 	
 	/**
@@ -33,19 +34,22 @@ public abstract class Server implements IServer {
 		
 		clientQueue = new BlockingQueueTask<Object>(String.format("%s[WaitForClient]", toString()), object -> waitForClient(object));
 		connections = new ArrayList<IConnection>();
-		isDisposed = new AtomicBoolean(false);
+		disposable = new Disposable();
 		
 		newClientExceptionCounter = 0;
 	}
 
 	@Override
 	public void open() {
-		checkDisposed();
+		disposable.checkDisposed();
 
 		try {
+			onLogEvent("Opening server");
+
 			openImpl(config.getPort());
 			
 			isOpened = true;
+
 			clientQueue.add(new Object());
 			clientQueue.start();
 
@@ -57,9 +61,11 @@ public abstract class Server implements IServer {
 
 	@Override
 	public void close() {
-		checkDisposed();
+		disposable.checkDisposed();
 
 		try {
+			onLogEvent("Closing server");
+
 			connections.forEach(connection -> connection.dispose());
 
 			closeImpl();
@@ -74,9 +80,8 @@ public abstract class Server implements IServer {
 	
 	@Override
 	public void dispose() {
-		close();			
-
-		if (isDisposed.compareAndSet(false, true)) {
+		if (disposable.dispose()) {
+			close();
 			clientQueue.dispose();
 		}
 	}
@@ -122,6 +127,10 @@ public abstract class Server implements IServer {
 	private void waitForClient(Object object) {
 		try {
 			IConnection connection = waitForClientImpl(config);
+
+			if (!isOpened())
+				return;
+
 			connection.initialise();
 			
 			// Adding connections to a list in order to close the remaining opened connection when the server
@@ -139,17 +148,8 @@ public abstract class Server implements IServer {
 			}
 		} finally {
 			// Wait for another client if the server is opened.
-			if (isOpened) {
+			if (isOpened())
 				clientQueue.add(object);
-			}
 		}
-	}
-	
-	/**
-	 * Throw an {@link IllegalStateException} if this object has been disposed.
-	 */
-	private void checkDisposed() {
-		if (isDisposed.get())
-			throw new IllegalStateException("Object disposed");
 	}
 }
