@@ -31,7 +31,7 @@ public abstract class Connection implements IConnection {
 	private BlockingQueueTask<byte[]> extractingQueue;
 	private BlockingQueueTask<CallbackManagement> callbackQueue;
 	private BlockingQueueTask<UnexpectedRequestEvent> unexpectedRequestQueue;
-	private CallbackMessageManager messageManager;
+	private CallbackManager messageManager;
 	private IDisposable disposable;
 	private boolean isEnabled;
 	private int sendingExceptionCounter;
@@ -59,7 +59,7 @@ public abstract class Connection implements IConnection {
 		extractingQueue = new BlockingQueueTask<byte[]>(String.format("%s[extract]", toString()), raw -> extractMessage(raw));
 		callbackQueue = new BlockingQueueTask<CallbackManagement>(String.format("%s[callback]", toString()), management -> callbackMessage(management));
 		unexpectedRequestQueue = new BlockingQueueTask<UnexpectedRequestEvent>(String.format("%s[dispatcher]", toString()), event -> dispatchEvent(event));
-		messageManager = new CallbackMessageManager(this);
+		messageManager = new CallbackManager(this);
 		disposable = new Disposable();
 
 		sendingExceptionCounter = 0;

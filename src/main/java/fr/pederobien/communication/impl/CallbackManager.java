@@ -7,7 +7,7 @@ import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
 
-public class CallbackMessageManager {
+public class CallbackManager {
 	private Connection connection;
 	private Map<Integer, CallbackManagement> pendingMessages;
 	private IDisposable disposable;
@@ -17,7 +17,7 @@ public class CallbackMessageManager {
 	 * 
 	 * @param connection The connection associated to this manager.
 	 */
-	public CallbackMessageManager(Connection connection) {
+	public CallbackManager(Connection connection) {
 		this.connection = connection;
 		pendingMessages = new HashMap<Integer, CallbackManagement>();
 		disposable = new Disposable();

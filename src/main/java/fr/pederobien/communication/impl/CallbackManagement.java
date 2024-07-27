@@ -6,7 +6,7 @@ import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.IMessage;
 
 public class CallbackManagement implements Runnable {
-	private CallbackMessageManager manager;
+	private CallbackManager manager;
 	private HeaderMessage request;
 	private IHeaderMessage response;
 	private Thread timeoutThread;
@@ -18,7 +18,7 @@ public class CallbackManagement implements Runnable {
 	 * @param manager The manager that monitor all requests waiting for a response from the remote.
 	 * @param request The request waiting for a response.
 	 */
-	public CallbackManagement(CallbackMessageManager manager, HeaderMessage request) {
+	public CallbackManagement(CallbackManager manager, HeaderMessage request) {
 		this.manager = manager;
 		this.request = request;
 		
