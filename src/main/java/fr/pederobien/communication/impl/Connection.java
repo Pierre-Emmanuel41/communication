@@ -206,8 +206,6 @@ public abstract class Connection implements IConnection {
 	 * @param algo The unstable algorithm.
 	 */
 	protected void onUnstableConnection(String algo) {
-		setEnabled(false);
-		
 		String message = null;
 		if (name == "Client") {
 			String formatter = "[Client %s:%s (%s)] - Too much exceptions in a row, closing connection";
@@ -219,6 +217,8 @@ public abstract class Connection implements IConnection {
 		}
 		
 		EventManager.callEvent(new LogEvent(ELogLevel.ERROR, message));
+
+		setEnabled(false);
 		EventManager.callEvent(new ConnectionUnstableEvent(this));
 	}
 	
