@@ -13,13 +13,13 @@ import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;
 import fr.pederobien.utils.event.LogEvent;
+import fr.pederobien.utils.event.LogEvent.ELogLevel;
 
 public abstract class Client implements IClient {
 	private IClientConfig config;
 	private EState state;
 	private IDisposable disposable;
 	private BlockingQueueTask<Object> connectionQueue;
-	private String clientName;
 	private IConnection connection;
 	private ConnectionListener listener;
 	
@@ -32,15 +32,14 @@ public abstract class Client implements IClient {
 	protected Client(IClientConfig config) {
 		this.config = config;
 		
-		clientName = String.format("[Client %s:%s]", config.getAddress(), config.getPort());
 		state = EState.DISCONNECTED;
 
 		disposable = new Disposable();
 		
-		String name = String.format("%s[reconnect]", clientName, config.getPort());
+		String name = String.format("%s[reconnect]", toString(), config.getPort());
 		connectionQueue = new BlockingQueueTask<Object>(name, object -> startConnect(object));
 		
-		listener = new ConnectionListener();
+		listener = new ConnectionListener(config.getMaxUnstableCounterValue());
 	}
 	
 	@Override
@@ -79,7 +78,9 @@ public abstract class Client implements IClient {
 	@Override
 	public void dispose() {
 		if (disposable.dispose()) {
-			disconnect();
+			if (state != EState.DISCONNECTED)
+				disconnect();
+
 			connectionQueue.dispose();
 		}
 	}
@@ -121,7 +122,7 @@ public abstract class Client implements IClient {
 	
 	@Override
 	public String toString() {
-		return clientName;
+		return String.format("[Client %s:%s]", config.getAddress(), config.getPort());
 	}
 	
 	/**
@@ -166,8 +167,17 @@ public abstract class Client implements IClient {
 	 * 
 	 * @param message The message of the event.
 	 */
+	protected void onLogEvent(ELogLevel level, String message) {
+		EventManager.callEvent(new LogEvent(level, "%s - %s", toString(), message));
+	}
+	
+	/**
+	 * Throw a LogEvent.
+	 * 
+	 * @param message The message of the event.
+	 */
 	protected void onLogEvent(String message) {
-		EventManager.callEvent(new LogEvent("%s - %s", clientName, message));
+		onLogEvent(ELogLevel.INFO, message);
 	}
 	
 	/**
@@ -216,6 +226,18 @@ public abstract class Client implements IClient {
 	}
 	
 	private class ConnectionListener implements IEventListener {
+		private int maxUnstableCounter;
+		private int unstableCounter;
+		
+		/**
+		 * Creates a connection listener to trigger a connection lost or an unstable connection.
+		 * 
+		 * @param maxUnstableCounter The maximum value of the unstable counter before stopping automatic reconnection.
+		 */
+		public ConnectionListener(int maxUnstableCounter) {
+			this.maxUnstableCounter = maxUnstableCounter;
+			unstableCounter = 0;
+		}
 		
 		/**
 		 * Start monitoring the underlying connection.
@@ -250,12 +272,14 @@ public abstract class Client implements IClient {
 		private void startReconnection(IConnection connection) {
 			if (connection == getConnection())
 			{
+				unstableCounter++;
 				disconnect();
 				stop();
 				
-				if (config.isAutomaticReconnection()) {
+				if (unstableCounter == maxUnstableCounter)
+					onLogEvent(ELogLevel.ERROR, "Client unstable, stopping automatic reconnection");
+				else if (config.isAutomaticReconnection())
 					connect();
-				}
 			}
 		}
 	}
