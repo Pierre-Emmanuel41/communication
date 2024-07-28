@@ -17,6 +17,7 @@ public class ClientConfigBuilder {
 	private boolean allowUnexpectedRequest;
 	private ILayer layer;
 	private Supplier<IRequestReceivedHandler> handler;
+	private int maxUnstableCounter;
 	
 	/**
 	 * Creates a builder in order to configure a client.
@@ -35,6 +36,7 @@ public class ClientConfigBuilder {
 		allowUnexpectedRequest = false;
 		layer = new SimpleLayer();
 		handler = () -> new SimpleRequestReceivedHandler();
+		maxUnstableCounter = 5;
 	}
 	
 	/**
@@ -185,6 +187,28 @@ public class ClientConfigBuilder {
 	}
 	
 	/**
+	 * An unstable connection event is thrown if an exception is thrown 10 times in a row.
+	 * It can be from the send, receive, extract, callback or dispatcher method. The maximum counter value
+	 * corresponds to the maximum number of time a connection unstable event is thrown before stopping
+	 * the automatic reconnection if is is enabled. The default value is 5, which allowing up to 50 exceptions
+	 * in a row to be thrown before stopping automatic reconnection.
+	 * 
+	 * @param maxUnstableCounter The maximum number of time a connection unstable before stopping
+	 *       the automatic reconnection.
+	 */
+	public ClientConfigBuilder setMaxUnstableCounter(int maxUnstableCounter) {
+		this.maxUnstableCounter = maxUnstableCounter;
+		return this;
+	}
+	
+	/**
+	 * @return The maximum number of time a connection unstable before stopping the automatic reconnection.
+	 */
+	private int getMaxUnstableCounter() {
+		return maxUnstableCounter;
+	}
+	
+	/**
 	 * @return The configuration to use for a client.
 	 */
 	public IClientConfig build() {
@@ -246,6 +270,11 @@ public class ClientConfigBuilder {
 		@Override
 		public int getReconnectionDelay() {
 			return builder.getReconnectionDelay();
+		}
+		
+		@Override
+		public int getMaxUnstableCounterValue() {
+			return builder.getMaxUnstableCounter();
 		}
 	}
 }
