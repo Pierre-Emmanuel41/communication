@@ -26,7 +26,7 @@ import fr.pederobien.utils.event.LogEvent.ELogLevel;
 public abstract class Connection implements IConnection {
 	private static final int MAX_EXCEPTION_NUMBER = 10;
 	private IConnectionConfig config;
-	private String name;
+	private Mode mode;
 	private IRequestReceivedHandler handler;
 	private BlockingQueueTask<HeaderMessage> sendingQueue;
 	private BlockingQueueTask<Object> receivingQueue;
@@ -54,7 +54,7 @@ public abstract class Connection implements IConnection {
 	 */
 	protected Connection(IConnectionConfig config, Mode mode) {
 		this.config = config;
-		name = mode == Mode.CLIENT_TO_SERVER ? "Client" : "Server";
+		this.mode = mode;
 		handler = config.getRequestReceivedHandler();
 		
 		sendingQueue = new BlockingQueueTask<HeaderMessage>(String.format("%s[send]", toString()), message -> sendMessage(message));
@@ -169,7 +169,13 @@ public abstract class Connection implements IConnection {
 	}
 	
 	@Override
+	public Mode getMode() {
+		return mode;
+	}
+	
+	@Override
 	public String toString() {
+		String name = mode == Mode.CLIENT_TO_SERVER ? "Client" : "Server";
 		return String.format("[%s %s:%s]", name, config.getAddress(), config.getPort());
 	}
 	
@@ -209,16 +215,9 @@ public abstract class Connection implements IConnection {
 	 * @param algo The unstable algorithm.
 	 */
 	protected void onUnstableConnection(String algo) {
-		String message = null;
-		if (name == "Client") {
-			String formatter = "[Client %s:%s (%s)] - Too much exceptions in a row, closing connection";
-			message = String.format(formatter, config.getAddress(), config.getPort(), algo);
-		}
-		else {
-			String formatter = "[Server *:%s (%s)] - Too much exceptions in a row, closing connection";
-			message = String.format(formatter, config.getPort(), algo);
-		}
-		
+		String name = mode == Mode.CLIENT_TO_SERVER ? "Client" : "Server";
+		String formatter = "[%s %s:%s (%s)] - Too much exceptions in a row, closing connection";
+		String message = String.format(formatter, name, config.getAddress(), config.getPort(), algo);
 		EventManager.callEvent(new LogEvent(ELogLevel.ERROR, message));
 
 		setEnabled(false);

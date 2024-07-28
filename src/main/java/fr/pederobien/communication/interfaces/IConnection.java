@@ -52,4 +52,9 @@ public interface IConnection {
 	 * Close this connection definitely. It cannot be used anymore.
 	 */
 	void dispose();
+	
+	/**
+	 * @return The mode of the connection, it can be from client to server of from server to client.
+	 */
+	Mode getMode();
 }
