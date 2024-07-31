@@ -25,6 +25,17 @@ public class Communication {
 	}
 	
 	/**
+	 * Creates a connection configuration from the client configuration.
+	 * 
+	 * @param address The IP address of the remote.
+	 * @param port The port number of the remote.
+	 * @param config The object that holds common connection parameters.
+	 */
+	public static final IConnectionConfig createDefaultConnectionConfig(String address, int port, IClientConfig config) {
+		return createConnectionConfigBuilder(address, port, config).build();
+	}
+	
+	/**
 	 * Creates a builder in order to configure a connection.
 	 * 
 	 * @param address The IP address of the remote.
@@ -33,6 +44,17 @@ public class Communication {
 	 */
 	public static final ConnectionConfigBuilder createConnectionConfigBuilder(String address, int port, IServerConfig config) {
 		return new ConnectionConfigBuilder(address, port, config);
+	}
+	
+	/**
+	 * Creates a connection configuration from the server configuration.
+	 * 
+	 * @param address The IP address of the remote.
+	 * @param port The port number of the remote.
+	 * @param config The object that holds common connection parameters.
+	 */
+	public static final IConnectionConfig createDefaultConnectionConfig(String address, int port, IServerConfig config) {
+		return createConnectionConfigBuilder(address, port, config).build();
 	}
 	
 	/**
