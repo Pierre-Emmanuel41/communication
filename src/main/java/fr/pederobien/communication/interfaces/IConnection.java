@@ -54,6 +54,11 @@ public interface IConnection {
 	void dispose();
 	
 	/**
+	 * @return true if this connection has been disposed and cannot be used anymore, false otherwise.
+	 */
+	boolean isDisposed();
+
+	/**
 	 * @return The mode of the connection, it can be from client to server of from server to client.
 	 */
 	Mode getMode();

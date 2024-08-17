@@ -101,13 +101,13 @@ public abstract class Connection implements IConnection {
 	public void sendSync(ICallbackMessage message) {
 		try {
 			// Creating a layer to force the current thread to wait for the response from the remote.
-			ICallbackMessage internalMessage = new CallbackMessage(message.getBytes(), message.getTimeout(), args -> {
+			ICallbackMessage sync = new CallbackMessage(message.getBytes(), message.getTimeout(), args -> {
 				argument = args;
 				semaphore.release();
 			});
 
 			// Sending asynchronously the message to the remote
-			send(internalMessage);
+			send(sync);
 
 			// Wait until the callback has been executed
 			semaphore.acquire();
@@ -168,6 +168,11 @@ public abstract class Connection implements IConnection {
 		}
 	}
 	
+	@Override
+	public boolean isDisposed() {
+		return disposable.isDisposed();
+	}
+
 	@Override
 	public Mode getMode() {
 		return mode;
@@ -268,9 +273,13 @@ public abstract class Connection implements IConnection {
 			} catch (Exception exception) {
 				receivingExceptionCounter++;
 				checkUnstable(receivingExceptionCounter, "receive");
+
+				if (!isDisposed())
+					// Waiting again for the reception
+					receivingQueue.add(new Object());
 			} finally {
 				// If connection is not lost
-				if (isEnabled() && (raw != null)) {
+				if (raw != null) {
 					// Waiting again for the reception
 					receivingQueue.add(new Object());
 				}

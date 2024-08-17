@@ -38,51 +38,55 @@ public abstract class Client implements IClient {
 		
 		String name = String.format("%s[reconnect]", toString(), config.getPort());
 		connectionQueue = new BlockingQueueTask<Object>(name, object -> startConnect(object));
-		
+
 		listener = new ConnectionListener(config.getMaxUnstableCounterValue());
 	}
 	
 	@Override
-	public void connect() {
+	public boolean connect() {
 		disposable.checkDisposed();
 
-		if (state == EState.CONNECTION_LOST || state == EState.DISCONNECTED) {
-			onLogEvent("Connecting to the remote");
+		if (state != EState.DISCONNECTED)
+			return false;
 
-			state = EState.CONNECTING;			
-			
-			connectionQueue.add(new Object());
-			connectionQueue.start();
-		}
+		state = EState.CONNECTING;
+		onLogEvent("Connecting to the remote");
+
+		connectionQueue.add(new Object());
+		connectionQueue.start();
+		return true;
 	}
 	
 	@Override
-	public void disconnect() {
+	public boolean disconnect() {
 		disposable.checkDisposed();
 		
-		if (state != EState.DISCONNECTING && state != EState.DISCONNECTED) {
-			state = EState.DISCONNECTING;
-			onLogEvent("Disconnecting from the remote");
-			
-			if (getConnection() != null) {
-				getConnection().setEnabled(false);
-				getConnection().dispose();
-			}
-			
-			state = EState.DISCONNECTED;
+		if (state != EState.CONNECTING && state != EState.CONNECTED)
+			return false;
 
-			onLogEvent("Disconnected from the remote");
+		state = EState.DISCONNECTING;
+		onLogEvent("Disconnecting from the remote");
+
+		if (getConnection() != null) {
+			getConnection().setEnabled(false);
+			getConnection().dispose();
 		}
+
+		state = EState.DISCONNECTED;
+		onLogEvent("Disconnected from the remote");
+		return true;
 	}
 
 	@Override
-	public void dispose() {
-		if (disposable.dispose()) {
-			if (state != EState.DISCONNECTED)
-				disconnect();
+	public boolean dispose() {
+		if (state != EState.DISCONNECTED || !disposable.dispose())
+			return false;
 
-			connectionQueue.dispose();
-		}
+		connectionQueue.dispose();
+
+		state = EState.DISPOSED;
+		onLogEvent("Client disposed");
+		return true;
 	}
 
 	@Override
@@ -193,7 +197,7 @@ public abstract class Client implements IClient {
 			connectImpl(getAddress(), getPort(), getConnectionTimeout());
 			
 			// But checking if connection has been canceled
-			if (state == EState.DISCONNECTING || state == EState.DISCONNECTED)
+			if (state != EState.CONNECTING)
 				return;
 			
 			state = EState.CONNECTED;
@@ -215,7 +219,7 @@ public abstract class Client implements IClient {
 				// Wait before trying to reconnect to the remote
 				Thread.sleep(getReconnectionDelay());
 
-				if (state == EState.CONNECTION_LOST || state == EState.CONNECTING) {
+				if (state == EState.CONNECTING) {
 					onLogEvent("Connection timeout, retrying");
 					connectionQueue.add(object);
 				}
@@ -270,9 +274,13 @@ public abstract class Client implements IClient {
 		 * @param connection The connection involved in a ConnectionUnstableEvent or in a ConnectionLostEvent.
 		 */
 		private void startReconnection(IConnection connection) {
+			if (isDisposed())
+				return;
+
 			if (connection == getConnection())
 			{
 				unstableCounter++;
+
 				disconnect();
 				stop();
 				

@@ -3,6 +3,7 @@ package fr.pederobien.communication.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.ConnectionUnstableEvent;
 import fr.pederobien.communication.event.NewClientEvent;
 import fr.pederobien.communication.event.ServerUnstableEvent;
@@ -23,9 +24,8 @@ public abstract class Server implements IServer {
 	private IServerConfig config;
 	private EState state; 
 	private BlockingQueueTask<Object> clientQueue;
-	private List<IConnection> connections;
+	private List<ConnectionListener> listeners;
 	private IDisposable disposable;
-	private ConnectionListener listener;
 	private int newClientExceptionCounter;
 	
 	/**
@@ -37,67 +37,72 @@ public abstract class Server implements IServer {
 		this.config = config;
 		
 		clientQueue = new BlockingQueueTask<Object>(String.format("%s[WaitForClient]", toString()), object -> waitForClient(object));
-		connections = new ArrayList<IConnection>();
+		listeners = new ArrayList<ConnectionListener>();
 		disposable = new Disposable();
-		listener = new ConnectionListener();
 		
 		newClientExceptionCounter = 0;
 		state = EState.CLOSED;
 	}
 
 	@Override
-	public void open() {
+	public boolean open() {
 		disposable.checkDisposed();
-		
-		if (state == EState.CLOSED) {
-			try {
-				state = EState.OPENING;
-				onLogEvent("Opening server");
 
-				openImpl(config.getPort());
-				
-				listener.start();
-				
-				state = EState.OPENED;
-				onLogEvent("Server opened");
+		if (state != EState.CLOSED)
+			return false;
 
-				clientQueue.add(new Object());
-				clientQueue.start();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		try {
+			state = EState.OPENING;
+			onLogEvent("Opening server");
+
+			openImpl(config.getPort());
+
+			state = EState.OPENED;
+			onLogEvent("Server opened");
+
+			clientQueue.add(new Object());
+			clientQueue.start();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
 		}
+
+		return true;
 	}
 
 	@Override
-	public void close() {
+	public boolean close() {
 		disposable.checkDisposed();
 
-		if (state == EState.OPENED) {
-			try {
-				state = EState.CLOSING;
-				onLogEvent("Closing server");
+		if (state != EState.OPENED)
+			return false;
 
-				listener.stop();
+		try {
+			state = EState.CLOSING;
+			onLogEvent("Closing server");
 
-				connections.forEach(connection -> connection.dispose());
-				
-				closeImpl();
+			// First close the server and then close all connections with clients.
+			closeImpl();
+			listeners.forEach(listener -> listener.stop());
+			listeners.clear();
 
-				state = EState.CLOSED;
-				onLogEvent("Server closed");
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			state = EState.CLOSED;
+			onLogEvent("Server closed");
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
 		}
+
+		return true;
 	}
 	
 	@Override
-	public void dispose() {
-		if (disposable.dispose()) {
-			close();
-			clientQueue.dispose();
-		}
+	public boolean dispose() {
+		if (state != EState.CLOSED || !disposable.dispose())
+			return false;
+
+		clientQueue.dispose();
+		return true;
 	}
 
 	@Override
@@ -146,16 +151,16 @@ public abstract class Server implements IServer {
 				connection.dispose();
 				return;
 			}
-			
+
 			connection.initialise();
-			
-			// A connection can be removed/added at the same time.
-			synchronized (this) {
-				connections.add(connection);
-			}
-			
+
+			ConnectionListener listener = new ConnectionListener(connection);
+			listener.start();
+
+			listeners.add(listener);
+
 			EventManager.callEvent(new NewClientEvent(connection, this));
-			
+
 			newClientExceptionCounter = 0;
 		} catch (Exception e) {
 			newClientExceptionCounter++;
@@ -171,6 +176,16 @@ public abstract class Server implements IServer {
 	}
 	
 	private class ConnectionListener implements IEventListener {
+		private IConnection connection;
+		
+		/**
+		 * Creates a listener to monitor the given connection.
+		 *
+		 * @param connection The connection to monitor.
+		 */
+		public ConnectionListener(IConnection connection) {
+			this.connection = connection;
+		}
 		
 		/**
 		 * Start monitoring the underlying connection.
@@ -184,20 +199,19 @@ public abstract class Server implements IServer {
 		 */
 		public void stop() {
 			EventManager.unregisterListener(this);
+			connection.dispose();
+		}
+		
+		@EventHandler
+		private void onConnectionLost(ConnectionLostEvent event) {
+			if (connection == event.getConnection())
+				connection.dispose();
 		}
 		
 		@EventHandler
 		private void onConnectionUnstable(ConnectionUnstableEvent event) {
-			List<IConnection> connections;
-
-			// A connection can be removed/added at the same time.
-			synchronized (this) {
-				connections = new ArrayList<IConnection>(Server.this.connections);
-			}
-
-			for (IConnection connection : connections)
-				if (connection == event.getConnection())
-					connection.dispose();
+			if (connection == event.getConnection())
+				connection.dispose();
 		}
 	}
 }
