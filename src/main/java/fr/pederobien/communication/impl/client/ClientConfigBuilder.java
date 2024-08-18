@@ -1,7 +1,8 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.client;
 
 import java.util.function.Supplier;
 
+import fr.pederobien.communication.impl.SimpleRequestReceivedHandler;
 import fr.pederobien.communication.impl.layer.SimpleLayer;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.ILayer;
@@ -25,7 +26,7 @@ public class ClientConfigBuilder {
 	 * @param address The IP address of the server.
 	 * @param port The port number of the server.
 	 */
-	protected ClientConfigBuilder(String address, int port) {
+	public ClientConfigBuilder(String address, int port) {
 		this.address = address;
 		this.port = port;
 		

@@ -3,7 +3,7 @@ package fr.pederobien.communication.impl.layer;
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.pederobien.communication.impl.HeaderMessage;
+import fr.pederobien.communication.impl.connection.HeaderMessage;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;

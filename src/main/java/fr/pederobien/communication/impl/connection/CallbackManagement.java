@@ -1,4 +1,4 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.connection;
 
 import fr.pederobien.communication.interfaces.ICallbackMessage;
 import fr.pederobien.communication.interfaces.ICallbackMessage.CallbackArgs;

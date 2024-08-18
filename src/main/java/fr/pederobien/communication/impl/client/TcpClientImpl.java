@@ -1,9 +1,12 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.client;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import fr.pederobien.communication.impl.Communication;
+import fr.pederobien.communication.impl.connection.ConnectionConfigBuilder;
+import fr.pederobien.communication.impl.connection.TcpConnectionImpl;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.IClientImpl;
 import fr.pederobien.communication.interfaces.IConnection;

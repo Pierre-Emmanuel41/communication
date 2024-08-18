@@ -1,4 +1,4 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.server;
 
 import java.util.ArrayList;
 import java.util.List;

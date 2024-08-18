@@ -1,4 +1,4 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.connection;
 
 import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.IConnectionImpl;
@@ -13,7 +13,7 @@ public class CustomConnection extends Connection {
 	 * @param implementation The connection specific implementation for sending/receiving data from the remote.
 	 * @param mode Represent the direction of the connection.
 	 */
-	protected CustomConnection(IConnectionConfig config, IConnectionImpl implementation, Mode mode) {
+	public CustomConnection(IConnectionConfig config, IConnectionImpl implementation, Mode mode) {
 		super(config, mode);
 		
 		this.implementation = implementation;

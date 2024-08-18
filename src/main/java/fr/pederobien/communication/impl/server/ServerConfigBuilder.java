@@ -1,7 +1,8 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.server;
 
 import java.util.function.Supplier;
 
+import fr.pederobien.communication.impl.SimpleRequestReceivedHandler;
 import fr.pederobien.communication.impl.layer.SimpleLayer;
 import fr.pederobien.communication.interfaces.ILayer;
 import fr.pederobien.communication.interfaces.IRequestReceivedHandler;

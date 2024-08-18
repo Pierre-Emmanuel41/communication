@@ -1,5 +1,13 @@
 package fr.pederobien.communication.impl;
 
+import fr.pederobien.communication.impl.client.ClientConfigBuilder;
+import fr.pederobien.communication.impl.client.CustomClient;
+import fr.pederobien.communication.impl.client.TcpClientImpl;
+import fr.pederobien.communication.impl.connection.ConnectionConfigBuilder;
+import fr.pederobien.communication.impl.connection.CustomConnection;
+import fr.pederobien.communication.impl.server.CustomServer;
+import fr.pederobien.communication.impl.server.ServerConfigBuilder;
+import fr.pederobien.communication.impl.server.TcpServerImpl;
 import fr.pederobien.communication.interfaces.IClient;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.IClientImpl;

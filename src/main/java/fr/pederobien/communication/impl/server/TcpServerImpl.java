@@ -1,8 +1,11 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.server;
 
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import fr.pederobien.communication.impl.Communication;
+import fr.pederobien.communication.impl.connection.ConnectionConfigBuilder;
+import fr.pederobien.communication.impl.connection.TcpConnectionImpl;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.IServerConfig;

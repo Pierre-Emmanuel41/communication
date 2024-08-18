@@ -1,4 +1,4 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.connection;
 
 import fr.pederobien.communication.interfaces.ICommonConfig;
 import fr.pederobien.communication.interfaces.IConnectionConfig;
@@ -17,7 +17,7 @@ public class ConnectionConfigBuilder {
 	 * @param port The port number of the remote.
 	 * @param config The object that holds common connection parameters.
 	 */
-	protected ConnectionConfigBuilder(String address, int port, ICommonConfig config) {
+	public ConnectionConfigBuilder(String address, int port, ICommonConfig config) {
 		this.address = address;
 		this.port = port;
 		this.config = config;

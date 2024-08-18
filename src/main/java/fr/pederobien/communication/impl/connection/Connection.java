@@ -1,4 +1,4 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.connection;
 
 import java.util.List;
 import java.util.concurrent.Semaphore;

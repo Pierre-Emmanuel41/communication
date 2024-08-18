@@ -14,8 +14,8 @@ import java.util.concurrent.Semaphore;
 
 import javax.crypto.Cipher;
 
-import fr.pederobien.communication.impl.HeaderMessage;
-import fr.pederobien.communication.impl.Message;
+import fr.pederobien.communication.impl.connection.HeaderMessage;
+import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;

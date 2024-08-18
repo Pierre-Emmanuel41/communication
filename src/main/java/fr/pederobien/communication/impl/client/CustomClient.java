@@ -1,4 +1,4 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.client;
 
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.IClientImpl;
@@ -13,7 +13,7 @@ public class CustomClient extends Client {
 	 * @param config The object that holds the client configuration.
 	 * @param implementation The client specific implementation to connect/disconnect from the server.
 	 */
-	protected CustomClient(IClientConfig config, IClientImpl implementation) {
+	public CustomClient(IClientConfig config, IClientImpl implementation) {
 		super(config);
 		
 		this.implementation = implementation;

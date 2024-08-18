@@ -1,4 +1,4 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.server;
 
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IServerConfig;
@@ -13,7 +13,7 @@ public class CustomServer extends Server {
 	 * @param config The object that holds the server configuration.
 	 * @param implementation The server specific implementation to open/close the server.
 	 */
-	protected CustomServer(IServerConfig config, IServerImpl implementation) {
+	public CustomServer(IServerConfig config, IServerImpl implementation) {
 		super(config);
 		
 		this.implementation = implementation;

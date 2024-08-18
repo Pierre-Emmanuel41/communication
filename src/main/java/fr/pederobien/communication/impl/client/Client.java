@@ -1,4 +1,4 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.client;
 
 import fr.pederobien.communication.event.ClientConnectedEvent;
 import fr.pederobien.communication.event.ConnectionLostEvent;
