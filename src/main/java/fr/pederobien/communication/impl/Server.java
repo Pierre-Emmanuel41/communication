@@ -102,6 +102,7 @@ public abstract class Server implements IServer {
 			return false;
 
 		clientQueue.dispose();
+		onLogEvent("Server disposed");
 		return true;
 	}
 
