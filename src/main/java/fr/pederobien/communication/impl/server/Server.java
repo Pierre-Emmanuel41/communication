@@ -1,11 +1,9 @@
 package fr.pederobien.communication.impl.server;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.ConnectionUnstableEvent;
 import fr.pederobien.communication.event.NewClientEvent;
+import fr.pederobien.communication.event.ServerCloseEvent;
 import fr.pederobien.communication.event.ServerUnstableEvent;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IServer;
@@ -24,7 +22,6 @@ public abstract class Server implements IServer {
 	private IServerConfig config;
 	private EState state; 
 	private BlockingQueueTask<Object> clientQueue;
-	private List<ConnectionListener> listeners;
 	private IDisposable disposable;
 	private int newClientExceptionCounter;
 	
@@ -37,7 +34,6 @@ public abstract class Server implements IServer {
 		this.config = config;
 		
 		clientQueue = new BlockingQueueTask<Object>(String.format("%s[WaitForClient]", toString()), object -> waitForClient(object));
-		listeners = new ArrayList<ConnectionListener>();
 		disposable = new Disposable();
 		
 		newClientExceptionCounter = 0;
@@ -83,8 +79,7 @@ public abstract class Server implements IServer {
 
 			// First close the server and then close all connections with clients.
 			closeImpl();
-			listeners.forEach(listener -> listener.stop());
-			listeners.clear();
+			EventManager.callEvent(new ServerCloseEvent(this));
 
 			state = EState.CLOSED;
 			onLogEvent("Server closed");
@@ -155,11 +150,8 @@ public abstract class Server implements IServer {
 
 			connection.initialise();
 
-			ConnectionListener listener = new ConnectionListener(connection);
-			listener.start();
-
-			listeners.add(listener);
-
+			// Monitor the created connection
+			new ConnectionListener(this, connection);
 			EventManager.callEvent(new NewClientEvent(connection, this));
 
 			newClientExceptionCounter = 0;
@@ -177,6 +169,7 @@ public abstract class Server implements IServer {
 	}
 	
 	private class ConnectionListener implements IEventListener {
+		private IServer server;
 		private IConnection connection;
 		
 		/**
@@ -184,23 +177,11 @@ public abstract class Server implements IServer {
 		 *
 		 * @param connection The connection to monitor.
 		 */
-		public ConnectionListener(IConnection connection) {
+		public ConnectionListener(IServer server, IConnection connection) {
+			this.server = server;
 			this.connection = connection;
-		}
-		
-		/**
-		 * Start monitoring the underlying connection.
-		 */
-		public void start() {
+			
 			EventManager.registerListener(this);
-		}
-		
-		/**
-		 * Stop monitoring the underlying connection.
-		 */
-		public void stop() {
-			EventManager.unregisterListener(this);
-			connection.dispose();
 		}
 		
 		@EventHandler
@@ -213,6 +194,14 @@ public abstract class Server implements IServer {
 		private void onConnectionUnstable(ConnectionUnstableEvent event) {
 			if (connection == event.getConnection())
 				connection.dispose();
+		}
+		
+		@EventHandler
+		private void onServerClose(ServerCloseEvent event) {
+			if (server == event.getServer()) {
+				EventManager.unregisterListener(this);
+				connection.dispose();
+			}
 		}
 	}
 }
