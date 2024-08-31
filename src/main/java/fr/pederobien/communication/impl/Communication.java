@@ -20,7 +20,7 @@ import fr.pederobien.communication.interfaces.IServerConfig;
 import fr.pederobien.communication.interfaces.IServerImpl;
 
 public class Communication {
-	
+
 	/**
 	 * Creates a builder in order to configure a connection.
 	 * 
@@ -31,7 +31,7 @@ public class Communication {
 	public static final ConnectionConfigBuilder createConnectionConfigBuilder(String address, int port, IClientConfig config) {
 		return new ConnectionConfigBuilder(address, port, config);
 	}
-	
+
 	/**
 	 * Creates a connection configuration from the client configuration.
 	 * 
@@ -42,7 +42,7 @@ public class Communication {
 	public static final IConnectionConfig createDefaultConnectionConfig(String address, int port, IClientConfig config) {
 		return createConnectionConfigBuilder(address, port, config).build();
 	}
-	
+
 	/**
 	 * Creates a builder in order to configure a connection.
 	 * 
@@ -53,7 +53,7 @@ public class Communication {
 	public static final ConnectionConfigBuilder createConnectionConfigBuilder(String address, int port, IServerConfig config) {
 		return new ConnectionConfigBuilder(address, port, config);
 	}
-	
+
 	/**
 	 * Creates a connection configuration from the server configuration.
 	 * 
@@ -64,7 +64,7 @@ public class Communication {
 	public static final IConnectionConfig createDefaultConnectionConfig(String address, int port, IServerConfig config) {
 		return createConnectionConfigBuilder(address, port, config).build();
 	}
-	
+
 	/**
 	 * Create custom connection that send asynchronously messages to the remote.
 	 * 
@@ -75,7 +75,7 @@ public class Communication {
 	public static final IConnection createCustomConnection(IConnectionConfig config, IConnectionImpl implementation, Mode mode) {
 		return new CustomConnection(config, implementation, mode);
 	}
-	
+
 	/**
 	 * Creates a builder in order to configure a client.
 	 * 
@@ -85,7 +85,7 @@ public class Communication {
 	public static final ClientConfigBuilder createClientConfigBuilder(String address, int port) {
 		return new ClientConfigBuilder(address, port);
 	}
-	
+
 	/**
 	 * Creates a builder in order to configure a client.
 	 * 
@@ -95,7 +95,7 @@ public class Communication {
 	public static final IClientConfig createDefaultClientConfig(String address, int port) {
 		return createClientConfigBuilder(address, port).build();
 	}
-	
+
 	/**
 	 * Create a client ready to be connected to a remote.
 	 * 
@@ -105,7 +105,7 @@ public class Communication {
 	public static final IClient createCustomClient(IClientConfig config, IClientImpl implementation) {
 		return new CustomClient(config, implementation);
 	}
-	
+
 	/**
 	 * Create a client with a TCP connection ready to be connected to a remote.
 	 * 
@@ -114,7 +114,17 @@ public class Communication {
 	public static final IClient createTcpClient(IClientConfig config) {
 		return createCustomClient(config, new TcpClientImpl());
 	}
-	
+
+	/**
+	 * Creates a client with a TCP connection ready to be connected to a remote.
+	 * 
+	 * @param address The IP address of the server.
+	 * @param port The port number of the server.
+	 */
+	public static final IClient createDefaultTcpClient(String address, int port) {
+		return createTcpClient(createDefaultClientConfig(address, port));
+	}
+
 	/**
 	 * Creates a builder in order to a configuration a server.
 	 * 
@@ -124,7 +134,7 @@ public class Communication {
 	public static final ServerConfigBuilder createServerConfigBuilder(String name, int port) {
 		return new ServerConfigBuilder(name, port);
 	}
-	
+
 	/**
 	 * Creates a default server configuration.
 	 * 
@@ -134,7 +144,7 @@ public class Communication {
 	public static final IServerConfig createDefaultServerConfig(String name, int port) {
 		return createServerConfigBuilder(name, port).build();
 	}
-	
+
 	/**
 	 * Creates a custom server.
 	 * 
@@ -144,14 +154,23 @@ public class Communication {
 	public static final IServer createCustomServer(IServerConfig config, IServerImpl implementation) {
 		return new CustomServer(config, implementation);
 	}
-	
+
 	/**
-	 * Creates a custom server.
+	 * Creates a TCP server ready to be opened.
 	 * 
 	 * @param config The object that holds the server configuration.
-	 * @param layer The layer responsible to encode/decode data.
 	 */
 	public static final IServer createTcpServer(IServerConfig config) {
 		return createCustomServer(config, new TcpServerImpl());
+	}
+
+	/**
+	 * Creates a TCP server ready to be opened.
+	 * 
+	 * @param name The name of the server.
+	 * @param port The port number of the server.
+	 */
+	public static final IServer createDefaultTcpServer(String name, int port) {
+		return createTcpServer(createDefaultServerConfig(name, port));
 	}
 }

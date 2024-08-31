@@ -17,7 +17,7 @@ public class TcpCommunicationTest {
 
 	public void testClientAutomaticReconnection() {
 		Runnable test = () -> {
-			IClient client = Communication.createTcpClient(Communication.createDefaultClientConfig("127.0.0.1", 12345));
+			IClient client = Communication.createDefaultTcpClient("127.0.0.1", 12345);
 			client.connect();
 			
 			sleep(5000);
@@ -31,12 +31,12 @@ public class TcpCommunicationTest {
 	
 	public void testClientAutomaticReconnectionButWithServerOpenedLater() {
 		Runnable test = () -> {
-			IClient client = Communication.createTcpClient(Communication.createDefaultClientConfig("127.0.0.1", 12345));
+			IClient client = Communication.createDefaultTcpClient("127.0.0.1", 12345);
 			client.connect();
 			
 			sleep(3000);
 			
-			IServer server = Communication.createTcpServer(Communication.createDefaultServerConfig("TCP server test", 12345));
+			IServer server = Communication.createDefaultTcpServer("TCP server test", 12345);
 			server.open();
 			
 			sleep(1000);
@@ -55,12 +55,12 @@ public class TcpCommunicationTest {
 	
 	public void testClientAutomaticReconnectionButServerClosedLater() {
 		Runnable test = () -> {
-			IServer server = Communication.createTcpServer(Communication.createDefaultServerConfig("TCP server test", 12345));
+			IServer server = Communication.createDefaultTcpServer("TCP server test", 12345);
 			server.open();
 			
 			sleep(500);
 			
-			IClient client = Communication.createTcpClient(Communication.createDefaultClientConfig("127.0.0.1", 12345));
+			IClient client = Communication.createDefaultTcpClient("127.0.0.1", 12345);
 			client.connect();
 			
 			sleep(1000);
@@ -93,7 +93,7 @@ public class TcpCommunicationTest {
 			IServer server = Communication.createTcpServer(serverBuilder.build());
 			server.open();
 			
-			IClient client = Communication.createTcpClient(Communication.createDefaultClientConfig("127.0.0.1", 12345));
+			IClient client = Communication.createDefaultTcpClient("127.0.0.1", 12345);
 			client.connect();
 			
 			// Waiting for the client to be connected to the remote
@@ -117,7 +117,7 @@ public class TcpCommunicationTest {
 	
 	public void testServerToClientCommunication() {
 		Runnable test = () -> {
-			IServer server = Communication.createTcpServer(Communication.createDefaultServerConfig("TCP server test", 12345));
+			IServer server = Communication.createDefaultTcpServer("TCP server test", 12345);
 			server.open();
 			
 			SimpleSendMessageToClientOnceConnected sendToClient = new SimpleSendMessageToClientOnceConnected(server, "You are connected !", 1);
@@ -154,7 +154,7 @@ public class TcpCommunicationTest {
 			IServer server = Communication.createTcpServer(serverBuilder.build());
 			server.open();
 			
-			IClient client = Communication.createTcpClient(Communication.createDefaultClientConfig("127.0.0.1", 12345));
+			IClient client = Communication.createDefaultTcpClient("127.0.0.1", 12345);
 			client.connect();
 			
 			sleep(1000);
@@ -184,10 +184,10 @@ public class TcpCommunicationTest {
 	
 	public void testClientToServerWithCallbackButTimeout() {
 		Runnable test = () -> {
-			IServer server = Communication.createTcpServer(Communication.createDefaultServerConfig("TCP server test", 12345));
+			IServer server = Communication.createDefaultTcpServer("TCP server test", 12345);
 			server.open();
 			
-			IClient client = Communication.createTcpClient(Communication.createDefaultClientConfig("127.0.0.1", 12345));
+			IClient client = Communication.createDefaultTcpClient("127.0.0.1", 12345);
 			client.connect();
 			
 			sleep(1000);
@@ -216,7 +216,7 @@ public class TcpCommunicationTest {
 	
 	public void testServerToClientWithCallback() {
 		Runnable test = () -> {
-			IServer server = Communication.createTcpServer(Communication.createDefaultServerConfig("TCP server test", 12345));
+			IServer server = Communication.createDefaultTcpServer("TCP server test", 12345);
 			server.open();
 
 			CallbackSendMessageToClientOnceConnected sendToClient = new CallbackSendMessageToClientOnceConnected(server, args -> {
@@ -255,7 +255,7 @@ public class TcpCommunicationTest {
 	
 	public void testServerToClientWithCallbackButTimeout() {
 		Runnable test = () -> {
-			IServer server = Communication.createTcpServer(Communication.createDefaultServerConfig("TCP server test", 12345));
+			IServer server = Communication.createDefaultTcpServer("TCP server test", 12345);
 			server.open();
 
 			CallbackSendMessageToClientOnceConnected sendToClient = new CallbackSendMessageToClientOnceConnected(server, args -> {
@@ -290,7 +290,7 @@ public class TcpCommunicationTest {
 	
 	public void testSendingException() {
 		Runnable test = () -> {
-			IServer server = Communication.createTcpServer(Communication.createDefaultServerConfig("TCP server test", 12345));
+			IServer server = Communication.createDefaultTcpServer("TCP server test", 12345);
 			server.open();
 			
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
@@ -319,7 +319,7 @@ public class TcpCommunicationTest {
 	
 	public void testReceivingException() {
 		Runnable test = () -> {
-			IServer server = Communication.createTcpServer(Communication.createDefaultServerConfig("TCP server test", 12345));
+			IServer server = Communication.createDefaultTcpServer("TCP server test", 12345);
 			server.open();
 			
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
@@ -342,7 +342,7 @@ public class TcpCommunicationTest {
 	
 	public void testExtractionException() {
 		Runnable test = () -> {
-			IServer server = Communication.createTcpServer(Communication.createDefaultServerConfig("TCP server test", 12345));
+			IServer server = Communication.createDefaultTcpServer("TCP server test", 12345);
 			server.open();
 			
 			SimpleSendMessageToClientOnceConnected sendToClient = new SimpleSendMessageToClientOnceConnected(server, "I'm spamming you !", 10);
@@ -379,7 +379,7 @@ public class TcpCommunicationTest {
 			IServer server = Communication.createTcpServer(serverBuilder.build());
 			server.open();
 			
-			IClient client = Communication.createTcpClient(Communication.createDefaultClientConfig("127.0.0.1", 12345));
+			IClient client = Communication.createDefaultTcpClient("127.0.0.1", 12345);
 			client.connect();
 
 			sleep(500);
@@ -411,7 +411,7 @@ public class TcpCommunicationTest {
 	
 	public void testUnexpectedRequestException() {
 		Runnable test = () -> {
-			IServer server = Communication.createTcpServer(Communication.createDefaultServerConfig("TCP server test", 12345));
+			IServer server = Communication.createDefaultTcpServer("TCP server test", 12345);
 			server.open();
 			
 			SimpleSendMessageToClientOnceConnected sendToClient = new SimpleSendMessageToClientOnceConnected(server, "I'm spamming you", 10);
@@ -440,7 +440,7 @@ public class TcpCommunicationTest {
 	
 	public void testUnstableClient() {
 		Runnable test = () -> {
-			IServer server = Communication.createTcpServer(Communication.createDefaultServerConfig("TCP server test", 12345));
+			IServer server = Communication.createDefaultTcpServer("TCP server test", 12345);
 			server.open();
 			
 			SimpleSendMessageToClientOnceConnected sendToClient = new SimpleSendMessageToClientOnceConnected(server, "I'm spamming you !", 10);
