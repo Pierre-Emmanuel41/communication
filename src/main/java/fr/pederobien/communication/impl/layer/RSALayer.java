@@ -16,6 +16,7 @@ import javax.crypto.Cipher;
 
 import fr.pederobien.communication.impl.connection.HeaderMessage;
 import fr.pederobien.communication.impl.connection.Message;
+import fr.pederobien.communication.interfaces.ICertificate;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;
@@ -25,6 +26,7 @@ import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.LogEvent;
 
 public class RSALayer implements ILayer {
+	private ICertificate certificate;
 	private Encapsuler encapsuler;
 	private Splitter splitter;
 	private ILayer implementation, notInitialised, initialised;
@@ -32,9 +34,12 @@ public class RSALayer implements ILayer {
 	private PublicKey publicKey, otherKey;
 
 	/**
-	 * Creates a layer using an RSA encryption/decryption algorithm
+	 * Creates a layer using an RSA encryption/decryption algorithm.
+	 * 
+	 * @param certificate The certificate to sign or authenticate the remote public key.
 	 */
-	public RSALayer() {
+	public RSALayer(ICertificate certificate) {
+		this.certificate = certificate;
 		try {
 			KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
 			generator.initialize(2048);
@@ -77,7 +82,7 @@ public class RSALayer implements ILayer {
 		
 		@Override
 		public void initialise(IConnection connection) throws Exception {
-			connection.send(new Message(publicKey.getEncoded()));
+			connection.send(new Message(certificate.sign(publicKey.getEncoded())));
 			semaphore.acquire();
 		}
 
@@ -92,12 +97,16 @@ public class RSALayer implements ILayer {
 			List<byte[]> messages = encapsuler.unpack(raw);		
 			for (byte[] message : messages) {
 				try {
+					byte[] certifiedKey = certificate.authenticate(message);
+					if (certifiedKey == null)
+						throw new IllegalStateException("Could not verify remote public key");
+
 					otherKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(message));
 
 					implementation = initialised;
 					semaphore.release();
 				} catch (Exception e) {
-					EventManager.callEvent(new LogEvent("Fail to initialise RSA layer"));
+					EventManager.callEvent(new LogEvent("Failure during RSA layer initialisation: %s", e.getMessage()));
 					throw new RuntimeException("Fail to initialise RSA layer");
 				}
 			}
