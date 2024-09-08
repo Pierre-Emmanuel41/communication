@@ -8,8 +8,10 @@ public interface ILayer {
 	 * Initialize this layer if some requests should be sent to the remote before being used normally.
 	 * 
 	 * @param connection The connection used to send data to the remote.
+	 * 
+	 * @return True if the layer is successfully initialized, false otherwise.
 	 */
-	void initialise(IConnection connection) throws Exception ;
+	boolean initialise(IConnection connection) throws Exception ;
 
 	/**
 	 * Pack the identifier and the payload in order to be sent to the remote.

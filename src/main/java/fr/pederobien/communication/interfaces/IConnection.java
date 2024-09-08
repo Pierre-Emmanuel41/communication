@@ -8,9 +8,12 @@ public interface IConnection {
 	}
 	
 	/**
-	 * First step for initializing this connection. This method should be called before trying to send a message.
+	 * First step for initializing this connection.
+	 * This method is called before trying to send a message.
+	 * 
+	 * @return True if this connection is successfully initialized, false otherwise.
 	 */
-	void initialise() throws Exception;
+	boolean initialise() throws Exception;
 	
 	/**
 	 * Send a message synchronously and block until a response has been received. The asynchronous send/receive are on suspended.

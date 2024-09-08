@@ -159,14 +159,6 @@ public abstract class Client implements IClient {
 	protected abstract IConnection onConnectionComplete(IClientConfig config);
 	
 	/**
-	 * Method called after having the connection fully initialized but before throwing
-	 * a connection complete event.
-	 * 
-	 * @param connection The initialized connection of this client.
-	 */
-	protected abstract boolean postInitialise(IConnection connection);
-	
-	/**
 	 * Throw a LogEvent.
 	 * 
 	 * @param message The message of the event.
@@ -202,9 +194,9 @@ public abstract class Client implements IClient {
 			
 			state = EState.CONNECTED;
 			IConnection connection = onConnectionComplete(config);
-			connection.initialise();
 			listener.start();
-			if (!postInitialise(connection))
+
+			if (!connection.initialise())
 				connection.dispose();
 			else {
 				this.connection = connection;

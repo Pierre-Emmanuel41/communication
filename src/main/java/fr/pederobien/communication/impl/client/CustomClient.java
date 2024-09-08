@@ -28,9 +28,4 @@ public class CustomClient extends Client {
 	protected IConnection onConnectionComplete(IClientConfig config) {
 		return implementation.onConnectionComplete(config);
 	}
-	
-	@Override
-	protected boolean postInitialise(IConnection connection) {
-		return implementation.postInitialise(connection);
-	}
 }

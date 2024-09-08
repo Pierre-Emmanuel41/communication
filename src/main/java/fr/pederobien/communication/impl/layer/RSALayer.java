@@ -59,8 +59,8 @@ public class RSALayer implements ILayer {
 	}
 	
 	@Override
-	public void initialise(IConnection connection) throws Exception {
-		implementation.initialise(connection);
+	public boolean initialise(IConnection connection) throws Exception {
+		return implementation.initialise(connection);
 	}
 
 	@Override
@@ -81,9 +81,10 @@ public class RSALayer implements ILayer {
 		}
 		
 		@Override
-		public void initialise(IConnection connection) throws Exception {
+		public boolean initialise(IConnection connection) throws Exception {
 			connection.send(new Message(certificate.sign(publicKey.getEncoded())));
 			semaphore.acquire();
+			return true;
 		}
 
 		@Override
@@ -118,7 +119,7 @@ public class RSALayer implements ILayer {
 	private class InitialisedLayer implements ILayer {
 		
 		@Override
-		public void initialise(IConnection connection) {
+		public boolean initialise(IConnection connection) {
 			throw new IllegalStateException("Layer already initialised");
 		}
 

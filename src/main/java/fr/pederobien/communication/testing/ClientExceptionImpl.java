@@ -41,11 +41,6 @@ public class ClientExceptionImpl implements IClientImpl {
 
 		return Communication.createCustomConnection(connectionConfig, impl, Mode.CLIENT_TO_SERVER);
 	}
-
-	@Override
-	public boolean postInitialise(IConnection connection) {
-		return true;
-	}
 	
 	private class ConnectionExceptionImpl implements IConnectionImpl {
 		private ClientExceptionMode mode;

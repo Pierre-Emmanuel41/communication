@@ -39,9 +39,4 @@ public class TcpClientImpl implements IClientImpl {
 		
 		return Communication.createCustomConnection(builder.build(), new TcpConnectionImpl(socket), Mode.CLIENT_TO_SERVER);
 	}
-	
-	@Override
-	public boolean postInitialise(IConnection connection) {
-		return true;
-	}
 }

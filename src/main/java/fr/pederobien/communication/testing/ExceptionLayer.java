@@ -27,8 +27,8 @@ public class ExceptionLayer implements ILayer {
 	}
 
 	@Override
-	public void initialise(IConnection connection) throws Exception {
-		// Do nothing
+	public boolean initialise(IConnection connection) throws Exception {
+		return true;
 	}
 
 	@Override

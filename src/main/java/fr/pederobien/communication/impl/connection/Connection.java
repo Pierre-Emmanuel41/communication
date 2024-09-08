@@ -76,7 +76,7 @@ public abstract class Connection implements IConnection {
 	}
 	
 	@Override
-	public void initialise() throws Exception {
+	public boolean initialise() throws Exception {
 		// Waiting for a message to be sent		
 		sendingQueue.start();
 		
@@ -94,7 +94,7 @@ public abstract class Connection implements IConnection {
 		unexpectedRequestQueue.start();
 		
 		// Initializing layer
-		config.getLayer().initialise(this);
+		return config.getLayer().initialise(this);
 	}
 	
 	@Override

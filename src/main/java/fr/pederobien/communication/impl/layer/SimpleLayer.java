@@ -14,8 +14,8 @@ public class SimpleLayer implements ILayer {
 	private Encapsuler encapsuler;
 	
 	@Override
-	public void initialise(IConnection connection) {
-		// Do nothing
+	public boolean initialise(IConnection connection) {
+		return true;
 	}
 	
 	/**
