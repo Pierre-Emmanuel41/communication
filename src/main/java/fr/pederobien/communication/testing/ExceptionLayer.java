@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fr.pederobien.communication.impl.connection.HeaderMessage;
-import fr.pederobien.communication.interfaces.IConnection;
+import fr.pederobien.communication.interfaces.IExchange;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;
 
@@ -27,7 +27,7 @@ public class ExceptionLayer implements ILayer {
 	}
 
 	@Override
-	public boolean initialise(IConnection connection) throws Exception {
+	public boolean initialise(IExchange exchange) throws Exception {
 		return true;
 	}
 

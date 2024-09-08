@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fr.pederobien.communication.impl.connection.HeaderMessage;
-import fr.pederobien.communication.interfaces.IConnection;
+import fr.pederobien.communication.interfaces.IExchange;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;
 import fr.pederobien.utils.ByteWrapper;
@@ -14,7 +14,7 @@ public class SimpleLayer implements ILayer {
 	private Encapsuler encapsuler;
 	
 	@Override
-	public boolean initialise(IConnection connection) {
+	public boolean initialise(IExchange exchange) {
 		return true;
 	}
 	

@@ -9,6 +9,7 @@ import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.ConnectionUnstableEvent;
 import fr.pederobien.communication.event.DataEvent;
 import fr.pederobien.communication.event.RequestReceivedEvent;
+import fr.pederobien.communication.impl.Exchange;
 import fr.pederobien.communication.interfaces.ICallbackMessage;
 import fr.pederobien.communication.interfaces.ICallbackMessage.CallbackArgs;
 import fr.pederobien.communication.interfaces.IConnection;
@@ -42,6 +43,10 @@ public abstract class Connection implements IConnection {
 	private int callbackExceptionCounter;
 	private int requestExceptionCounter;
 	
+	// For connection initialization
+	private boolean initialization;
+	private Exchange exchange;
+	
 	// When the synchronous send has been called
 	private Semaphore semaphore;
 	private CallbackArgs argument;
@@ -71,7 +76,9 @@ public abstract class Connection implements IConnection {
 		callbackExceptionCounter = 0;
 		requestExceptionCounter = 0;
 		isEnabled = true;
-		
+		initialization = false;
+
+		exchange = new Exchange(this);
 		semaphore = new Semaphore(0);
 	}
 	
@@ -94,7 +101,12 @@ public abstract class Connection implements IConnection {
 		unexpectedRequestQueue.start();
 		
 		// Initializing layer
-		return config.getLayer().initialise(this);
+		initialization = true;
+		boolean success = config.getLayer().initialise(exchange);
+		if (success)
+			initialization = false;
+
+		return success;
 	}
 	
 	@Override
@@ -313,8 +325,7 @@ public abstract class Connection implements IConnection {
 							callbackQueue.add(management);
 					}
 
-					// Receiving unexpected request from the remote, checking if it should be executed
-					else if (config.isAllowUnexpectedRequest())
+					else
 						// Dispatching asynchronously a request received event.
 						unexpectedRequestQueue.add(new UnexpectedRequestEvent(request.getID(), request.getBytes()));
 				}
@@ -358,7 +369,12 @@ public abstract class Connection implements IConnection {
 		if (isEnabled()) {
 			try {
 				RequestReceivedEvent event = new RequestReceivedEvent(this, config.getAddress(), config.getPort(), unexpectedEvent.getPayload());
-				handler.onRequestReceivedEvent(event);
+
+				if (initialization)
+					exchange.notify(event);
+				else if (config.isAllowUnexpectedRequest())
+					handler.onRequestReceivedEvent(event);
+
 				if (event.getCallbackResponse() != null)
 					sendCallbackRequest(unexpectedEvent.getID(), event.getCallbackResponse());
 				else if (event.getSimpleResponse() != null)

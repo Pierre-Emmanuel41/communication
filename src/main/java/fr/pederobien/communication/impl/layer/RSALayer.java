@@ -14,10 +14,13 @@ import java.util.concurrent.Semaphore;
 
 import javax.crypto.Cipher;
 
+import fr.pederobien.communication.event.RequestReceivedEvent;
+import fr.pederobien.communication.impl.connection.CallbackMessage;
 import fr.pederobien.communication.impl.connection.HeaderMessage;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.interfaces.ICertificate;
 import fr.pederobien.communication.interfaces.IConnection;
+import fr.pederobien.communication.interfaces.IExchange;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;
 import fr.pederobien.utils.ByteWrapper;
@@ -59,8 +62,8 @@ public class RSALayer implements ILayer {
 	}
 	
 	@Override
-	public boolean initialise(IConnection connection) throws Exception {
-		return implementation.initialise(connection);
+	public boolean initialise(IExchange exchange) throws Exception {
+		return implementation.initialise(exchange);
 	}
 
 	@Override
@@ -74,16 +77,14 @@ public class RSALayer implements ILayer {
 	}
 	
 	private class NotInitialisedLayer implements ILayer {
-		private Semaphore semaphore;
 		
 		public NotInitialisedLayer() {
-			semaphore = new Semaphore(0);
+			// Do nothing
 		}
 		
 		@Override
-		public boolean initialise(IConnection connection) throws Exception {
-			connection.send(new Message(certificate.sign(publicKey.getEncoded())));
-			semaphore.acquire();
+		public boolean initialise(IExchange exchange) throws Exception {
+			RequestReceivedEvent event = exchange.receive();
 			return true;
 		}
 
@@ -105,7 +106,6 @@ public class RSALayer implements ILayer {
 					otherKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(message));
 
 					implementation = initialised;
-					semaphore.release();
 				} catch (Exception e) {
 					EventManager.callEvent(new LogEvent("Failure during RSA layer initialisation: %s", e.getMessage()));
 					throw new RuntimeException("Fail to initialise RSA layer");
@@ -119,7 +119,7 @@ public class RSALayer implements ILayer {
 	private class InitialisedLayer implements ILayer {
 		
 		@Override
-		public boolean initialise(IConnection connection) {
+		public boolean initialise(IExchange exchange) {
 			throw new IllegalStateException("Layer already initialised");
 		}
 
