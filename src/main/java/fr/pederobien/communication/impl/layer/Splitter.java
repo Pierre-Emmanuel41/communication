@@ -73,8 +73,8 @@ public class Splitter {
 	 * 
 	 * @return An list of messages received entirely.
 	 */
-	public Map<Integer, ReadableByteWrapper> unpack(List<byte[]> messages) {
-		Map<Integer, ReadableByteWrapper> requests = new HashMap<Integer, ReadableByteWrapper>();
+	public Map<Integer, byte[]> unpack(List<byte[]> messages) {
+		Map<Integer, byte[]> requests = new HashMap<Integer, byte[]>();
 
 		// Step 2: Concatenating messages into requests
 		for (byte[] message : messages) {
@@ -98,11 +98,11 @@ public class Splitter {
 			
 			// Original request to split in different packets
 			if (total == 1)
-				requests.put(ID, ReadableByteWrapper.wrap(payload));
+				requests.put(ID, payload);
 			else {
 				ReadableByteWrapper wrapper = registerRequest(ID, total, current, payload);
 				if (wrapper != null)
-					requests.put(ID, wrapper);
+					requests.put(ID, wrapper.get());
 			}
 		}
 		

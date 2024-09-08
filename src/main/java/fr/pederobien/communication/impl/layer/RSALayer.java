@@ -152,11 +152,11 @@ public class RSALayer implements ILayer {
 				decrypted.add(decrypt(packet));
 			
 			// Step 3: Concatenating decrypted packet in one message
-			Map<Integer, ReadableByteWrapper> messages = splitter.unpack(decrypted);
+			Map<Integer, byte[]> messages = splitter.unpack(decrypted);
 			
 			// Step 4: Updating list of requests
-			for (Map.Entry<Integer, ReadableByteWrapper> entry : messages.entrySet()) {
-				ReadableByteWrapper wrapper = entry.getValue();
+			for (Map.Entry<Integer, byte[]> entry : messages.entrySet()) {
+				ReadableByteWrapper wrapper = ReadableByteWrapper.wrap(entry.getValue());
 				
 				// bytes 0 -> 3: requestID
 				int requestID = wrapper.nextInt();
