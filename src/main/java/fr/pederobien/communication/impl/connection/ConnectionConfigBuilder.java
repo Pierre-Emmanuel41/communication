@@ -1,6 +1,6 @@
 package fr.pederobien.communication.impl.connection;
 
-import fr.pederobien.communication.interfaces.ICommonConfig;
+import fr.pederobien.communication.interfaces.IConfiguration;
 import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.ILayer;
 import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
@@ -8,16 +8,16 @@ import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
 public class ConnectionConfigBuilder {
 	private String address;
 	private int port;
-	private ICommonConfig config;
+	private IConfiguration config;
 	
 	/**
 	 * Creates a builder in order to configure a connection.
 	 * 
 	 * @param address The IP address of the remote.
 	 * @param port The port number of the remote.
-	 * @param config The object that holds common connection parameters.
+	 * @param config The object that holds connection configuration.
 	 */
-	public ConnectionConfigBuilder(String address, int port, ICommonConfig config) {
+	public ConnectionConfigBuilder(String address, int port, IConfiguration config) {
 		this.address = address;
 		this.port = port;
 		this.config = config;
@@ -40,7 +40,7 @@ public class ConnectionConfigBuilder {
 	/**
 	 * @return The client configuration that holds connection configuration parameters.
 	 */
-	private ICommonConfig getConfig() {
+	private IConfiguration getConfig() {
 		return config;
 	}
 	

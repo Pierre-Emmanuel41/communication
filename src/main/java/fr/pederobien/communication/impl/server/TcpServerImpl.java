@@ -7,7 +7,6 @@ import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.connection.ConnectionConfigBuilder;
 import fr.pederobien.communication.impl.connection.TcpConnectionImpl;
 import fr.pederobien.communication.interfaces.IConnection;
-import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.IServerConfig;
 import fr.pederobien.communication.interfaces.IServerImpl;
 
@@ -42,7 +41,7 @@ public class TcpServerImpl implements IServerImpl {
 		// Creating a connection configuration builder.
 		ConnectionConfigBuilder builder = Communication.createConnectionConfigBuilder(address, port, config);
 		
-		return Communication.createCustomConnection(builder.build(), new TcpConnectionImpl(socket), Mode.SERVER_TO_CLIENT);
+		return Communication.createCustomConnection(builder.build(), new TcpConnectionImpl(socket), config.getMode());
 	}
 
 }

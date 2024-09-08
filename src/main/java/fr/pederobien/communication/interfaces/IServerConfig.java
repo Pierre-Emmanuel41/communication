@@ -1,6 +1,15 @@
 package fr.pederobien.communication.interfaces;
 
-public interface IServerConfig extends ICommonConfig {
+import fr.pederobien.communication.interfaces.IConnection.Mode;
+
+public interface IServerConfig extends IConfiguration {
+	
+	/**
+	 * @return The connection mode.
+	 */
+	default Mode getMode() {
+		return Mode.SERVER_TO_CLIENT;
+	}
 
 	/**
 	 * @return The name of the server.

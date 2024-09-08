@@ -11,6 +11,7 @@ import fr.pederobien.communication.impl.server.TcpServerImpl;
 import fr.pederobien.communication.interfaces.IClient;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.IClientImpl;
+import fr.pederobien.communication.interfaces.IConfiguration;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.IConnectionConfig;
@@ -20,7 +21,22 @@ import fr.pederobien.communication.interfaces.IServerConfig;
 import fr.pederobien.communication.interfaces.IServerImpl;
 
 public class Communication {
-
+	
+	/**
+	 * @return A builder to create a configuration common to a client and a server,
+	 *         to be used by a connection configuration.
+	 */
+	public static final ConfigurationBuilder createConfigurationBuilder() {
+		return new ConfigurationBuilder();
+	}
+	
+	/**
+	 * @return A configuration with default values, to be used by a connection configuration.
+	 */
+	public static final IConfiguration createDefaultConfiguration() {
+		return createConfigurationBuilder().build();
+	}
+	
 	/**
 	 * Creates a builder in order to configure a connection.
 	 * 
@@ -28,41 +44,18 @@ public class Communication {
 	 * @param port The port number of the remote.
 	 * @param config The object that holds common connection parameters.
 	 */
-	public static final ConnectionConfigBuilder createConnectionConfigBuilder(String address, int port, IClientConfig config) {
+	public static final ConnectionConfigBuilder createConnectionConfigBuilder(String address, int port, IConfiguration config) {
 		return new ConnectionConfigBuilder(address, port, config);
 	}
-
+	
 	/**
-	 * Creates a connection configuration from the client configuration.
+	 * Creates a connection configuration.
 	 * 
 	 * @param address The IP address of the remote.
 	 * @param port The port number of the remote.
-	 * @param config The object that holds common connection parameters.
 	 */
-	public static final IConnectionConfig createDefaultConnectionConfig(String address, int port, IClientConfig config) {
-		return createConnectionConfigBuilder(address, port, config).build();
-	}
-
-	/**
-	 * Creates a builder in order to configure a connection.
-	 * 
-	 * @param address The IP address of the remote.
-	 * @param port The port number of the remote.
-	 * @param config The object that holds common connection parameters.
-	 */
-	public static final ConnectionConfigBuilder createConnectionConfigBuilder(String address, int port, IServerConfig config) {
-		return new ConnectionConfigBuilder(address, port, config);
-	}
-
-	/**
-	 * Creates a connection configuration from the server configuration.
-	 * 
-	 * @param address The IP address of the remote.
-	 * @param port The port number of the remote.
-	 * @param config The object that holds common connection parameters.
-	 */
-	public static final IConnectionConfig createDefaultConnectionConfig(String address, int port, IServerConfig config) {
-		return createConnectionConfigBuilder(address, port, config).build();
+	public static final IConnectionConfig createDefaultConnectionConfig(String address, int port) {
+		return createConnectionConfigBuilder(address, port, createDefaultConfiguration()).build();
 	}
 
 	/**

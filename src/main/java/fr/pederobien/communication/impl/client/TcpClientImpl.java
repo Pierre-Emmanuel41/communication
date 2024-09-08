@@ -10,7 +10,6 @@ import fr.pederobien.communication.impl.connection.TcpConnectionImpl;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.IClientImpl;
 import fr.pederobien.communication.interfaces.IConnection;
-import fr.pederobien.communication.interfaces.IConnection.Mode;
 
 public class TcpClientImpl implements IClientImpl {
 	private Socket socket;
@@ -37,6 +36,6 @@ public class TcpClientImpl implements IClientImpl {
 		// Creating a connection configuration builder.
 		ConnectionConfigBuilder builder = Communication.createConnectionConfigBuilder(address, port, config);
 		
-		return Communication.createCustomConnection(builder.build(), new TcpConnectionImpl(socket), Mode.CLIENT_TO_SERVER);
+		return Communication.createCustomConnection(builder.build(), new TcpConnectionImpl(socket), config.getMode());
 	}
 }
