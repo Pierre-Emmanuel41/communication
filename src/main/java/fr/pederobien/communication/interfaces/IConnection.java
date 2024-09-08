@@ -16,13 +16,6 @@ public interface IConnection {
 	boolean initialise() throws Exception;
 	
 	/**
-	 * Send a message synchronously and block until a response has been received. The asynchronous send/receive are on suspended.
-	 * 
-	 * @param message The message to send synchronously to the remote.
-	 */
-	void sendSync(ICallbackMessage message);
-	
-	/**
 	 * The implementation shall send the provided data **asynchronously**. That is to say that the method is not expecting to block
 	 * any time. Error sending data may be reported with the event LogEvent.
 	 * 

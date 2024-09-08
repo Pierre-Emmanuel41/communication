@@ -110,32 +110,6 @@ public abstract class Connection implements IConnection {
 	}
 	
 	@Override
-	public void sendSync(ICallbackMessage message) {
-		try {
-			// Creating a layer to force the current thread to wait for the response from the remote.
-			ICallbackMessage sync = new CallbackMessage(message.getBytes(), message.getTimeout(), args -> {
-				argument = args;
-				semaphore.release();
-			});
-
-			// Sending asynchronously the message to the remote
-			send(sync);
-
-			// Wait until the callback has been executed
-			semaphore.acquire();
-
-			// Executing callback
-			message.getCallback().accept(argument);
-
-		} catch (Exception e) {
-			message.getCallback().accept(new CallbackArgs(null, true));
-		} finally {
-			// Always releasing the semaphore to allow another synchronous send
-			semaphore.release();
-		}
-	}
-	
-	@Override
 	public void send(IMessage message) {
 		disposable.checkDisposed();
 
@@ -148,7 +122,7 @@ public abstract class Connection implements IConnection {
 		disposable.checkDisposed();
 		
 		if (isEnabled())
-			sendCallbackRequest(0, message);
+			send(0, message);
 	}
 	
 	@Override
@@ -348,7 +322,7 @@ public abstract class Connection implements IConnection {
 			try {
 				CallbackArgs args = management.apply();
 				if (args.getCallbackRequest() != null)
-					sendCallbackRequest(management.getResponse().getID(), args.getCallbackRequest());
+					send(management.getResponse().getID(), args.getCallbackRequest());
 				else if (args.getSimpleRequest() != null)
 					sendingQueue.add(new HeaderMessage(management.getResponse().getID(), args.getSimpleRequest()));
 				
@@ -376,7 +350,7 @@ public abstract class Connection implements IConnection {
 					handler.onRequestReceivedEvent(event);
 
 				if (event.getCallbackResponse() != null)
-					sendCallbackRequest(unexpectedEvent.getID(), event.getCallbackResponse());
+					send(unexpectedEvent.getID(), event.getCallbackResponse());
 				else if (event.getSimpleResponse() != null)
 					sendingQueue.add(new HeaderMessage(unexpectedEvent.getID(), event.getSimpleResponse()));
 				requestExceptionCounter = 0;
@@ -393,10 +367,34 @@ public abstract class Connection implements IConnection {
 	 * @param requestID The Identifier of the request to respond to.
 	 * @param message The message to send to the remote.
 	 */
-	private void sendCallbackRequest(int requestID, ICallbackMessage message) {
-		HeaderMessage headerMessage = new HeaderMessage(requestID, message);
+	private void send(int requestID, ICallbackMessage message) {
+		ICallbackMessage toSend = message;
+
+		if (message.isSync()) {
+			toSend = new CallbackMessage(message.getBytes(), message.getTimeout(), args -> {
+				argument = args;
+				semaphore.release();
+			});
+		}
+
+		HeaderMessage headerMessage = new HeaderMessage(requestID, toSend);
 		messageManager.register(headerMessage);
 		sendingQueue.add(headerMessage);
+
+		if (message.isSync()) {
+			try {
+				// Wait until the callback has been executed
+				semaphore.acquire();
+
+				// Executing callback
+				message.getCallback().accept(argument);
+			} catch (Exception e) {
+				message.getCallback().accept(new CallbackArgs(null, true));
+			} finally {
+				// Always releasing the semaphore to allow another synchronous send
+				semaphore.release();
+			}
+		}
 	}
 	
 	/**

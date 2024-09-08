@@ -80,4 +80,9 @@ public interface ICallbackMessage extends IMessage {
 	 * @return Callback function to be called when response is received or when timeout occurs.
 	 */
 	Consumer<CallbackArgs> getCallback();
+	
+	/**
+	 * @return True if this callback message shall be sent synchronously, false to send it asynchronously.
+	 */
+	boolean isSync();
 }
