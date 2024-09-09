@@ -321,6 +321,7 @@ public abstract class Connection implements IConnection {
 		if (isEnabled()) {
 			try {
 				CallbackArgs args = management.apply();
+
 				if (args.getCallbackRequest() != null)
 					send(management.getResponse().getID(), args.getCallbackRequest());
 				else if (args.getSimpleRequest() != null)
@@ -391,8 +392,8 @@ public abstract class Connection implements IConnection {
 			} catch (Exception e) {
 				message.getCallback().accept(new CallbackArgs(null, true));
 			} finally {
-				// Always releasing the semaphore to allow another synchronous send
-				semaphore.release();
+				// Always draining the semaphore to force the synchronous send
+				semaphore.drainPermits();
 			}
 		}
 	}
