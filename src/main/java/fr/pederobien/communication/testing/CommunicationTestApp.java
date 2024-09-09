@@ -3,6 +3,7 @@ package fr.pederobien.communication.testing;
 import fr.pederobien.utils.event.EventLogger;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.LogEvent;
+import fr.pederobien.utils.event.LogEvent.ELogLevel;
 
 /**
  * Hello world!
@@ -14,16 +15,35 @@ public class CommunicationTestApp
     {
     	EventLogger.instance().newLine(true).timeStamp(true).register();
 
-    	EventManager.callEvent(new LogEvent("Start of TCP tests execution"));
-        runTcpCommunicationTest();
-        EventManager.callEvent(new LogEvent("End of TCP tests execution"));
+    	runTest("Layer tests", () -> runLayerTests());
+    	runTest("TCP tests", () -> runTcpCommunicationTest());
         
         // Asynchronous tests, wait a little bit before closing tests session
         try {
-			Thread.sleep(1000);
+			Thread.sleep(1000000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+    }
+    
+    private static void runLayerTests() {
+    	LayerTest tests = new LayerTest();
+    	
+    	tests.testEncapsulerOneMessage();
+    	tests.testEncapsulerTwoMessages();
+    	tests.testEncapsulerLastMessageTruncated();
+    	tests.testSplitterOneMessage();
+    	tests.testSplitterTwoMessages();
+    	tests.testSplitterLastMessageTruncated();
+    	tests.testSimpleLayerOneMessage();
+    	tests.testSimpleLayerTwoMessages();
+    	tests.testSimpleLayerLastMessageTruncated();
+    	tests.testCertifiedLayerOneMessage();
+    	tests.testCertifiedLayerTwoMessages();
+    	tests.testCertifiedLayerLastMessageTruncated();
+    	tests.testCertifiedLayerOneCorruptedMessage();
+    	tests.testRsaLayerInitialization();
+    	// tests.testRsaLayerInitializationFailureClientToServer();
     }
     
     private static void runTcpCommunicationTest() {
@@ -45,4 +65,14 @@ public class CommunicationTestApp
         tests.testUnexpectedRequestException();
         tests.testUnstableClient();
     }
+    
+    private static void runTest(String testName, Runnable runnable) {
+		EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Start of %s execution", testName));
+		try {
+			runnable.run();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "End of %s execution", testName));
+	}
 }
