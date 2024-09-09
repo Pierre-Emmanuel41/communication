@@ -6,16 +6,18 @@ import fr.pederobien.communication.event.RequestReceivedEvent;
 import fr.pederobien.communication.interfaces.ICallbackMessage;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IExchange;
+import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
 
 public class Exchange implements IExchange {
 	private IConnection connection;
-	private Semaphore semaphore;
+	private Semaphore receive, handled;
 	private RequestReceivedEvent event;
 
 	public Exchange(IConnection connection) {
 		this.connection = connection;
 		
-		semaphore = new Semaphore(0);
+		receive = new Semaphore(0);
+		handled = new Semaphore(0);
 	}
 	
 	@Override
@@ -24,9 +26,19 @@ public class Exchange implements IExchange {
 	}
 	
 	@Override
-	public RequestReceivedEvent receive() throws InterruptedException {
-		semaphore.acquire();
-		return event;
+	public void receive(IRequestReceivedHandler handler) throws InterruptedException {
+		// Waiting for receiving data from remote
+		receive.acquire();
+		receive.drainPermits();
+		
+		// Delay to let the notifying thread to acquire the handled semaphore
+		Thread.sleep(10);
+		
+		// Handling received data
+		handler.onRequestReceivedEvent(event);
+		
+		// Notifying the data has been handled
+		handled.release();
 	}
 	
 	/**
@@ -35,8 +47,12 @@ public class Exchange implements IExchange {
 	 * 
 	 * @param event The event to send back.
 	 */
-	public void notify(RequestReceivedEvent event) {
+	public void notify(RequestReceivedEvent event) throws InterruptedException {
 		this.event = event;
-		semaphore.release();
+		receive.release();
+		
+		// Waiting for the event to be dispatched to the handler
+		handled.acquire();
+		handled.drainPermits();
 	}
 }

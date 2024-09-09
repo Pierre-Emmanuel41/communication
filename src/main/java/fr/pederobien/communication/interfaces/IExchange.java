@@ -1,7 +1,5 @@
 package fr.pederobien.communication.interfaces;
 
-import fr.pederobien.communication.event.RequestReceivedEvent;
-
 public interface IExchange {
 	
 	/**
@@ -18,5 +16,5 @@ public interface IExchange {
 	 * 
 	 * @return The event associated to the received data.
 	 */
-	RequestReceivedEvent receive() throws InterruptedException;
+	void receive(IRequestReceivedHandler handler) throws InterruptedException;
 }
