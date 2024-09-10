@@ -23,6 +23,6 @@ public class SimpleAnswerToRequestListener implements IRequestReceivedHandler {
 	public void onRequestReceivedEvent(RequestReceivedEvent event) {
 		String received = new String(event.getData());
 		EventManager.callEvent(new LogEvent(ELogLevel.WARNING, "Message received: %s", received));
-		event.setSimpleResponse(new Message(message.getBytes()));
+		event.getConnection().answer(event.getIdentifier(), new Message(message.getBytes()));
 	}
 }
