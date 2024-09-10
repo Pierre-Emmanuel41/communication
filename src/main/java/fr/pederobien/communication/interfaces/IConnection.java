@@ -16,21 +16,35 @@ public interface IConnection {
 	boolean initialise() throws Exception;
 	
 	/**
-	 * The implementation shall send the provided data **asynchronously**. That is to say that the method is not expecting to block
-	 * any time. Error sending data may be reported with the event LogEvent.
+	 * Send asynchronously a request to the remote.
 	 * 
 	 * @param message the message to send to the remote.
 	 */
 	void send(IMessage message);
-	
+
 	/**
-	 * The implementation shall send the provided data **asynchronously**. That is to say that the method is not expecting to block
-	 * any time. Error sending data may be reported with the event LogEvent.
+	 * Send asynchronously or not (depending on the isSync value) a request to the remote.
 	 * 
 	 * @param message the message to send to the remote.
 	 */
 	void send(ICallbackMessage message);
 	
+	/**
+	 * Send asynchronously a request to the remote.
+	 * 
+	 * @param requestID The identifier of the request to be answered.
+	 * @param message The response of the request.
+	 */
+	void answer(int requestID, IMessage message);
+
+	/**
+	 * Send asynchronously or not (depending on the isSync value) a request to the remote.
+	 * 
+	 * @param requestID The identifier of the request to be answered.
+	 * @param message The response of the request.
+	 */
+	void answer(int requestID, ICallbackMessage message);
+
 	/**
 	 * @return True if the connection can send data to the remote or not. It is independent from the connection with the remote.
 	 */

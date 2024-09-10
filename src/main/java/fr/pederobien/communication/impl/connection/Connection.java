@@ -66,7 +66,7 @@ public abstract class Connection implements IConnection {
 		receivingQueue = new BlockingQueueTask<Object>(String.format("%s[receive]", toString()), object -> receiveMessage(object));
 		extractingQueue = new BlockingQueueTask<byte[]>(String.format("%s[extract]", toString()), raw -> extractMessage(raw));
 		callbackQueue = new BlockingQueueTask<CallbackManagement>(String.format("%s[callback]", toString()), management -> callbackMessage(management));
-		unexpectedRequestQueue = new BlockingQueueTask<UnexpectedRequestEvent>(String.format("%s[dispatcher]", toString()), event -> dispatchEvent(event));
+		unexpectedRequestQueue = new BlockingQueueTask<UnexpectedRequestEvent>(String.format("%s[dispatcher]", toString()), event -> unexpectedRequest(event));
 		messageManager = new CallbackManager(this);
 		disposable = new Disposable();
 
@@ -125,6 +125,22 @@ public abstract class Connection implements IConnection {
 			send(0, message);
 	}
 	
+	@Override
+	public void answer(int requestID, IMessage message) {
+		disposable.checkDisposed();
+
+		if (isEnabled())
+			sendingQueue.add(new HeaderMessage(requestID, message));
+	}
+
+	@Override
+	public void answer(int requestID, ICallbackMessage message) {
+		disposable.checkDisposed();
+
+		if (isEnabled())
+			send(requestID, message);
+	}
+
 	@Override
 	public boolean isEnabled() {
 		return isEnabled;
@@ -225,9 +241,9 @@ public abstract class Connection implements IConnection {
 			try {
 				byte[] data = config.getLayer().pack(message);
 
+				messageManager.start(message.getID());
 				sendImpl(data);
 	
-				messageManager.start(message);
 				sendingExceptionCounter = 0;
 			} catch (Exception exception) {
 				sendingExceptionCounter++;
@@ -249,7 +265,7 @@ public abstract class Connection implements IConnection {
 				if (raw == null)
 					EventManager.callEvent(new ConnectionLostEvent(this));
 				else {
-					EventManager.callEvent(new DataEvent(this, config.getAddress(), config.getPort(), raw));
+					EventManager.callEvent(new DataEvent(this, raw));
 
 					// Adding raw data for asynchronous extraction
 					extractingQueue.add(raw);
@@ -320,13 +336,8 @@ public abstract class Connection implements IConnection {
 	private void callbackMessage(CallbackManagement management) {
 		if (isEnabled()) {
 			try {
-				CallbackArgs args = management.apply();
+				management.apply();
 
-				if (args.getCallbackRequest() != null)
-					send(management.getResponse().getID(), args.getCallbackRequest());
-				else if (args.getSimpleRequest() != null)
-					sendingQueue.add(new HeaderMessage(management.getResponse().getID(), args.getSimpleRequest()));
-				
 				callbackExceptionCounter = 0;
 			} catch (Exception e) {
 				callbackExceptionCounter++;
@@ -340,20 +351,16 @@ public abstract class Connection implements IConnection {
 	 * 
 	 * @param event The event that contains the identifier and the payload of the unexpected request.
 	 */
-	private void dispatchEvent(UnexpectedRequestEvent unexpectedEvent) {
+	private void unexpectedRequest(UnexpectedRequestEvent unexpected) {
 		if (isEnabled()) {
 			try {
-				RequestReceivedEvent event = new RequestReceivedEvent(this, config.getAddress(), config.getPort(), unexpectedEvent.getPayload());
+				RequestReceivedEvent event = new RequestReceivedEvent(this, unexpected.getPayload(), unexpected.getIdentifier());
 
 				if (initialization)
 					exchange.notify(event);
 				else if (config.isAllowUnexpectedRequest())
 					handler.onRequestReceivedEvent(event);
 
-				if (event.getCallbackResponse() != null)
-					send(unexpectedEvent.getID(), event.getCallbackResponse());
-				else if (event.getSimpleResponse() != null)
-					sendingQueue.add(new HeaderMessage(unexpectedEvent.getID(), event.getSimpleResponse()));
 				requestExceptionCounter = 0;
 			} catch (Exception e) {
 				requestExceptionCounter++;
@@ -378,9 +385,9 @@ public abstract class Connection implements IConnection {
 			});
 		}
 
-		HeaderMessage headerMessage = new HeaderMessage(requestID, toSend);
-		messageManager.register(headerMessage);
-		sendingQueue.add(headerMessage);
+		HeaderMessage header = new HeaderMessage(requestID, toSend);
+		messageManager.register(header.getID(), toSend);
+		sendingQueue.add(header);
 
 		if (message.isSync()) {
 			try {
@@ -390,7 +397,7 @@ public abstract class Connection implements IConnection {
 				// Executing callback
 				message.getCallback().accept(argument);
 			} catch (Exception e) {
-				message.getCallback().accept(new CallbackArgs(null, true));
+				message.getCallback().accept(new CallbackArgs(-1, null, true));
 			} finally {
 				// Always draining the semaphore to force the synchronous send
 				semaphore.drainPermits();
@@ -411,25 +418,25 @@ public abstract class Connection implements IConnection {
 	}
 	
 	private class UnexpectedRequestEvent {
-		private int ID;
+		private int identifier;
 		private byte[] payload;
 		
 		/**
 		 * Creates an unexpected request event.
 		 * 
-		 * @param ID The identifier of the request.
+		 * @param identifier The identifier of the request.
 		 * @param payload The payload of the request.
 		 */
-		public UnexpectedRequestEvent(int ID, byte[] payload) {
-			this.ID = ID;
+		public UnexpectedRequestEvent(int identifier, byte[] payload) {
+			this.identifier = identifier;
 			this.payload = payload;
 		}
 		
 		/**
 		 * @return The identifier of the request.
 		 */
-		public int getID() {
-			return ID;
+		public int getIdentifier() {
+			return identifier;
 		}
 		
 		/**

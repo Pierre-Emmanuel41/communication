@@ -17,6 +17,7 @@ import javax.crypto.Cipher;
 import fr.pederobien.communication.event.RequestReceivedEvent;
 import fr.pederobien.communication.impl.connection.CallbackMessage;
 import fr.pederobien.communication.impl.connection.HeaderMessage;
+import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.interfaces.ICertificate;
 import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.IExchange;
@@ -26,9 +27,6 @@ import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.ReadableByteWrapper;
 import fr.pederobien.utils.Watchdog;
-import fr.pederobien.utils.event.EventManager;
-import fr.pederobien.utils.event.LogEvent;
-import fr.pederobien.utils.event.LogEvent.ELogLevel;
 
 public class RSALayer implements ILayer {
 	private static final byte[] SUCCESS_PATTERN = "SUCCESS_PATTERN".getBytes();
@@ -193,7 +191,6 @@ public class RSALayer implements ILayer {
 			int counter = 0;
 			while (!success && (counter++ < 3)) {
 
-				EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Server: Sending public key"));
 				// Step 1: Sending public key
 				getExchange().send(new CallbackMessage(getToSend().getEncoded(), 100000, true, args -> {
 					if (!args.isTimeout()) {
@@ -202,21 +199,16 @@ public class RSALayer implements ILayer {
 						setRemoteKey(parseRemotePublicKey(args.getResponse().getBytes()));
 						if (getRemoteKey() != null) {
 
-							EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Server: Sending positive Acknowledgment"));
-
 							// Step 3: Sending positive acknowledgement
-							args.setCallbackRequest(new CallbackMessage(SUCCESS_PATTERN, 10000, true, args1 -> {
+							getExchange().answer(args.getIdentifier(), new CallbackMessage(SUCCESS_PATTERN, 10000, true, args1 -> {
 								if (!args1.isTimeout() && Arrays.equals(SUCCESS_PATTERN, args1.getResponse().getBytes()))
 									success = true;
 							}));
 						}
 					}
-					else
-						EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Server: Timeout to get remote key"));
 				}));
 			}
 			
-			EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Server initialized: ", success ? "success" : "fail"));
 			return success;
 		}
 	}
@@ -240,26 +232,23 @@ public class RSALayer implements ILayer {
 		protected boolean exchange() throws Exception {
 			Watchdog.execute(() -> {
 				while (!success) {
-					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Waiting for data from remote"));
-
 					// Waiting for receiving data from the remote
 					getExchange().receive(this);
 				}
 			}, 60000);
 			
-			EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Client successfully initialised: %s", success));
 			return success;
 		}
 		
 		@Override
 		public void onRequestReceivedEvent(RequestReceivedEvent event) {
-			EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Data received from remote"));
-
 			setRemoteKey(parseRemotePublicKey(event.getData()));
 			if (getRemoteKey() != null)
-				event.setCallbackResponse(new CallbackMessage(SUCCESS_PATTERN, 10000, true, args -> {
-					if (!args.isTimeout() && Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes()))
+				getExchange().answer(event.getIdentifier(), new CallbackMessage(getToSend().getEncoded(), 10000, true, args -> {
+					if (!args.isTimeout() && Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
+						getExchange().answer(args.getIdentifier(), new Message(SUCCESS_PATTERN));
 						success = true;
+					}
 				}));
 		}
 	}

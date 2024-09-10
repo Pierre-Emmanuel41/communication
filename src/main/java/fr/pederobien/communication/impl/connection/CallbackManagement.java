@@ -7,7 +7,8 @@ import fr.pederobien.communication.interfaces.IMessage;
 
 public class CallbackManagement implements Runnable {
 	private CallbackManager manager;
-	private HeaderMessage request;
+	private int identifier;
+	private ICallbackMessage message;
 	private IHeaderMessage response;
 	private Thread timeoutThread;
 	private boolean isTimeout;
@@ -16,11 +17,13 @@ public class CallbackManagement implements Runnable {
 	 * Creates a callback management to monitor if a response has been received for a request.
 	 * 
 	 * @param manager The manager that monitor all requests waiting for a response from the remote.
-	 * @param request The request waiting for a response.
+	 * @param identifier The identifier of the message to monitor.
+	 * @param message The message waiting for a response.
 	 */
-	public CallbackManagement(CallbackManager manager, HeaderMessage request) {
+	public CallbackManagement(CallbackManager manager, int identifier, ICallbackMessage message) {
 		this.manager = manager;
-		this.request = request;
+		this.identifier = identifier;
+		this.message = message;
 		
 		isTimeout = false;
 		timeoutThread = new Thread(this, "[Timeout]");
@@ -57,22 +60,15 @@ public class CallbackManagement implements Runnable {
 	/**
 	 * @return The identifier of the message.
 	 */
-	public int getID() {
-		return request.getID();
+	public int getIdentifier() {
+		return identifier;
 	}
 	
 	/**
 	 * @return The message sent to the remote and waiting for a response.
 	 */
 	public ICallbackMessage getMessage() {
-		return (ICallbackMessage) request.getMessage();
-	}
-	
-	/**
-	 * @return The response of the message, if a response has been received.
-	 */
-	public IHeaderMessage getResponse() {
-		return response;
+		return message;
 	}
 	
 	/**
@@ -90,8 +86,9 @@ public class CallbackManagement implements Runnable {
 	 * @return The callback arguments to see if a request should be sent back to the remote as response for its response.
 	 */
 	public CallbackArgs apply() {
-		IMessage response = isTimeout ? null : new Message(getResponse().getBytes());
-		CallbackArgs arguments = new CallbackArgs(response, isTimeout);
+		IMessage message = isTimeout ? null : new Message(response.getBytes());
+		int identifier = isTimeout ? -1 : response.getID();
+		CallbackArgs arguments = new CallbackArgs(identifier, message, isTimeout);
 		getMessage().getCallback().accept(arguments);
 		return arguments;
 	}

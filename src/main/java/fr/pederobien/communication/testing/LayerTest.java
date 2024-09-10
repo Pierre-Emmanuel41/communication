@@ -363,7 +363,8 @@ public class LayerTest {
 			
 			Thread clientThread = new Thread(() -> {
 				try {
-					client.initialise();
+					boolean success = client.initialise();
+					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Client initialization %s", success ? "succeed" : "failed"));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -372,7 +373,8 @@ public class LayerTest {
 			
 			Thread serverThread = new Thread(() -> {
 				try {
-					server.initialise();
+					boolean success = server.initialise();
+					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Server initialization %s", success ? "succeed" : "failed"));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
