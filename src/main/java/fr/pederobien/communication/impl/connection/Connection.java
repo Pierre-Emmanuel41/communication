@@ -44,7 +44,7 @@ public abstract class Connection implements IConnection {
 	private int requestExceptionCounter;
 	
 	// For connection initialization
-	private boolean initialization;
+	private boolean initialized;
 	private Exchange exchange;
 	
 	// When the synchronous send has been called
@@ -76,7 +76,7 @@ public abstract class Connection implements IConnection {
 		callbackExceptionCounter = 0;
 		requestExceptionCounter = 0;
 		isEnabled = true;
-		initialization = false;
+		initialized = false;
 
 		exchange = new Exchange(this);
 		semaphore = new Semaphore(0);
@@ -101,12 +101,7 @@ public abstract class Connection implements IConnection {
 		unexpectedRequestQueue.start();
 		
 		// Initializing layer
-		initialization = true;
-		boolean success = config.getLayer().initialise(exchange);
-		if (success)
-			initialization = false;
-
-		return success;
+		return initialized = config.getLayer().initialise(exchange);
 	}
 	
 	@Override
@@ -356,7 +351,7 @@ public abstract class Connection implements IConnection {
 			try {
 				RequestReceivedEvent event = new RequestReceivedEvent(this, unexpected.getPayload(), unexpected.getIdentifier());
 
-				if (initialization)
+				if (!initialized)
 					exchange.notify(event);
 				else if (config.isAllowUnexpectedRequest())
 					handler.onRequestReceivedEvent(event);

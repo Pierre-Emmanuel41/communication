@@ -27,6 +27,7 @@ import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.ReadableByteWrapper;
 import fr.pederobien.utils.Watchdog;
+import fr.pederobien.utils.Watchdog.WatchdogStakeholder;
 
 public class RSALayer implements ILayer {
 	private static final byte[] SUCCESS_PATTERN = "SUCCESS_PATTERN".getBytes();
@@ -192,7 +193,7 @@ public class RSALayer implements ILayer {
 			while (!success && (counter++ < 3)) {
 
 				// Step 1: Sending public key
-				getExchange().send(new CallbackMessage(getToSend().getEncoded(), 100000, true, args -> {
+				getExchange().send(new CallbackMessage(getToSend().getEncoded(), 10000, true, args -> {
 					if (!args.isTimeout()) {
 
 						// Step 2: Excepting remote public key
@@ -200,10 +201,7 @@ public class RSALayer implements ILayer {
 						if (getRemoteKey() != null) {
 
 							// Step 3: Sending positive acknowledgement
-							getExchange().answer(args.getIdentifier(), new CallbackMessage(SUCCESS_PATTERN, 10000, true, args1 -> {
-								if (!args1.isTimeout() && Arrays.equals(SUCCESS_PATTERN, args1.getResponse().getBytes()))
-									success = true;
-							}));
+							getExchange().answer(args.getIdentifier(), new Message(SUCCESS_PATTERN));
 						}
 					}
 				}));
@@ -215,6 +213,7 @@ public class RSALayer implements ILayer {
 	
 	private class ClientToServerKeyExchange extends KeyExchange implements IRequestReceivedHandler {
 		private boolean success;
+		private WatchdogStakeholder watchdog;
 
 		/**
 		 * Creates a key exchange responsible to send and receive public key from the remote.
@@ -230,18 +229,22 @@ public class RSALayer implements ILayer {
 
 		@Override
 		protected boolean exchange() throws Exception {
-			Watchdog.execute(() -> {
+			watchdog = Watchdog.create(() -> {
 				while (!success) {
 					// Waiting for receiving data from the remote
 					getExchange().receive(this);
 				}
 			}, 60000);
 			
-			return success;
+			return watchdog.start();
 		}
 		
 		@Override
 		public void onRequestReceivedEvent(RequestReceivedEvent event) {
+			// When the connection with the remote has been lost
+			if (event.getData() == null)
+				watchdog.cancel();
+
 			setRemoteKey(parseRemotePublicKey(event.getData()));
 			if (getRemoteKey() != null)
 				getExchange().answer(event.getIdentifier(), new CallbackMessage(getToSend().getEncoded(), 10000, true, args -> {

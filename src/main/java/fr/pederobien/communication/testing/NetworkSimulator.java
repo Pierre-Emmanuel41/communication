@@ -58,6 +58,13 @@ public class NetworkSimulator {
 			client.notifyReceptionForReception(serverToClient.apply(data));
 	}
 	
+	private void notifyConnectionClosed(IConnectionImpl local) {
+		if (local == client)
+			server.notifyRemoteConnectionClosed();
+		else
+			client.notifyRemoteConnectionClosed();
+	}
+
 	private class ConnectionImpl implements IConnectionImpl {
 		private NetworkSimulator network;
 		private Semaphore semaphore;
@@ -81,11 +88,16 @@ public class NetworkSimulator {
 
 		@Override
 		public void disposeImpl() {
-			
+			network.notifyConnectionClosed(this);
 		}
 		
 		public void notifyReceptionForReception(byte[] data) {
 			buffer = data;
+			semaphore.release();
+		}
+
+		public void notifyRemoteConnectionClosed() {
+			buffer = null;
 			semaphore.release();
 		}
 	}

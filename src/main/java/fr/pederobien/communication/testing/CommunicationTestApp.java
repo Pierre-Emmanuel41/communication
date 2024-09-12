@@ -20,7 +20,7 @@ public class CommunicationTestApp
         
         // Asynchronous tests, wait a little bit before closing tests session
         try {
-			Thread.sleep(1000000);
+			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -28,7 +28,6 @@ public class CommunicationTestApp
     
     private static void runLayerTests() {
     	LayerTest tests = new LayerTest();
-    	
     	tests.testEncapsulerOneMessage();
     	tests.testEncapsulerTwoMessages();
     	tests.testEncapsulerLastMessageTruncated();
@@ -43,7 +42,7 @@ public class CommunicationTestApp
     	tests.testCertifiedLayerLastMessageTruncated();
     	tests.testCertifiedLayerOneCorruptedMessage();
     	tests.testRsaLayerInitialization();
-    	// tests.testRsaLayerInitializationFailureClientToServer();
+    	tests.testRsaLayerInitializationFailureClientToServer();
     }
     
     private static void runTcpCommunicationTest() {

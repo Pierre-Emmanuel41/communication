@@ -365,6 +365,8 @@ public class LayerTest {
 				try {
 					boolean success = client.initialise();
 					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Client initialization %s", success ? "succeed" : "failed"));
+
+					client.dispose();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -375,6 +377,8 @@ public class LayerTest {
 				try {
 					boolean success = server.initialise();
 					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Server initialization %s", success ? "succeed" : "failed"));
+
+					server.dispose();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -419,7 +423,10 @@ public class LayerTest {
 			
 			Thread clientThread = new Thread(() -> {
 				try {
-					client.initialise();
+					boolean success = client.initialise();
+					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Client initialization %s", success ? "succeed" : "failed"));
+
+					client.dispose();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -427,7 +434,10 @@ public class LayerTest {
 			
 			Thread serverThread = new Thread(() -> {
 				try {
-					server.initialise();
+					boolean success = server.initialise();
+					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Server initialization %s", success ? "succeed" : "failed"));
+
+					server.dispose();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -437,7 +447,7 @@ public class LayerTest {
 			clientThread.start();
 			
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(35000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

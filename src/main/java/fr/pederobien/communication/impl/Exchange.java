@@ -2,14 +2,18 @@ package fr.pederobien.communication.impl;
 
 import java.util.concurrent.Semaphore;
 
+import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.RequestReceivedEvent;
 import fr.pederobien.communication.interfaces.ICallbackMessage;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IExchange;
 import fr.pederobien.communication.interfaces.IMessage;
 import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
+import fr.pederobien.utils.event.EventHandler;
+import fr.pederobien.utils.event.EventManager;
+import fr.pederobien.utils.event.IEventListener;
 
-public class Exchange implements IExchange {
+public class Exchange implements IExchange, IEventListener {
 	private IConnection connection;
 	private Semaphore receive, handled;
 	private RequestReceivedEvent event;
@@ -19,6 +23,8 @@ public class Exchange implements IExchange {
 		
 		receive = new Semaphore(0);
 		handled = new Semaphore(0);
+
+		EventManager.registerListener(this);
 	}
 	
 	@Override
@@ -70,5 +76,14 @@ public class Exchange implements IExchange {
 		// Waiting for the event to be dispatched to the handler
 		handled.acquire();
 		handled.drainPermits();
+	}
+
+	@EventHandler
+	private void onConnectionLost(ConnectionLostEvent event) {
+		if (connection != event.getConnection())
+			return;
+
+		this.event = new RequestReceivedEvent(connection, null, -1);
+		receive.release();
 	}
 }
