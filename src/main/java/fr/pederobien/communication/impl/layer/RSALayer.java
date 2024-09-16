@@ -292,7 +292,7 @@ public class RSALayer implements ILayer {
 		public byte[] pack(IHeaderMessage message) throws Exception {
 			// Step 1: Splitting message in packets
 			byte[] payload = ByteWrapper.create().putInt(message.getRequestID()).put(message.getBytes()).get();
-			List<byte[]> packets = splitter.pack(message.getID(), payload);
+			List<byte[]> packets = splitter.pack(message.getIdentifier(), payload);
 			
 			// Step 2: Encoding packets
 			List<byte[]> encrypted = new ArrayList<byte[]>();

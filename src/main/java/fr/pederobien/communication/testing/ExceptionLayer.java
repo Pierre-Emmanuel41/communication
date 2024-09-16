@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fr.pederobien.communication.impl.connection.HeaderMessage;
+import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.interfaces.IExchange;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;
@@ -45,7 +46,7 @@ public class ExceptionLayer implements ILayer {
 			throw new RuntimeException("Exception to test unstable counter");
 
 		List<IHeaderMessage> messages = new ArrayList<IHeaderMessage>();
-		messages.add(new HeaderMessage(raw));
+		messages.add(new HeaderMessage(0, new Message(raw)));
 		return messages;
 	}
 

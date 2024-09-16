@@ -10,6 +10,7 @@ import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.ConfigurationBuilder;
 import fr.pederobien.communication.impl.connection.ConnectionConfigBuilder;
 import fr.pederobien.communication.impl.connection.HeaderMessage;
+import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.layer.CertifiedLayer;
 import fr.pederobien.communication.impl.layer.Encapsuler;
 import fr.pederobien.communication.impl.layer.RSALayer;
@@ -184,7 +185,7 @@ public class LayerTest {
 			ILayer layer = new SimpleLayer();
 			String message = "Hello world";
 			
-			byte[] toSend = layer.pack(new HeaderMessage(message.getBytes()));
+			byte[] toSend = layer.pack(new HeaderMessage(0, new Message(message.getBytes())));
 			List<IHeaderMessage> messages = layer.unpack(toSend);
 			
 			for (IHeaderMessage received : messages)
@@ -201,8 +202,8 @@ public class LayerTest {
 			String message1 = main.concat(" 1");
 			String message2 = main.concat(" 2");
 			
-			byte[] toSend1 = layer.pack(new HeaderMessage(message1.getBytes()));
-			byte[] toSend2 = layer.pack(new HeaderMessage(message2.getBytes()));
+			byte[] toSend1 = layer.pack(new HeaderMessage(0, new Message(message1.getBytes())));
+			byte[] toSend2 = layer.pack(new HeaderMessage(0, new Message(message2.getBytes())));
 			
 			byte[] total = new byte[toSend1.length + toSend2.length];
 			System.arraycopy(toSend1, 0, total, 0, toSend1.length);
@@ -224,8 +225,8 @@ public class LayerTest {
 			String message1 = main.concat(" 1");
 			String message2 = main.concat(" 2");
 			
-			byte[] toSend1 = layer.pack(new HeaderMessage(message1.getBytes()));
-			byte[] toSend2 = layer.pack(new HeaderMessage(message2.getBytes()));
+			byte[] toSend1 = layer.pack(new HeaderMessage(0, new Message(message1.getBytes())));
+			byte[] toSend2 = layer.pack(new HeaderMessage(0, new Message(message2.getBytes())));
 			
 			// Missing last 5 bytes
 			byte[] total = new byte[toSend1.length + toSend2.length - 5];
@@ -253,7 +254,7 @@ public class LayerTest {
 			ILayer layer = new CertifiedLayer(new SimpleCertificate());
 			String message = "Hello world";
 			
-			byte[] toSend = layer.pack(new HeaderMessage(message.getBytes()));
+			byte[] toSend = layer.pack(new HeaderMessage(0, new Message(message.getBytes())));
 			List<IHeaderMessage> messages = layer.unpack(toSend);
 			
 			for (IHeaderMessage received : messages)
@@ -271,8 +272,8 @@ public class LayerTest {
 			String message1 = main.concat(" 1");
 			String message2 = main.concat(" 2");
 			
-			byte[] toSend1 = layer.pack(new HeaderMessage(message1.getBytes()));
-			byte[] toSend2 = layer.pack(new HeaderMessage(message2.getBytes()));
+			byte[] toSend1 = layer.pack(new HeaderMessage(0, new Message(message1.getBytes())));
+			byte[] toSend2 = layer.pack(new HeaderMessage(0, new Message(message2.getBytes())));
 			
 			byte[] total = new byte[toSend1.length + toSend2.length];
 			System.arraycopy(toSend1, 0, total, 0, toSend1.length);
@@ -294,8 +295,8 @@ public class LayerTest {
 			String message1 = main.concat(" 1");
 			String message2 = main.concat(" 2");
 			
-			byte[] toSend1 = layer.pack(new HeaderMessage(message1.getBytes()));
-			byte[] toSend2 = layer.pack(new HeaderMessage(message2.getBytes()));
+			byte[] toSend1 = layer.pack(new HeaderMessage(0, new Message(message1.getBytes())));
+			byte[] toSend2 = layer.pack(new HeaderMessage(0, new Message(message2.getBytes())));
 			
 			byte[] total = new byte[toSend1.length + toSend2.length - 5];
 			System.arraycopy(toSend1, 0, total, 0, toSend1.length);
@@ -322,7 +323,7 @@ public class LayerTest {
 			ILayer layer = new CertifiedLayer(new SimpleCertificate());
 			String message = "Hello world";
 			
-			byte[] toSend = layer.pack(new HeaderMessage(message.getBytes()));
+			byte[] toSend = layer.pack(new HeaderMessage(0, new Message(message.getBytes())));
 			
 			// Simulating corruption: modifying message
 			byte[] corrupted1 = new byte[toSend.length];
@@ -364,9 +365,7 @@ public class LayerTest {
 			Thread clientThread = new Thread(() -> {
 				try {
 					boolean success = client.initialise();
-					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Client initialization %s", success ? "succeed" : "failed"));
-
-					client.dispose();
+					EventManager.callEvent(new LogEvent("Client initialization %s", success ? "succeed" : "failed"));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -376,9 +375,7 @@ public class LayerTest {
 			Thread serverThread = new Thread(() -> {
 				try {
 					boolean success = server.initialise();
-					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Server initialization %s", success ? "succeed" : "failed"));
-
-					server.dispose();
+					EventManager.callEvent(new LogEvent("Server initialization %s", success ? "succeed" : "failed"));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -388,11 +385,10 @@ public class LayerTest {
 			clientThread.start();
 			serverThread.start();
 			
-			try {
-				Thread.sleep(1000000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			sleep(2000);
+			
+			client.dispose();
+			server.dispose();
 		};
 		
 		runTest("testRsaLayerInitialization", test);
@@ -406,7 +402,7 @@ public class LayerTest {
 				return bytes;
 			};
 			
-			NetworkSimulator network = new NetworkSimulator(clientToServer, bytes -> bytes);
+			NetworkSimulator network = new NetworkSimulator(clientToServer, Function.identity());
 
 			ConfigurationBuilder clientConfigBuilder = Communication.createConfigurationBuilder();
 			clientConfigBuilder.setLayer(new RSALayer(Mode.CLIENT_TO_SERVER, new SimpleCertificate()));
@@ -424,9 +420,7 @@ public class LayerTest {
 			Thread clientThread = new Thread(() -> {
 				try {
 					boolean success = client.initialise();
-					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Client initialization %s", success ? "succeed" : "failed"));
-
-					client.dispose();
+					EventManager.callEvent(new LogEvent("Client initialization %s", success ? "succeed" : "failed"));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -435,9 +429,7 @@ public class LayerTest {
 			Thread serverThread = new Thread(() -> {
 				try {
 					boolean success = server.initialise();
-					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Server initialization %s", success ? "succeed" : "failed"));
-
-					server.dispose();
+					EventManager.callEvent(new LogEvent("Server initialization %s", success ? "succeed" : "failed"));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -446,14 +438,237 @@ public class LayerTest {
 			serverThread.start();
 			clientThread.start();
 			
-			try {
-				Thread.sleep(35000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			sleep(40000);
+			
+			client.dispose();
+			server.dispose();
 		};
 		
 		runTest("testRsaLayerInitializationFailureClientToServer", test);
+	}
+	
+	public void testRsaLayerInitializationFailureServerAcknowledgement() {
+		IExecutable test = () -> {
+			NetworkSimulator network = new NetworkSimulator(Function.identity(), new NetworkModifier(1, 2));
+
+			ConfigurationBuilder clientConfigBuilder = Communication.createConfigurationBuilder();
+			clientConfigBuilder.setLayer(new RSALayer(Mode.CLIENT_TO_SERVER, new SimpleCertificate()));
+			
+			ConnectionConfigBuilder clientConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, clientConfigBuilder.build());
+			
+			ConfigurationBuilder serverConfigBuilder = Communication.createConfigurationBuilder();
+			serverConfigBuilder.setLayer(new RSALayer(Mode.SERVER_TO_CLIENT, new SimpleCertificate()));
+			
+			ConnectionConfigBuilder serverConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, serverConfigBuilder.build());
+
+			IConnection client = Communication.createCustomConnection(clientConnectionBuilder.build(), network.getClient(), Mode.CLIENT_TO_SERVER);
+			IConnection server = Communication.createCustomConnection(serverConnectionBuilder.build(), network.getServer(), Mode.SERVER_TO_CLIENT);
+			
+			Thread clientThread = new Thread(() -> {
+				try {
+					boolean success = client.initialise();
+					EventManager.callEvent(new LogEvent("Client initialization %s", success ? "succeed" : "failed"));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}, "Client initialization");
+			
+			Thread serverThread = new Thread(() -> {
+				try {
+					boolean success = server.initialise();
+					EventManager.callEvent(new LogEvent("Server initialization %s", success ? "succeed" : "failed"));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}, "Server initialization");
+			
+			serverThread.start();
+			clientThread.start();
+			
+			sleep(40000);
+			
+			client.dispose();
+			server.dispose();
+		};
+		
+		runTest("testRsaLayerInitializationFailureServerAcknowledgement", test);
+	}
+	
+	public void testRsaLayerInitializationAndTransmission() {
+		IExecutable test = () -> {
+			NetworkSimulator network = new NetworkSimulator();
+
+			ConfigurationBuilder clientConfigBuilder = Communication.createConfigurationBuilder();
+			clientConfigBuilder.setLayer(new RSALayer(Mode.CLIENT_TO_SERVER, new SimpleCertificate()));
+			
+			ConnectionConfigBuilder clientConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, clientConfigBuilder.build());
+			
+			ConfigurationBuilder serverConfigBuilder = Communication.createConfigurationBuilder();
+			serverConfigBuilder.setLayer(new RSALayer(Mode.SERVER_TO_CLIENT, new SimpleCertificate()));
+			serverConfigBuilder.setRequestReceivedHandler(() -> new SimpleAnswerToRequestListener("I received your request !"));
+			
+			ConnectionConfigBuilder serverConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, serverConfigBuilder.build());
+
+			IConnection client = Communication.createCustomConnection(clientConnectionBuilder.build(), network.getClient(), Mode.CLIENT_TO_SERVER);
+			IConnection server = Communication.createCustomConnection(serverConnectionBuilder.build(), network.getServer(), Mode.SERVER_TO_CLIENT);
+			
+			Thread clientThread = new Thread(() -> {
+				try {
+					boolean success = client.initialise();
+					EventManager.callEvent(new LogEvent("Client initialization %s", success ? "succeed" : "failed"));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}, "Client initialization");
+			
+			Thread serverThread = new Thread(() -> {
+				try {
+					boolean success = server.initialise();
+					EventManager.callEvent(new LogEvent("Server initialization %s", success ? "succeed" : "failed"));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}, "Server initialization");
+			
+			serverThread.start();
+			clientThread.start();
+			
+			sleep(1000);
+			
+			String message1 = "Hello world";
+			client.send(new Message(message1.getBytes(), args -> {
+				if (!args.isTimeout()) {
+					EventManager.callEvent(new LogEvent("Client received: %s", new String(args.getResponse().getBytes())));
+				}
+				else
+					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
+			}));
+			
+			sleep(2000);
+			
+			client.dispose();
+			server.dispose();
+		};
+		
+		runTest("testRsaLayerInitializationAndTransmission", test);
+	}
+	
+	public void testRsaLayerInitializationFirstFailureAndTransmission() {
+		IExecutable test = () -> {
+			NetworkSimulator network = new NetworkSimulator(Function.identity(), new NetworkModifier(0, 1));
+
+			ConfigurationBuilder clientConfigBuilder = Communication.createConfigurationBuilder();
+			clientConfigBuilder.setLayer(new RSALayer(Mode.CLIENT_TO_SERVER, new SimpleCertificate()));
+			
+			ConnectionConfigBuilder clientConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, clientConfigBuilder.build());
+			
+			ConfigurationBuilder serverConfigBuilder = Communication.createConfigurationBuilder();
+			serverConfigBuilder.setLayer(new RSALayer(Mode.SERVER_TO_CLIENT, new SimpleCertificate()));
+			serverConfigBuilder.setRequestReceivedHandler(() -> new SimpleAnswerToRequestListener("I received your request !"));
+			
+			ConnectionConfigBuilder serverConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, serverConfigBuilder.build());
+
+			IConnection client = Communication.createCustomConnection(clientConnectionBuilder.build(), network.getClient(), Mode.CLIENT_TO_SERVER);
+			IConnection server = Communication.createCustomConnection(serverConnectionBuilder.build(), network.getServer(), Mode.SERVER_TO_CLIENT);
+			
+			Thread clientThread = new Thread(() -> {
+				try {
+					boolean success = client.initialise();
+					EventManager.callEvent(new LogEvent("Client initialization %s", success ? "succeed" : "failed"));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}, "Client initialization");
+			
+			Thread serverThread = new Thread(() -> {
+				try {
+					boolean success = server.initialise();
+					EventManager.callEvent(new LogEvent("Server initialization %s", success ? "succeed" : "failed"));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}, "Server initialization");
+			
+			serverThread.start();
+			clientThread.start();
+			
+			sleep(15000);
+			
+			String message1 = "Hello world";
+			client.send(new Message(message1.getBytes(), args -> {
+				if (!args.isTimeout()) {
+					EventManager.callEvent(new LogEvent("Client received: %s", new String(args.getResponse().getBytes())));
+				}
+				else
+					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
+			}));
+			
+			sleep(2000);
+			
+			client.dispose();
+			server.dispose();
+		};
+		
+		runTest("testRsaLayerInitializationFirstFailureAndTransmission", test);
+	}
+	
+	public void testRsaLayerInitializationSecondFailureAndTransmission() {
+		IExecutable test = () -> {
+			NetworkSimulator network = new NetworkSimulator(new NetworkModifier(0, 1), new NetworkModifier(0, 1));
+
+			ConfigurationBuilder clientConfigBuilder = Communication.createConfigurationBuilder();
+			clientConfigBuilder.setLayer(new RSALayer(Mode.CLIENT_TO_SERVER, new SimpleCertificate()));
+			
+			ConnectionConfigBuilder clientConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, clientConfigBuilder.build());
+			
+			ConfigurationBuilder serverConfigBuilder = Communication.createConfigurationBuilder();
+			serverConfigBuilder.setLayer(new RSALayer(Mode.SERVER_TO_CLIENT, new SimpleCertificate()));
+			serverConfigBuilder.setRequestReceivedHandler(() -> new SimpleAnswerToRequestListener("I received your request !"));
+			
+			ConnectionConfigBuilder serverConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, serverConfigBuilder.build());
+
+			IConnection client = Communication.createCustomConnection(clientConnectionBuilder.build(), network.getClient(), Mode.CLIENT_TO_SERVER);
+			IConnection server = Communication.createCustomConnection(serverConnectionBuilder.build(), network.getServer(), Mode.SERVER_TO_CLIENT);
+			
+			Thread clientThread = new Thread(() -> {
+				try {
+					boolean success = client.initialise();
+					EventManager.callEvent(new LogEvent("Client initialization %s", success ? "succeed" : "failed"));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}, "Client initialization");
+			
+			Thread serverThread = new Thread(() -> {
+				try {
+					boolean success = server.initialise();
+					EventManager.callEvent(new LogEvent("Server initialization %s", success ? "succeed" : "failed"));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}, "Server initialization");
+			
+			serverThread.start();
+			clientThread.start();
+			
+			sleep(25000);
+			
+			String message1 = "Hello world";
+			client.send(new Message(message1.getBytes(), args -> {
+				if (!args.isTimeout()) {
+					EventManager.callEvent(new LogEvent("Client received: %s", new String(args.getResponse().getBytes())));
+				}
+				else
+					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
+			}));
+			
+			sleep(2000);
+			
+			client.dispose();
+			server.dispose();
+		};
+		
+		runTest("testRsaLayerInitializationSecondFailureAndTransmission", test);
 	}
 
 	private void runTest(String testName, IExecutable test) {
@@ -464,5 +679,13 @@ public class LayerTest {
 			EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected error: %s", e.getMessage()));
 		}
 		EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "End %s", testName));
+	}
+	
+	private void sleep(int millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 }

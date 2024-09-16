@@ -28,6 +28,7 @@ public class CommunicationTestApp
     
     private static void runLayerTests() {
     	LayerTest tests = new LayerTest();
+
     	tests.testEncapsulerOneMessage();
     	tests.testEncapsulerTwoMessages();
     	tests.testEncapsulerLastMessageTruncated();
@@ -43,6 +44,10 @@ public class CommunicationTestApp
     	tests.testCertifiedLayerOneCorruptedMessage();
     	tests.testRsaLayerInitialization();
     	tests.testRsaLayerInitializationFailureClientToServer();
+    	tests.testRsaLayerInitializationFailureServerAcknowledgement();
+    	tests.testRsaLayerInitializationAndTransmission();
+    	tests.testRsaLayerInitializationFirstFailureAndTransmission();
+    	tests.testRsaLayerInitializationSecondFailureAndTransmission();
     }
     
     private static void runTcpCommunicationTest() {

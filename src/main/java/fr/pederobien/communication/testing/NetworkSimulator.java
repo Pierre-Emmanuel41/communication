@@ -39,7 +39,7 @@ public class NetworkSimulator {
 	 * Create a simple network simulator.
 	 */
 	public NetworkSimulator() {
-		this(bytes -> bytes);
+		this(Function.identity());
 	}
 	
 	public IConnectionImpl getClient() {

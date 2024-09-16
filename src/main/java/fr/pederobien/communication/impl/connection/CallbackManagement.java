@@ -79,7 +79,7 @@ public class CallbackManagement implements Runnable {
 	 */
 	public CallbackArgs apply() {
 		IMessage resp = isTimeout ? null : new Message(response.getBytes());
-		int identifier = isTimeout ? -1 : response.getID();
+		int identifier = isTimeout ? -1 : response.getIdentifier();
 
 		CallbackArgs arguments = new CallbackArgs(identifier, resp, isTimeout);
 		message.getCallback().apply(arguments);

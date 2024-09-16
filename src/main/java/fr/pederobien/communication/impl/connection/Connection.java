@@ -219,7 +219,7 @@ public abstract class Connection implements IConnection {
 			try {
 				byte[] data = config.getLayer().pack(message);
 
-				messageManager.start(message.getID());
+				messageManager.start(message.getIdentifier());
 				sendImpl(data);
 	
 				sendingExceptionCounter = 0;
@@ -295,7 +295,7 @@ public abstract class Connection implements IConnection {
 
 					else
 						// Dispatching asynchronously a request received event.
-						unexpectedRequestQueue.add(new UnexpectedRequestEvent(request.getID(), request.getBytes()));
+						unexpectedRequestQueue.add(new UnexpectedRequestEvent(request.getIdentifier(), request.getBytes()));
 				}
 
 				extractingExceptionCounter = 0;
@@ -365,7 +365,7 @@ public abstract class Connection implements IConnection {
 		}
 
 		HeaderMessage header = new HeaderMessage(requestID, toSend);
-		messageManager.register(header.getID(), toSend);
+		messageManager.register(header.getIdentifier(), toSend);
 		sendingQueue.add(header);
 
 		if (message.isSync()) {

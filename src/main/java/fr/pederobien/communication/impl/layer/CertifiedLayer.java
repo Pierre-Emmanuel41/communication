@@ -34,7 +34,7 @@ public class CertifiedLayer implements ILayer {
 	@Override
 	public byte[] pack(IHeaderMessage message) throws Exception {
 		ByteWrapper wrapper = ByteWrapper.create();
-		wrapper.putInt(message.getID());
+		wrapper.putInt(message.getIdentifier());
 		wrapper.putInt(message.getRequestID());
 		wrapper.putInt(message.getBytes().length);
 		wrapper.put(message.getBytes());

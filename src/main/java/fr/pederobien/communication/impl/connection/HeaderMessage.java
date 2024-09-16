@@ -7,7 +7,7 @@ import fr.pederobien.communication.interfaces.IMessage;
 
 public class HeaderMessage implements IHeaderMessage {
 	private static final AtomicInteger IDENTIFIER_GENERATOR = new AtomicInteger(1);
-	private int ID;
+	private int identifier;
 	private int requestID;
 	private IMessage message;
 	
@@ -16,12 +16,12 @@ public class HeaderMessage implements IHeaderMessage {
 	 * the requestID must be the original request identifier. It should be set to 0 when the message
 	 * is not a response.
 	 * 
-	 * @param ID The identifier of this request.
+	 * @param identifier The identifier of this request.
 	 * @param requestID The identifier of the request associated to this response.
 	 * @param message The response of the request.
 	 */
-	public HeaderMessage(int ID, int requestID, IMessage message) {
-		this.ID = ID;
+	private HeaderMessage(int identifier, int requestID, IMessage message) {
+		this.identifier = identifier;
 		this.requestID = requestID;
 		this.message = message;		
 	}
@@ -31,12 +31,12 @@ public class HeaderMessage implements IHeaderMessage {
 	 * the requestID must be the original request identifier. It should be set to 0 when the message
 	 * is not a response.
 	 * 
-	 * @param ID The identifier of this request.
+	 * @param identifier The identifier of this request.
 	 * @param requestID The identifier of the request associated to this response.
 	 * @param bytes The bytes array of the message.
 	 */
-	public HeaderMessage(int ID, int requestID, byte[] bytes) {
-		this(ID, requestID, new Message(bytes));
+	public HeaderMessage(int identifier, int requestID, byte[] bytes) {
+		this(identifier, requestID, new Message(bytes));
 	}
 
 	/**
@@ -49,27 +49,9 @@ public class HeaderMessage implements IHeaderMessage {
 		this(IDENTIFIER_GENERATOR.getAndIncrement(), requestID, message);
 	}
 	
-	/**
-	 * Create a header of a message.
-	 * 
-	 * @param message The message that contains bytes.
-	 */
-	public HeaderMessage(IMessage message) {
-		this(0, message);
-	}
-	
-	/**
-	 * Create a header of a message.
-	 * 
-	 * @param bytes The bytes array of the message.
-	 */
-	public HeaderMessage(byte[] bytes) {
-		this(0, new Message(bytes));
-	}
-	
 	@Override
-	public int getID() {
-		return ID;
+	public int getIdentifier() {
+		return identifier;
 	}
 	
 	@Override
