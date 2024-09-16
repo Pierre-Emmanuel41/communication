@@ -7,4 +7,14 @@ public interface IMessage {
 	 * as it is used for internal purpose.
 	 */
 	byte[] getBytes();
+
+	/**
+	 * @return True if this message shall be sent synchronously, false to send it asynchronously.
+	 */
+	boolean isSync();
+
+	/**
+	 * @return The callback to execute, if not null, when a response has been received from the remote.
+	 */
+	ICallback getCallback();
 }

@@ -3,8 +3,8 @@ package fr.pederobien.communication.impl.connection;
 import java.util.HashMap;
 import java.util.Map;
 
-import fr.pederobien.communication.interfaces.ICallbackMessage;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
+import fr.pederobien.communication.interfaces.IMessage;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
 
@@ -30,10 +30,12 @@ public class CallbackManager {
 	 * @param identifier The message identifier of the message.
 	 * @param message The message to register.
 	 */
-	public void register(int identifier, ICallbackMessage message) {
+	public void register(int identifier, IMessage message) {
 		disposable.checkDisposed();
 
-		pendingMessages.put(identifier, new CallbackManagement(this, identifier, message));
+		// When no timeout defined, no callback defined.
+		if (message.getCallback().getTimeout() > 0)
+			pendingMessages.put(identifier, new CallbackManagement(this, identifier, message));
 	}
 	
 	/**
@@ -44,11 +46,10 @@ public class CallbackManager {
 	 */
 	public void start(int identifier) {
 		disposable.isDisposed();
-		
+
 		CallbackManagement management = pendingMessages.get(identifier);
-		if (management != null) {
+		if (management != null)
 			management.start();
-		}
 	}
 	
 	/**

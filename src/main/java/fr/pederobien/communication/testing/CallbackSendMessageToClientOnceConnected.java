@@ -3,8 +3,8 @@ package fr.pederobien.communication.testing;
 import java.util.function.Consumer;
 
 import fr.pederobien.communication.event.NewClientEvent;
-import fr.pederobien.communication.impl.connection.CallbackMessage;
-import fr.pederobien.communication.interfaces.ICallbackMessage.CallbackArgs;
+import fr.pederobien.communication.impl.connection.Message;
+import fr.pederobien.communication.interfaces.ICallback.CallbackArgs;
 import fr.pederobien.communication.interfaces.IServer;
 import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
@@ -36,6 +36,6 @@ public class CallbackSendMessageToClientOnceConnected implements IEventListener 
 	@EventHandler
 	private void onNewClientEvent(NewClientEvent event) {
 		if (event.getServer() == server)
-			event.getConnection().send(new CallbackMessage("You are connected".getBytes(), 1000, callback));
+			event.getConnection().send(new Message("You are connected".getBytes(), callback));
 	}
 }

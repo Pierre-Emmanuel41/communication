@@ -1,9 +1,7 @@
 package fr.pederobien.communication.interfaces;
 
-import java.util.function.Consumer;
-
-public interface ICallbackMessage extends IMessage {
-
+public interface ICallback {
+	
 	public class CallbackArgs {
 		private int identifier;
 		private IMessage response;
@@ -44,19 +42,14 @@ public interface ICallbackMessage extends IMessage {
 			return isTimeout;
 		}
 	}
-	
-	/**
-	 * @return The timeout in milliseconds for this request.
-	 */
-	long getTimeout();
 
 	/**
-	 * @return Callback function to be called when response is received or when timeout occurs.
+	 * @return The maximum time, in ms, to wait for remote response.
 	 */
-	Consumer<CallbackArgs> getCallback();
+	int getTimeout();
 	
 	/**
-	 * @return True if this callback message shall be sent synchronously, false to send it asynchronously.
+	 * Execute the underlying callback with the given arguments.
 	 */
-	boolean isSync();
+	void apply(CallbackArgs args);
 }

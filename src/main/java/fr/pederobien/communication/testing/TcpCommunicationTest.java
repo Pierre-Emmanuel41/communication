@@ -2,7 +2,6 @@ package fr.pederobien.communication.testing;
 
 import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.client.ClientConfigBuilder;
-import fr.pederobien.communication.impl.connection.CallbackMessage;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.server.ServerConfigBuilder;
 import fr.pederobien.communication.interfaces.IClient;
@@ -159,7 +158,7 @@ public class TcpCommunicationTest {
 			
 			sleep(1000);
 			
-			client.getConnection().send(new CallbackMessage("Hello world !".getBytes(), 1000, args -> {
+			client.getConnection().send(new Message("Hello world !".getBytes(), args -> {
 				if (!args.isTimeout()) {
 					String received = new String(args.getResponse().getBytes());
 					EventManager.callEvent(new LogEvent(ELogLevel.WARNING, "Response received: %s", received));
@@ -192,7 +191,7 @@ public class TcpCommunicationTest {
 			
 			sleep(1000);
 			
-			client.getConnection().send(new CallbackMessage("Hello world !".getBytes(), 1000, args -> {
+			client.getConnection().send(new Message("Hello world !".getBytes(), args -> {
 				if (!args.isTimeout()) {
 					String received = new String(args.getResponse().getBytes());
 					EventManager.callEvent(new LogEvent(ELogLevel.WARNING, "Response received: %s", received));
@@ -386,7 +385,7 @@ public class TcpCommunicationTest {
 
 			for (int i = 0; i < 15; i++) {
 				String message = "Hello world";
-				client.getConnection().send(new CallbackMessage(message.getBytes(), 1000, args ->  {
+				client.getConnection().send(new Message(message.getBytes(), args ->  {
 					if (!args.isTimeout())
 						throw new RuntimeException("Exception to test unstable counter");
 					else

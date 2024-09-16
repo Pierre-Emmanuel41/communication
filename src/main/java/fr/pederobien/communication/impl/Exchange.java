@@ -4,7 +4,6 @@ import java.util.concurrent.Semaphore;
 
 import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.RequestReceivedEvent;
-import fr.pederobien.communication.interfaces.ICallbackMessage;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IExchange;
 import fr.pederobien.communication.interfaces.IMessage;
@@ -33,17 +32,7 @@ public class Exchange implements IExchange, IEventListener {
 	}
 
 	@Override
-	public void send(ICallbackMessage message) {
-		connection.send(message);
-	}
-
-	@Override
 	public void answer(int identifier, IMessage message) {
-		connection.answer(identifier, message);
-	}
-
-	@Override
-	public void answer(int identifier, ICallbackMessage message) {
 		connection.answer(identifier, message);
 	}
 

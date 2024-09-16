@@ -15,7 +15,6 @@ import java.util.Map;
 import javax.crypto.Cipher;
 
 import fr.pederobien.communication.event.RequestReceivedEvent;
-import fr.pederobien.communication.impl.connection.CallbackMessage;
 import fr.pederobien.communication.impl.connection.HeaderMessage;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.interfaces.ICertificate;
@@ -75,22 +74,15 @@ public class RSALayer implements ILayer {
 
 		@Override
 		public boolean initialise(IExchange exchange) throws Exception {
-			// Step 1: Creating public/private key
-			KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-			generator.initialize(2048);
-
-			KeyPair keyPair = generator.generateKeyPair();
-			privateKey = keyPair.getPrivate();
-			PublicKey publicKey = keyPair.getPublic();
-
 			KeyExchange keyExchange;
 			if (mode == Mode.CLIENT_TO_SERVER)
-				keyExchange = new ClientToServerKeyExchange(exchange, publicKey);
+				keyExchange = new ClientToServerKeyExchange(exchange);
 			else
-				keyExchange = new ServerToClientKeyExchange(exchange, publicKey);
+				keyExchange = new ServerToClientKeyExchange(exchange);
 
 			boolean success =  keyExchange.exchange();
 			if (success) {
+				privateKey = keyExchange.getPrivateKey();
 				remoteKey = keyExchange.getRemoteKey();
 				implementation = initialised;
 			}
@@ -111,17 +103,16 @@ public class RSALayer implements ILayer {
 	
 	private abstract class KeyExchange {
 		private IExchange exchange;
-		private PublicKey toSend, remoteKey;
+		private PublicKey publicKey, remoteKey;
+		private PrivateKey privateKey;
 		
 		/**
 		 * Creates a key exchange responsible to send and receive public key from the remote.
 		 * 
 		 * @param exchange The exchange to send/receive data from the remote.
-		 * @param toSend The public key to send.
 		 */
-		public KeyExchange(IExchange exchange, PublicKey toSend) {
+		public KeyExchange(IExchange exchange) {
 			this.exchange = exchange;
-			this.toSend = toSend;
 		}
 		
 		/**
@@ -130,28 +121,35 @@ public class RSALayer implements ILayer {
 		 * @return True if the key exchange went through, false otherwise.
 		 */
 		protected abstract boolean exchange() throws Exception;
-		
+
 		/**
 		 * @return The exchange used to send/receive data from the remote.
 		 */
-		public IExchange getExchange() {
+		protected IExchange getExchange() {
 			return exchange;
 		}
-		
+
 		/**
 		 * @return The public key to send to the remote.
 		 */
-		public PublicKey getToSend() {
-			return toSend;
+		protected PublicKey getPublicKey() {
+			return publicKey;
 		}
-		
+
+		/**
+		 * @return The private key.
+		 */
+		protected PrivateKey getPrivateKey() {
+			return privateKey;
+		}
+
 		/**
 		 * @return The public key received from the remote.
 		 */
-		public PublicKey getRemoteKey() {
+		protected PublicKey getRemoteKey() {
 			return remoteKey;
 		}
-		
+
 		/**
 		 * Set the remote public key.
 		 * 
@@ -171,6 +169,19 @@ public class RSALayer implements ILayer {
 			
 			return remoteKey;
 		}
+
+		/**
+		 * Update internal public / private key.
+		 */
+		protected void createKeyPair() throws Exception {
+			// Step 1: Creating public/private key
+			KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+			generator.initialize(2048);
+
+			KeyPair keyPair = generator.generateKeyPair();
+			privateKey = keyPair.getPrivate();
+			publicKey = keyPair.getPublic();
+		}
 	}
 	
 	private class ServerToClientKeyExchange extends KeyExchange {
@@ -180,10 +191,9 @@ public class RSALayer implements ILayer {
 		 * Creates a key exchange responsible to send and receive public key from the remote.
 		 * 
 		 * @param exchange The exchange to send/receive data from the remote.
-		 * @param toSend The public key to send.
 		 */
-		public ServerToClientKeyExchange(IExchange exchange, PublicKey toSend) {
-			super(exchange, toSend);
+		public ServerToClientKeyExchange(IExchange exchange) {
+			super(exchange);
 		}
 		
 		@Override
@@ -192,8 +202,11 @@ public class RSALayer implements ILayer {
 			int counter = 0;
 			while (!success && (counter++ < 3)) {
 
+				// Generating new keys each time a error occurs
+				createKeyPair();
+
 				// Step 1: Sending public key
-				getExchange().send(new CallbackMessage(getToSend().getEncoded(), 10000, true, args -> {
+				getExchange().send(new Message(getPublicKey().getEncoded(), true, 10000, args -> {
 					if (!args.isTimeout()) {
 
 						// Step 2: Excepting remote public key
@@ -201,7 +214,8 @@ public class RSALayer implements ILayer {
 						if (getRemoteKey() != null) {
 
 							// Step 3: Sending positive acknowledgement
-							getExchange().answer(args.getIdentifier(), new Message(SUCCESS_PATTERN));
+							getExchange().answer(args.getIdentifier(), new Message(SUCCESS_PATTERN, true));
+							success = true;
 						}
 					}
 				}));
@@ -219,10 +233,9 @@ public class RSALayer implements ILayer {
 		 * Creates a key exchange responsible to send and receive public key from the remote.
 		 * 
 		 * @param exchange The exchange to send/receive data from the remote.
-		 * @param toSend The public key to send.
 		 */
-		public ClientToServerKeyExchange(IExchange exchange, PublicKey toSend) {
-			super(exchange, toSend);
+		public ClientToServerKeyExchange(IExchange exchange) {
+			super(exchange);
 			
 			success = false;
 		}
@@ -231,10 +244,14 @@ public class RSALayer implements ILayer {
 		protected boolean exchange() throws Exception {
 			watchdog = Watchdog.create(() -> {
 				while (!success) {
+
+					// Generating new keys each time a error occurs
+					createKeyPair();
+
 					// Waiting for receiving data from the remote
 					getExchange().receive(this);
 				}
-			}, 60000);
+			}, 35000);
 			
 			return watchdog.start();
 		}
@@ -246,13 +263,14 @@ public class RSALayer implements ILayer {
 				watchdog.cancel();
 
 			setRemoteKey(parseRemotePublicKey(event.getData()));
-			if (getRemoteKey() != null)
-				getExchange().answer(event.getIdentifier(), new CallbackMessage(getToSend().getEncoded(), 10000, true, args -> {
-					if (!args.isTimeout() && Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
-						getExchange().answer(args.getIdentifier(), new Message(SUCCESS_PATTERN));
+			if (getRemoteKey() != null) {
+
+				// Sending public key to remote
+				getExchange().answer(event.getIdentifier(), new Message(getPublicKey().getEncoded(), true, 10000, args -> {
+					if (!args.isTimeout() && Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes()))
 						success = true;
-					}
 				}));
+			}
 		}
 	}
 	

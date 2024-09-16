@@ -21,13 +21,6 @@ public interface IConnection {
 	 * @param message the message to send to the remote.
 	 */
 	void send(IMessage message);
-
-	/**
-	 * Send asynchronously or not (depending on the isSync value) a request to the remote.
-	 * 
-	 * @param message the message to send to the remote.
-	 */
-	void send(ICallbackMessage message);
 	
 	/**
 	 * Send asynchronously a request to the remote.
@@ -36,14 +29,6 @@ public interface IConnection {
 	 * @param message The response of the request.
 	 */
 	void answer(int requestID, IMessage message);
-
-	/**
-	 * Send asynchronously or not (depending on the isSync value) a request to the remote.
-	 * 
-	 * @param requestID The identifier of the request to be answered.
-	 * @param message The response of the request.
-	 */
-	void answer(int requestID, ICallbackMessage message);
 
 	/**
 	 * @return True if the connection can send data to the remote or not. It is independent from the connection with the remote.

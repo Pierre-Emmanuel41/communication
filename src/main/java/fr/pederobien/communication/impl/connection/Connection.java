@@ -10,8 +10,7 @@ import fr.pederobien.communication.event.ConnectionUnstableEvent;
 import fr.pederobien.communication.event.DataEvent;
 import fr.pederobien.communication.event.RequestReceivedEvent;
 import fr.pederobien.communication.impl.Exchange;
-import fr.pederobien.communication.interfaces.ICallbackMessage;
-import fr.pederobien.communication.interfaces.ICallbackMessage.CallbackArgs;
+import fr.pederobien.communication.interfaces.ICallback.CallbackArgs;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
@@ -109,27 +108,11 @@ public abstract class Connection implements IConnection {
 		disposable.checkDisposed();
 
 		if (isEnabled())
-			sendingQueue.add(new HeaderMessage(message));
-	}
-	
-	@Override
-	public void send(ICallbackMessage message) {
-		disposable.checkDisposed();
-		
-		if (isEnabled())
 			send(0, message);
 	}
 	
 	@Override
 	public void answer(int requestID, IMessage message) {
-		disposable.checkDisposed();
-
-		if (isEnabled())
-			sendingQueue.add(new HeaderMessage(requestID, message));
-	}
-
-	@Override
-	public void answer(int requestID, ICallbackMessage message) {
 		disposable.checkDisposed();
 
 		if (isEnabled())
@@ -370,11 +353,12 @@ public abstract class Connection implements IConnection {
 	 * @param requestID The Identifier of the request to respond to.
 	 * @param message The message to send to the remote.
 	 */
-	private void send(int requestID, ICallbackMessage message) {
-		ICallbackMessage toSend = message;
+	private void send(int requestID, IMessage message) {
+		IMessage toSend = message;
 
 		if (message.isSync()) {
-			toSend = new CallbackMessage(message.getBytes(), message.getTimeout(), args -> {
+			int timeout = message.getCallback().getTimeout() == -1 ? 10 : message.getCallback().getTimeout();
+			toSend = new Message(message.getBytes(), message.isSync(), timeout, args -> {
 				argument = args;
 				semaphore.release();
 			});
@@ -388,15 +372,16 @@ public abstract class Connection implements IConnection {
 			try {
 				// Wait until the callback has been executed
 				semaphore.acquire();
-
-				// Executing callback
-				message.getCallback().accept(argument);
 			} catch (Exception e) {
-				message.getCallback().accept(new CallbackArgs(-1, null, true));
+				argument = new CallbackArgs(-1, null, true);
 			} finally {
 				// Always draining the semaphore to force the synchronous send
 				semaphore.drainPermits();
 			}
+
+			// Executing callback
+			if (message.getCallback().getTimeout() != -1)
+				message.getCallback().apply(argument);
 		}
 	}
 	
