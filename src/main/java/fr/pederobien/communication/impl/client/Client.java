@@ -192,7 +192,6 @@ public abstract class Client implements IClient {
 			if (state != EState.CONNECTING)
 				return;
 			
-			state = EState.CONNECTED;
 			IConnection connection = onConnectionComplete(config);
 			listener.start();
 
@@ -202,6 +201,7 @@ public abstract class Client implements IClient {
 				this.connection = connection;
 				onLogEvent("Connected to the remote");
 
+				state = EState.CONNECTED;
 				// Notifying observers that the client is connected
 				EventManager.callEvent(new ClientConnectedEvent(this));
 			}
