@@ -30,7 +30,7 @@ public class NewClientEvent extends ConnectionEvent {
 	public String toString() {
 		StringJoiner joiner = new StringJoiner(", ", "{", "}");
 		joiner.add("server=" + getServer());
-		joiner.add("tcpConnection=" + getConnection());
+		joiner.add("connection=" + getConnection());
 		return String.format("%s_%s", getName(), joiner);
 	}
 }
