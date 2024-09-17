@@ -13,16 +13,16 @@ import fr.pederobien.utils.ReadableByteWrapper;
 public class SimpleLayer implements ILayer {
 	private Encapsuler encapsuler;
 	
-	@Override
-	public boolean initialise(IExchange exchange) {
-		return true;
-	}
-	
 	/**
 	 * Creates a layer in order to extract several responses from raw data received from the remote.
 	 */
 	public SimpleLayer() {
 		encapsuler = new Encapsuler("(~@=", "#.?)");
+	}
+
+	@Override
+	public boolean initialise(IExchange exchange) {
+		return true;
 	}
 
 	@Override
