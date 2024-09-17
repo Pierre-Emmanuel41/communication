@@ -31,7 +31,7 @@ import fr.pederobien.utils.Watchdog.WatchdogStakeholder;
 public class RSALayer implements ILayer {
 	private static final byte[] SUCCESS_PATTERN = "SUCCESS_PATTERN".getBytes();
 	
-	private ILayer implementation, notInitialised, initialised;
+	private ILayer implementation;
 	private PrivateKey privateKey;
 	private PublicKey remoteKey;
 
@@ -42,10 +42,7 @@ public class RSALayer implements ILayer {
 	 * @param certificate The certificate to sign or authenticate the remote public key.
 	 */
 	public RSALayer(Mode mode, ICertificate certificate) {
-		notInitialised = new NotInitialisedLayer(mode, certificate);
-		initialised = new InitialisedLayer();
-		
-		implementation = notInitialised;
+		implementation = new NotInitialisedLayer(mode, certificate);
 	}
 	
 	@Override
@@ -84,7 +81,7 @@ public class RSALayer implements ILayer {
 			if (success) {
 				privateKey = keyExchange.getPrivateKey();
 				remoteKey = keyExchange.getRemoteKey();
-				implementation = initialised;
+				implementation = new InitialisedLayer();
 			}
 
 			return success;
