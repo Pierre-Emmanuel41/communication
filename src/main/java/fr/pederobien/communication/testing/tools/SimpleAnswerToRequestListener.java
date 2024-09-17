@@ -1,4 +1,4 @@
-package fr.pederobien.communication.testing;
+package fr.pederobien.communication.testing.tools;
 
 import fr.pederobien.communication.event.RequestReceivedEvent;
 import fr.pederobien.communication.impl.connection.Message;

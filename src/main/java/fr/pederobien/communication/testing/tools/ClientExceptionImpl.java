@@ -1,4 +1,4 @@
-package fr.pederobien.communication.testing;
+package fr.pederobien.communication.testing.tools;
 
 import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.interfaces.IClientConfig;

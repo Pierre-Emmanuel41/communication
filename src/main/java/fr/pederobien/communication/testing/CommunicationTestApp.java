@@ -15,8 +15,9 @@ public class CommunicationTestApp
     {
     	EventLogger.instance().newLine(true).timeStamp(true).register();
 
-    	runTest("Layer tests", () -> runLayerTests());
-    	runTest("TCP tests", () -> runTcpCommunicationTest());
+    	// runTest("Layer tests", () -> runLayerTests());
+    	runTest("Network tests", () -> runNetworkTest());
+    	// runTest("TCP tests", () -> runTcpCommunicationTest());
         
         // Asynchronous tests, wait a little bit before closing tests session
         try {
@@ -48,6 +49,14 @@ public class CommunicationTestApp
     	tests.testRsaLayerInitializationAndTransmission();
     	tests.testRsaLayerInitializationFirstFailureAndTransmission();
     	tests.testRsaLayerInitializationSecondFailureAndTransmission();
+    }
+    
+    private static void runNetworkTest() {
+    	NetworkTest tests = new NetworkTest();
+    	
+    	// tests.testServerInitialisation();
+    	// tests.testClientAutomaticReconnection();
+    	tests.testClientAutomaticReconnectionButWithServerOpenedLater();
     }
     
     private static void runTcpCommunicationTest() {

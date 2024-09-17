@@ -1,4 +1,4 @@
-package fr.pederobien.communication.testing;
+package fr.pederobien.communication.testing.tools;
 
 import java.util.function.Consumer;
 
