@@ -54,9 +54,10 @@ public class CommunicationTestApp
     private static void runNetworkTest() {
     	NetworkTest tests = new NetworkTest();
     	
-    	// tests.testServerInitialisation();
-    	// tests.testClientAutomaticReconnection();
+    	tests.testServerInitialisation();
+    	tests.testClientAutomaticReconnection();
     	tests.testClientAutomaticReconnectionButWithServerOpenedLater();
+    	tests.testClientAutomaticReconnectionButServerClosedLater();
     }
     
     private static void runTcpCommunicationTest() {
