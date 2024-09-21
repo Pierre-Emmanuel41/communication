@@ -12,6 +12,7 @@ import fr.pederobien.communication.interfaces.ILayer;
 public class ExceptionLayer implements ILayer {
 	
 	public enum LayerExceptionMode {
+		INITIALISATION,
 		PACK,
 		UNPACK
 	}
@@ -29,6 +30,9 @@ public class ExceptionLayer implements ILayer {
 
 	@Override
 	public boolean initialise(IExchange exchange) throws Exception {
+		if (mode == LayerExceptionMode.INITIALISATION)
+			throw new RuntimeException("Exception to test unstable counter");
+
 		return true;
 	}
 
