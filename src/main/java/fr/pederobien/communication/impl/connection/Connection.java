@@ -160,7 +160,7 @@ public abstract class Connection implements IConnection {
 	
 	@Override
 	public String toString() {
-		String name = mode == Mode.CLIENT_TO_SERVER ? "Client" : "Server";
+		String name = mode == Mode.CLIENT_TO_SERVER ? "Server" : "Client";
 		return String.format("[%s %s:%s]", name, config.getAddress(), config.getPort());
 	}
 	
