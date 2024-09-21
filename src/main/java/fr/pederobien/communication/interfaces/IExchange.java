@@ -1,5 +1,7 @@
 package fr.pederobien.communication.interfaces;
 
+import fr.pederobien.communication.interfaces.IConnection.Mode;
+
 public interface IExchange {
 	
 	/**
@@ -23,4 +25,9 @@ public interface IExchange {
 	 * @return The event associated to the received data.
 	 */
 	void receive(IRequestReceivedHandler handler) throws InterruptedException;
+
+	/**
+	 * @return The mode of the underlying connection.
+	 */
+	Mode getMode();
 }

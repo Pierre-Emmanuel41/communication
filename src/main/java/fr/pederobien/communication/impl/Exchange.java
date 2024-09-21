@@ -5,6 +5,7 @@ import java.util.concurrent.Semaphore;
 import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.RequestReceivedEvent;
 import fr.pederobien.communication.interfaces.IConnection;
+import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.IExchange;
 import fr.pederobien.communication.interfaces.IMessage;
 import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
@@ -51,7 +52,12 @@ public class Exchange implements IExchange, IEventListener {
 		// Notifying the data has been handled
 		handled.release();
 	}
-	
+
+	@Override
+	public Mode getMode() {
+		return connection.getMode();
+	}
+
 	/**
 	 * Notify that data has been received from the remote. If something was waiting, this event will
 	 * be returned.
