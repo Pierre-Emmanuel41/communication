@@ -4,7 +4,6 @@ import fr.pederobien.communication.event.RequestReceivedEvent;
 import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.LogEvent;
-import fr.pederobien.utils.event.LogEvent.ELogLevel;
 
 public class SimpleClientListener implements IRequestReceivedHandler {
 	private boolean exceptionMode;
@@ -24,6 +23,6 @@ public class SimpleClientListener implements IRequestReceivedHandler {
 			throw new RuntimeException("Exception to test unstable counter");
 
 		String received = new String(event.getData());
-		EventManager.callEvent(new LogEvent(ELogLevel.WARNING, "Client received: %s", received));
+		EventManager.callEvent(new LogEvent("Client received: %s", received));
 	}
 }
