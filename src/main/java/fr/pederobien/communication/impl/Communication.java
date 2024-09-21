@@ -100,6 +100,17 @@ public class Communication {
 	}
 
 	/**
+	 * Create a client with default configuration ready to be connected to a remote.
+	 * 
+	 * @param address The IP address of the server.
+	 * @param port The port number of the server.
+	 * @param implementation The client specific implementation to connect/disconnect from the server.
+	 */
+	public static final IClient createDefaultCustomClient(String address, int port, IClientImpl implementation) {
+		return new CustomClient(createDefaultClientConfig(address, port), implementation);
+	}
+
+	/**
 	 * Create a client with a TCP connection ready to be connected to a remote.
 	 * 
 	 * @param config The object that holds the client configuration.
@@ -146,6 +157,17 @@ public class Communication {
 	 */
 	public static final IServer createCustomServer(IServerConfig config, IServerImpl implementation) {
 		return new CustomServer(config, implementation);
+	}
+
+	/**
+	 * Creates a custom server with default configuration ready to be opened.
+	 * 
+	 * @param name The name of the server.
+	 * @param port The port number of the server.
+	 * @param implementation The server specific implementation to open/close the server.
+	 */
+	public static final IServer createDefaultCustomServer(String name, int port, IServerImpl implementation) {
+		return new CustomServer(createDefaultServerConfig(name, port), implementation);
 	}
 
 	/**
