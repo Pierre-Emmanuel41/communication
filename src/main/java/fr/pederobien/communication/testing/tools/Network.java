@@ -31,6 +31,23 @@ public class Network {
 		byte[] simulate(Address local, Address remote, byte[] data);
 	}
 
+	public static enum ExceptionMode {
+		/**
+		 * No exception thrown when calling send or receive methods.
+		 */
+		NONE,
+
+		/**
+		 * Exception thrown when calling send method.
+		 */
+		SEND,
+
+		/**
+		 * Exception Thrown when calling receive method.
+		 */
+		RECEIVE
+	}
+
 	private Networkstakeholder network;
 	private IServerImpl server;
 
@@ -62,9 +79,41 @@ public class Network {
 	 * @return A new client ready to be connected to the server.
 	 */
 	public IClientImpl newClient() {
-		return new ClientImpl(network);
+		return new ClientImpl(network, ExceptionMode.NONE);
 	}
 
+	/**
+	 * @param mode the exception mode to simulate an error while sending/receiving data from the remote.
+	 * 
+	 * @return A new client ready to be connected to the server.
+	 */
+	public IClientImpl newClient(ExceptionMode mode) {
+		return new ClientImpl(network, mode);
+	}
+
+	public class Address {
+		private String address;
+		private int port;
+
+		public Address(String address, int port) {
+			this.address = address;
+			this.port = port;
+		}
+
+		/**
+		 * @return The address of this address.
+		 */
+		public String getAddress() {
+			return address;
+		}
+
+		/**
+		 * @return The port of this address.
+		 */
+		public int getPort() {
+			return port;
+		}
+	}
 
 	private class Networkstakeholder {
 		private INetworkSimulator simulator;
@@ -94,7 +143,7 @@ public class Network {
 		protected void registerSocket(NetworkSocket socket) {
 			sockets.add(socket);
 		}
-		
+
 		protected void unregister(NetworkSocket socket) {
 			sockets.remove(socket);
 		}
@@ -118,7 +167,7 @@ public class Network {
 						connected = true;
 				}
 			}, timeout);
-			
+
 			return success ? serverSocket.notifyNewClient(local) : null;
 		}
 
@@ -148,30 +197,6 @@ public class Network {
 			}
 		}
 	}
-	
-	private class Address {
-		private String address;
-		private int port;
-
-		public Address(String address, int port) {
-			this.address = address;
-			this.port = port;
-		}
-
-		/**
-		 * @return The address of this address.
-		 */
-		public String getAddress() {
-			return address;
-		}
-
-		/**
-		 * @return The port of this address.
-		 */
-		public int getPort() {
-			return port;
-		}
-	}
 
 	private class NetworkServerSocket {
 		private Networkstakeholder network;
@@ -190,7 +215,7 @@ public class Network {
 			this.network = network;
 			this.port = port;
 			semaphore = new Semaphore(0);
-			
+
 			network.setServerSocket(this);
 		}
 
@@ -252,7 +277,7 @@ public class Network {
 		private Address local, remote;
 		private Semaphore semaphore;
 		private byte[] data;
-		
+
 		/**
 		 * Create a socket used to send data to the remote.
 		 * 
@@ -280,7 +305,7 @@ public class Network {
 				network.unregister(this);
 				throw new RuntimeException("Timeout occurs");
 			}
-			
+
 			// Updating the remote address
 			remote = address;
 		}
@@ -346,18 +371,28 @@ public class Network {
 
 	private class Connection implements IConnectionImpl {
 		private NetworkSocket socket;
+		private ExceptionMode mode;
 
-		public Connection(NetworkSocket socket) {
+		public Connection(NetworkSocket socket, ExceptionMode mode) {
 			this.socket = socket;
+			this.mode = mode;
 		}
 
 		@Override
 		public void sendImpl(byte[] data) throws Exception {
+			if (mode == ExceptionMode.SEND)
+				throw new RuntimeException("Exception to test unstable counter");
+
 			socket.send(data);
 		}
 
 		@Override
 		public byte[] receiveImpl(int receivingBufferSize) throws Exception {
+			if (mode == ExceptionMode.RECEIVE) {
+				Thread.sleep(200);
+				throw new RuntimeException("Exception to test unstable counter");
+			}
+
 			return socket.receive();
 		}
 
@@ -370,9 +405,11 @@ public class Network {
 	private class ClientImpl implements IClientImpl {
 		private Networkstakeholder network;
 		private NetworkSocket socket;
+		private ExceptionMode mode;
 
-		public ClientImpl(Networkstakeholder network) {
+		public ClientImpl(Networkstakeholder network, ExceptionMode mode) {
 			this.network = network;
+			this.mode = mode;
 		}
 
 		@Override
@@ -389,7 +426,7 @@ public class Network {
 			// Creating connection config builder
 			ConnectionConfigBuilder builder = Communication.createConnectionConfigBuilder(address, port, config);
 
-			return Communication.createCustomConnection(builder.build(), new Connection(socket), config.getMode());
+			return Communication.createCustomConnection(builder.build(), new Connection(socket, mode), config.getMode());
 		}
 	}
 
@@ -421,7 +458,7 @@ public class Network {
 			// Creating connection config builder
 			ConnectionConfigBuilder builder = Communication.createConnectionConfigBuilder(address, port, config);
 
-			return Communication.createCustomConnection(builder.build(), new Connection(socket), config.getMode());
+			return Communication.createCustomConnection(builder.build(), new Connection(socket, ExceptionMode.NONE), config.getMode());
 		}
 	}
 }
