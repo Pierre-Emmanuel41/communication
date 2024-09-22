@@ -1,6 +1,7 @@
 package fr.pederobien.communication.impl.client;
 
 import fr.pederobien.communication.event.ClientConnectedEvent;
+import fr.pederobien.communication.event.ClientInitialisationFailureEvent;
 import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.ConnectionUnstableEvent;
 import fr.pederobien.communication.interfaces.IClient;
@@ -16,12 +17,14 @@ import fr.pederobien.utils.event.LogEvent;
 import fr.pederobien.utils.event.LogEvent.ELogLevel;
 
 public abstract class Client implements IClient {
+	private static final int MAX_EXCEPTION_COUNTER = 3;
 	private IClientConfig config;
 	private EState state;
-	private IDisposable disposable;
 	private BlockingQueueTask<Object> connectionQueue;
 	private IConnection connection;
 	private ConnectionListener listener;
+	private IDisposable disposable;
+	private int initialisationExceptionCounter;
 	
 	/**
 	 * Create a client ready to be connected to a remote.
@@ -33,13 +36,13 @@ public abstract class Client implements IClient {
 		this.config = config;
 		
 		state = EState.DISCONNECTED;
-
-		disposable = new Disposable();
 		
 		String name = String.format("%s[reconnect]", toString(), config.getPort());
 		connectionQueue = new BlockingQueueTask<Object>(name, object -> startConnect(object));
-
 		listener = new ConnectionListener(config.getMaxUnstableCounterValue());
+		disposable = new Disposable();
+
+		initialisationExceptionCounter = 0;
 	}
 	
 	@Override
@@ -175,7 +178,7 @@ public abstract class Client implements IClient {
 	protected void onLogEvent(String message) {
 		onLogEvent(ELogLevel.INFO, message);
 	}
-	
+
 	/**
 	 * Start to connect to the remote. If an error occurred, it will automatically try to reconnect unless
 	 * the disconnect method is called.
@@ -183,29 +186,23 @@ public abstract class Client implements IClient {
 	 * @param socket The socket to use to connect to the remote.
 	 */
 	private void startConnect(Object object) {
+		if (establishConnection(object))
+			initializeConnection(object);
+	}
+
+	/**
+	 * Try to establish the connection with the remote.
+	 * 
+	 * @param object The object used to retry asynchronously to establish to connection with the remote.
+	 * 
+	 * @return True if the connection is established, false otherwise.
+	 */
+	private boolean establishConnection(Object object) {
 		try {
-			
 			// Attempting connection with the remote
 			connectImpl(getAddress(), getPort(), getConnectionTimeout());
-			
-			// But checking if connection has been canceled
-			if (state != EState.CONNECTING)
-				return;
-			
-			IConnection connection = onConnectionComplete(config);
-			listener.start();
+			return state == EState.CONNECTING;
 
-			if (!connection.initialise())
-				connection.dispose();
-			else {
-				this.connection = connection;
-				onLogEvent("Connected to the remote");
-
-				state = EState.CONNECTED;
-				// Notifying observers that the client is connected
-				EventManager.callEvent(new ClientConnectedEvent(this));
-			}
-				
 		} catch (Exception e) {
 			try {
 				// Wait before trying to reconnect to the remote
@@ -219,12 +216,66 @@ public abstract class Client implements IClient {
 				// Exception occurs if client is disposed -> do nothing
 			}
 		}
+
+		return false;
+	}
+
+	/**
+	 * Initialise the connection with the remote.
+	 * If the initialisation fails, no ClientConnected event is thrown.
+	 * 
+	 * @param object The object used to retry asynchronously to establish to connection with the remote.
+	 */
+	private void initializeConnection(Object object) {
+		boolean initialized = false;
+
+		IConnection connection = onConnectionComplete(config);
+		listener.start();
+		try {
+
+			// Attempting connection initialisation
+			initialized = connection.initialise();
+
+			initialisationExceptionCounter = 0;
+		} catch (Exception e) {
+			// Do nothing
+		}
+
+		if (!initialized) {
+			connection.dispose();
+			initialisationExceptionCounter++;
+			if ((initialisationExceptionCounter < MAX_EXCEPTION_COUNTER) && (state == EState.CONNECTING)) {
+				connectionQueue.add(object);
+			}
+			else {
+				onLogEvent(ELogLevel.ERROR, "Failure to initialise the connection with the remote");
+				EventManager.callEvent(new ClientInitialisationFailureEvent(this));
+			}
+		}
+		else {
+			try {
+				// Adding delay to be sure connection has not been lost
+				Thread.sleep(100);
+
+				if (listener.isAlive()) {
+					this.connection = connection;
+					onLogEvent("Connected to the remote");
+
+					state = EState.CONNECTED;
+					// Notifying observers that the client is connected
+					EventManager.callEvent(new ClientConnectedEvent(this));
+				}
+			} catch (Exception e) {
+				// Do nothing
+			}
+		}
 	}
 	
 	private class ConnectionListener implements IEventListener {
 		private int maxUnstableCounter;
 		private int unstableCounter;
-		
+		private boolean isAlive;
+
 		/**
 		 * Creates a connection listener to trigger a connection lost or an unstable connection.
 		 * 
@@ -233,6 +284,8 @@ public abstract class Client implements IClient {
 		public ConnectionListener(int maxUnstableCounter) {
 			this.maxUnstableCounter = maxUnstableCounter;
 			unstableCounter = 0;
+
+			isAlive = true;
 		}
 		
 		/**
@@ -249,6 +302,13 @@ public abstract class Client implements IClient {
 			EventManager.unregisterListener(this);
 		}
 		
+		/**
+		 * @return True if the connection is connected to the remote, false otherwise.
+		 */
+		public boolean isAlive() {
+			return isAlive;
+		}
+
 		@EventHandler
 		private void onConnectionUnstable(ConnectionUnstableEvent event) {
 			startReconnection(event.getConnection());
@@ -273,13 +333,17 @@ public abstract class Client implements IClient {
 			{
 				unstableCounter++;
 
+				isAlive = false;
+
 				disconnect();
 				stop();
 				
 				if (unstableCounter == maxUnstableCounter)
 					onLogEvent(ELogLevel.ERROR, "Client unstable, stopping automatic reconnection");
-				else if (config.isAutomaticReconnection())
+				else if (config.isAutomaticReconnection()) {
+					onLogEvent("Starting automatic reconnection");
 					connect();
+				}
 			}
 		}
 	}

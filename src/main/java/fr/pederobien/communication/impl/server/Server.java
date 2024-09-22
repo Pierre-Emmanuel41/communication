@@ -15,6 +15,7 @@ import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;
 import fr.pederobien.utils.event.LogEvent;
+import fr.pederobien.utils.event.LogEvent.ELogLevel;
 
 public abstract class Server implements IServer {
 	private static final int MAX_EXCEPTION_NUMBER = 10;
@@ -135,24 +136,41 @@ public abstract class Server implements IServer {
 	 * 
 	 * @param message The message of the event.
 	 */
+	protected void onLogEvent(ELogLevel level, String message) {
+		EventManager.callEvent(new LogEvent(level, "%s - %s", toString(), message));
+	}
+
+	/**
+	 * Throw a LogEvent.
+	 * 
+	 * @param message The message of the event.
+	 */
 	protected void onLogEvent(String message) {
-		EventManager.callEvent(new LogEvent("%s - %s", toString(), message));
+		onLogEvent(ELogLevel.INFO, message);
 	}
 	
 	private void waitForClient(Object object) {
-		try {
-			IConnection connection = waitForClientImpl(config);
+		IConnection connection = establishConnection(object);
+		if (connection != null)
+			initialiseConnection(connection);
+	}
 
+	/**
+	 * Wait for a client to connect.
+	 * 
+	 * @param object The object used to wait asynchronously for a client to connect.
+	 * 
+	 * @return Null if an error occurs, the connection with the client otherwise.
+	 */
+	private IConnection establishConnection(Object object) {
+		IConnection connection = null;
+
+		try {
+			connection = waitForClientImpl(config);
 			if (state != EState.OPENED) {
 				connection.dispose();
-				return;
+				connection = null;
 			}
-
-			connection.initialise();
-
-			// Monitor the created connection
-			new ConnectionListener(this, connection);
-			EventManager.callEvent(new NewClientEvent(connection, this));
 
 			newClientExceptionCounter = 0;
 		} catch (Exception e) {
@@ -166,12 +184,45 @@ public abstract class Server implements IServer {
 			if (state == EState.OPENED)
 				clientQueue.add(object);
 		}
+
+		return connection;
+	}
+
+	private void initialiseConnection(IConnection connection) {
+		boolean initialised = false;
+
+		// Monitor the created connection
+		ConnectionListener listener = new ConnectionListener(this, connection);
+
+		try {
+			initialised = connection.initialise();
+		} catch (Exception e) {
+			// Do nothing
+		}
+
+		if (!initialised) {
+			onLogEvent(ELogLevel.ERROR, "Failure to initialise the connection with the remote");
+			connection.dispose();
+		}
+		else {
+			try {
+				// Adding delay to be sure connection has not been lost
+				Thread.sleep(100);
+
+				if (listener.isAlive())
+					// Notifying observers that a client is connected
+					EventManager.callEvent(new NewClientEvent(connection, this));
+			} catch (Exception e) {
+				// Do nothing
+			}
+		}
 	}
 	
 	private class ConnectionListener implements IEventListener {
 		private IServer server;
 		private IConnection connection;
-		
+		private boolean isAlive;
+
 		/**
 		 * Creates a listener to monitor the given connection.
 		 *
@@ -180,27 +231,41 @@ public abstract class Server implements IServer {
 		public ConnectionListener(IServer server, IConnection connection) {
 			this.server = server;
 			this.connection = connection;
-			
+
+			isAlive = true;
+
 			EventManager.registerListener(this);
 		}
-		
+
+		/**
+		 * @return True if the connection is connected to the remote, false otherwise.
+		 */
+		public boolean isAlive() {
+			return isAlive;
+		}
+
 		@EventHandler
 		private void onConnectionLost(ConnectionLostEvent event) {
-			if (connection == event.getConnection())
+			if (connection == event.getConnection()) {
+				isAlive = false;
 				connection.dispose();
+			}
 		}
 		
 		@EventHandler
 		private void onConnectionUnstable(ConnectionUnstableEvent event) {
-			if (connection == event.getConnection())
+			if (connection == event.getConnection()) {
+				isAlive = false;
 				connection.dispose();
+			}
 		}
 		
 		@EventHandler
 		private void onServerClose(ServerCloseEvent event) {
 			if (server == event.getServer()) {
-				EventManager.unregisterListener(this);
+				isAlive = false;
 				connection.dispose();
+				EventManager.unregisterListener(this);
 			}
 		}
 	}
