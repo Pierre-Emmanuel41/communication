@@ -164,19 +164,22 @@ public abstract class Client implements IClient {
 	/**
 	 * Throw a LogEvent.
 	 * 
-	 * @param message The message of the event.
+	 * @param level The level of the log.
+	 * @param message The message of the log.
+	 * @param args The arguments of the message to display.
 	 */
-	protected void onLogEvent(ELogLevel level, String message) {
-		EventManager.callEvent(new LogEvent(level, "%s - %s", toString(), message));
+	protected void onLogEvent(ELogLevel level, String message, Object... args) {
+		EventManager.callEvent(new LogEvent(level, "%s - %s", toString(), String.format(message, args)));
 	}
 	
 	/**
 	 * Throw a LogEvent.
 	 * 
 	 * @param message The message of the event.
+	 * @param args The arguments of the message to display.
 	 */
-	protected void onLogEvent(String message) {
-		onLogEvent(ELogLevel.INFO, message);
+	protected void onLogEvent(String message, Object... args) {
+		onLogEvent(ELogLevel.INFO, message, args);
 	}
 
 	/**
@@ -228,45 +231,36 @@ public abstract class Client implements IClient {
 	 */
 	private void initializeConnection(Object object) {
 		boolean initialized = false;
-
 		IConnection connection = onConnectionComplete(config);
-		listener.start();
+
 		try {
 
-			// Attempting connection initialisation
-			initialized = connection.initialise();
+			// Attempting connection initialization
+			if (initialized = connection.initialise()) {
+				// Starting the monitoring of the connection
+				listener.start();
 
-			initialisationExceptionCounter = 0;
+				state = EState.CONNECTED;
+				onLogEvent("Connected to the remote");
+
+				// Notifying observers that the client is connected
+				EventManager.callEvent(new ClientConnectedEvent(this));
+			}
 		} catch (Exception e) {
-			// Do nothing
-		}
-
-		if (!initialized) {
-			connection.dispose();
-			initialisationExceptionCounter++;
-			if ((initialisationExceptionCounter < MAX_EXCEPTION_COUNTER) && (state == EState.CONNECTING)) {
-				connectionQueue.add(object);
-			}
-			else {
-				onLogEvent(ELogLevel.ERROR, "Failure to initialise the connection with the remote");
-				EventManager.callEvent(new ClientInitialisationFailureEvent(this));
-			}
-		}
-		else {
-			try {
-				// Adding delay to be sure connection has not been lost
-				Thread.sleep(100);
-
-				if (listener.isAlive()) {
-					this.connection = connection;
-					onLogEvent("Connected to the remote");
-
-					state = EState.CONNECTED;
-					// Notifying observers that the client is connected
-					EventManager.callEvent(new ClientConnectedEvent(this));
+			// An issue happened during initialization, considering the connection uninitialized
+			initialized = false;
+		} finally {
+			if (!initialized) {
+				initialisationExceptionCounter++;
+				if (initialisationExceptionCounter == MAX_EXCEPTION_COUNTER) {
+					onLogEvent(ELogLevel.ERROR, "Failure to initialise the connection with the remote");
+					EventManager.callEvent(new ClientInitialisationFailureEvent(this));
 				}
-			} catch (Exception e) {
-				// Do nothing
+				else {
+					connection.dispose();
+					if (state == EState.CONNECTING)
+						connectionQueue.add(object);
+				}
 			}
 		}
 	}
@@ -274,18 +268,16 @@ public abstract class Client implements IClient {
 	private class ConnectionListener implements IEventListener {
 		private int maxUnstableCounter;
 		private int unstableCounter;
-		private boolean isAlive;
 
 		/**
 		 * Creates a connection listener to trigger a connection lost or an unstable connection.
 		 * 
-		 * @param maxUnstableCounter The maximum value of the unstable counter before stopping automatic reconnection.
+		 * @param maxUnstableCounter The maximum value of the unstable counter before stopping
+		 *                           automatic reconnection.
 		 */
 		public ConnectionListener(int maxUnstableCounter) {
 			this.maxUnstableCounter = maxUnstableCounter;
 			unstableCounter = 0;
-
-			isAlive = true;
 		}
 		
 		/**
@@ -300,13 +292,6 @@ public abstract class Client implements IClient {
 		 */
 		public void stop() {
 			EventManager.unregisterListener(this);
-		}
-		
-		/**
-		 * @return True if the connection is connected to the remote, false otherwise.
-		 */
-		public boolean isAlive() {
-			return isAlive;
 		}
 
 		@EventHandler
@@ -331,16 +316,13 @@ public abstract class Client implements IClient {
 
 			if (connection == getConnection())
 			{
-				unstableCounter++;
-
-				isAlive = false;
-
 				disconnect();
 				stop();
-				
+
 				if (unstableCounter == maxUnstableCounter)
 					onLogEvent(ELogLevel.ERROR, "Client unstable, stopping automatic reconnection");
 				else if (config.isAutomaticReconnection()) {
+					unstableCounter++;
 					onLogEvent("Starting automatic reconnection");
 					connect();
 				}
