@@ -135,18 +135,20 @@ public abstract class Server implements IServer {
 	 * Throw a LogEvent.
 	 * 
 	 * @param message The message of the event.
+	 * @param args The arguments of the message to display.
 	 */
-	protected void onLogEvent(ELogLevel level, String message) {
-		EventManager.callEvent(new LogEvent(level, "%s - %s", toString(), message));
+	protected void onLogEvent(ELogLevel level, String message, Object... args) {
+		EventManager.callEvent(new LogEvent(level, "%s - %s", toString(), String.format(message, args)));
 	}
 
 	/**
 	 * Throw a LogEvent.
 	 * 
 	 * @param message The message of the event.
+	 * @param args The arguments of the message to display.
 	 */
-	protected void onLogEvent(String message) {
-		onLogEvent(ELogLevel.INFO, message);
+	protected void onLogEvent(String message, Object... args) {
+		onLogEvent(ELogLevel.INFO, message, args);
 	}
 	
 	private void waitForClient(Object object) {
@@ -201,7 +203,7 @@ public abstract class Server implements IServer {
 		}
 
 		if (!initialised) {
-			onLogEvent(ELogLevel.ERROR, "Failure to initialise the connection with the remote");
+			onLogEvent(ELogLevel.ERROR, "Failure to initialise the connection with the remote %s", connection);
 			connection.dispose();
 		}
 		else {
