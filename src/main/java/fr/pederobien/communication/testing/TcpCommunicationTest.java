@@ -8,13 +8,13 @@ import fr.pederobien.communication.interfaces.IClient;
 import fr.pederobien.communication.interfaces.IServer;
 import fr.pederobien.communication.testing.tools.CallbackSendMessageToClientOnceConnected;
 import fr.pederobien.communication.testing.tools.ClientExceptionImpl;
+import fr.pederobien.communication.testing.tools.ClientExceptionImpl.ClientExceptionMode;
 import fr.pederobien.communication.testing.tools.ExceptionLayer;
+import fr.pederobien.communication.testing.tools.ExceptionLayer.LayerExceptionMode;
 import fr.pederobien.communication.testing.tools.SimpleAnswerToRequestListener;
 import fr.pederobien.communication.testing.tools.SimpleClientListener;
 import fr.pederobien.communication.testing.tools.SimpleSendMessageToClientOnceConnected;
 import fr.pederobien.communication.testing.tools.SimpleServerListener;
-import fr.pederobien.communication.testing.tools.ClientExceptionImpl.ClientExceptionMode;
-import fr.pederobien.communication.testing.tools.ExceptionLayer.LayerExceptionMode;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.LogEvent;
 import fr.pederobien.utils.event.LogEvent.ELogLevel;
@@ -201,9 +201,9 @@ public class TcpCommunicationTest {
 			client.getConnection().send(new Message("Hello world !".getBytes(), args -> {
 				if (!args.isTimeout()) {
 					String received = new String(args.getResponse().getBytes());
-					EventManager.callEvent(new LogEvent(ELogLevel.WARNING, "Response received: %s", received));
+					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected response received: %s", received));
 				} else
-					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Expected timeout occured"));
+					EventManager.callEvent(new LogEvent("Expected timeout occured"));
 			}));
 			
 			sleep(2000);

@@ -38,11 +38,10 @@ public class RSALayer implements ILayer {
 	/**
 	 * Creates a layer using an RSA encryption/decryption algorithm.
 	 * 
-	 * @param mode The direction of the connection: CLIENT_TO_SERVER or SERVER_TO_CLIENT.
 	 * @param certificate The certificate to sign or authenticate the remote public key.
 	 */
-	public RSALayer(Mode mode, ICertificate certificate) {
-		implementation = new NotInitialisedLayer(mode, certificate);
+	public RSALayer(ICertificate certificate) {
+		implementation = new NotInitialisedLayer(certificate);
 	}
 	
 	@Override
@@ -62,17 +61,15 @@ public class RSALayer implements ILayer {
 	
 	private class NotInitialisedLayer implements ILayer {
 		private ILayer layer;
-		private Mode mode;
 		
-		public NotInitialisedLayer(Mode mode, ICertificate certificate) {
-			this.mode = mode;
+		public NotInitialisedLayer(ICertificate certificate) {
 			layer = new CertifiedLayer(certificate);
 		}
 
 		@Override
 		public boolean initialise(IExchange exchange) throws Exception {
 			KeyExchange keyExchange;
-			if (mode == Mode.CLIENT_TO_SERVER)
+			if (exchange.getMode() == Mode.CLIENT_TO_SERVER)
 				keyExchange = new ClientToServerKeyExchange(exchange);
 			else
 				keyExchange = new ServerToClientKeyExchange(exchange);
@@ -203,7 +200,7 @@ public class RSALayer implements ILayer {
 				createKeyPair();
 
 				// Step 1: Sending public key
-				getExchange().send(new Message(getPublicKey().getEncoded(), true, 10000, args -> {
+				getExchange().send(new Message(getPublicKey().getEncoded(), true, 1000000, args -> {
 					if (!args.isTimeout()) {
 
 						// Step 2: Excepting remote public key

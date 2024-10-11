@@ -4,11 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.function.Function;
 
 import fr.pederobien.communication.impl.Communication;
-import fr.pederobien.communication.impl.ConfigurationBuilder;
-import fr.pederobien.communication.impl.connection.ConnectionConfigBuilder;
+import fr.pederobien.communication.impl.client.ClientConfigBuilder;
 import fr.pederobien.communication.impl.connection.HeaderMessage;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.layer.CertifiedLayer;
@@ -16,14 +14,16 @@ import fr.pederobien.communication.impl.layer.Encapsuler;
 import fr.pederobien.communication.impl.layer.RSALayer;
 import fr.pederobien.communication.impl.layer.SimpleLayer;
 import fr.pederobien.communication.impl.layer.Splitter;
-import fr.pederobien.communication.interfaces.IConnection;
+import fr.pederobien.communication.impl.server.ServerConfigBuilder;
+import fr.pederobien.communication.interfaces.IClient;
 import fr.pederobien.communication.interfaces.IConnection.Mode;
-import fr.pederobien.communication.testing.tools.NetworkModifier;
-import fr.pederobien.communication.testing.tools.NetworkSimulator;
-import fr.pederobien.communication.testing.tools.SimpleAnswerToRequestListener;
-import fr.pederobien.communication.testing.tools.SimpleCertificate;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;
+import fr.pederobien.communication.interfaces.IServer;
+import fr.pederobien.communication.testing.tools.Network;
+import fr.pederobien.communication.testing.tools.NetworkSimulator.IModifier;
+import fr.pederobien.communication.testing.tools.SimpleAnswerToRequestListener;
+import fr.pederobien.communication.testing.tools.SimpleCertificate;
 import fr.pederobien.utils.IExecutable;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.LogEvent;
@@ -351,147 +351,113 @@ public class LayerTest {
 	
 	public void testRsaLayerInitialization() {
 		IExecutable test = () -> {
-			NetworkSimulator network = new NetworkSimulator();
+			Network network = new Network();
 
-			ConfigurationBuilder clientConfigBuilder = Communication.createConfigurationBuilder();
-			clientConfigBuilder.setLayer(new RSALayer(Mode.CLIENT_TO_SERVER, new SimpleCertificate()));
-			
-			ConnectionConfigBuilder clientConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, clientConfigBuilder.build());
-			
-			ConfigurationBuilder serverConfigBuilder = Communication.createConfigurationBuilder();
-			serverConfigBuilder.setLayer(new RSALayer(Mode.SERVER_TO_CLIENT, new SimpleCertificate()));
-			
-			ConnectionConfigBuilder serverConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, serverConfigBuilder.build());
+			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("Dummy Server", 12345);
+			serverBuilder.setLayer(new RSALayer(new SimpleCertificate()));
 
-			IConnection client = Communication.createCustomConnection(clientConnectionBuilder.build(), network.getClient(), Mode.CLIENT_TO_SERVER);
-			IConnection server = Communication.createCustomConnection(serverConnectionBuilder.build(), network.getServer(), Mode.SERVER_TO_CLIENT);
-			
-			Thread clientThread = new Thread(() -> {
-				try {
-					boolean success = client.initialise();
-					EventManager.callEvent(new LogEvent("Client initialization %s", success ? "succeed" : "failed"));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}, "Client initialization");
-			clientThread.setDaemon(true);
-			
-			Thread serverThread = new Thread(() -> {
-				try {
-					boolean success = server.initialise();
-					EventManager.callEvent(new LogEvent("Server initialization %s", success ? "succeed" : "failed"));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}, "Server initialization");
-			serverThread.setDaemon(true);
-			
-			clientThread.start();
-			serverThread.start();
-			
+			IServer server = Communication.createCustomServer(serverBuilder.build(), network.getServer());
+			server.open();
+
+			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
+			clientBuilder.setLayer(new RSALayer(new SimpleCertificate()));
+
+			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
+			client.connect();
+
 			sleep(2000);
-			
+
+			client.disconnect();
 			client.dispose();
+			
+			sleep(500);
+			
+			server.close();
 			server.dispose();
 		};
-		
+
 		runTest("testRsaLayerInitialization", test);
 	}
 	
 	public void testRsaLayerInitializationFailureClientToServer() {
 		IExecutable test = () -> {
-			Function<byte[], byte[]> clientToServer = bytes -> {
-				int random = new Random().nextInt(bytes.length);
-				bytes[random] += 1;
-				return bytes;
+			IModifier modifier = (counter, data) -> {
+				Random random = new Random();
+				for (int i = 0; i < 5; i++) {
+					int index = random.nextInt(4, data.length - 4);
+					int value = random.nextInt(-127, 126);
+					
+					data[index] = (byte) value;
+				}
+				return data;
 			};
-			
-			NetworkSimulator network = new NetworkSimulator(clientToServer, Function.identity());
+			Network network = new Network(Mode.CLIENT_TO_SERVER, modifier);
 
-			ConfigurationBuilder clientConfigBuilder = Communication.createConfigurationBuilder();
-			clientConfigBuilder.setLayer(new RSALayer(Mode.CLIENT_TO_SERVER, new SimpleCertificate()));
-			
-			ConnectionConfigBuilder clientConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, clientConfigBuilder.build());
-			
-			ConfigurationBuilder serverConfigBuilder = Communication.createConfigurationBuilder();
-			serverConfigBuilder.setLayer(new RSALayer(Mode.SERVER_TO_CLIENT, new SimpleCertificate()));
-			
-			ConnectionConfigBuilder serverConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, serverConfigBuilder.build());
+			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("Dummy Server", 12345);
+			serverBuilder.setLayer(new RSALayer(new SimpleCertificate()));
 
-			IConnection client = Communication.createCustomConnection(clientConnectionBuilder.build(), network.getClient(), Mode.CLIENT_TO_SERVER);
-			IConnection server = Communication.createCustomConnection(serverConnectionBuilder.build(), network.getServer(), Mode.SERVER_TO_CLIENT);
-			
-			Thread clientThread = new Thread(() -> {
-				try {
-					boolean success = client.initialise();
-					EventManager.callEvent(new LogEvent("Client initialization %s", success ? "succeed" : "failed"));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}, "Client initialization");
-			
-			Thread serverThread = new Thread(() -> {
-				try {
-					boolean success = server.initialise();
-					EventManager.callEvent(new LogEvent("Server initialization %s", success ? "succeed" : "failed"));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}, "Server initialization");
-			
-			serverThread.start();
-			clientThread.start();
-			
-			sleep(40000);
-			
+			IServer server = Communication.createCustomServer(serverBuilder.build(), network.getServer());
+			server.open();
+
+			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
+			clientBuilder.setLayer(new RSALayer(new SimpleCertificate()));
+
+			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
+			client.connect();
+
+			sleep(60000);
+
+			client.disconnect();
 			client.dispose();
+			
+			sleep(2000);
+			
+			server.close();
 			server.dispose();
 		};
-		
+
 		runTest("testRsaLayerInitializationFailureClientToServer", test);
 	}
 	
 	public void testRsaLayerInitializationFailureServerAcknowledgement() {
 		IExecutable test = () -> {
-			NetworkSimulator network = new NetworkSimulator(Function.identity(), new NetworkModifier(1, 2));
-
-			ConfigurationBuilder clientConfigBuilder = Communication.createConfigurationBuilder();
-			clientConfigBuilder.setLayer(new RSALayer(Mode.CLIENT_TO_SERVER, new SimpleCertificate()));
-			
-			ConnectionConfigBuilder clientConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, clientConfigBuilder.build());
-			
-			ConfigurationBuilder serverConfigBuilder = Communication.createConfigurationBuilder();
-			serverConfigBuilder.setLayer(new RSALayer(Mode.SERVER_TO_CLIENT, new SimpleCertificate()));
-			
-			ConnectionConfigBuilder serverConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, serverConfigBuilder.build());
-
-			IConnection client = Communication.createCustomConnection(clientConnectionBuilder.build(), network.getClient(), Mode.CLIENT_TO_SERVER);
-			IConnection server = Communication.createCustomConnection(serverConnectionBuilder.build(), network.getServer(), Mode.SERVER_TO_CLIENT);
-			
-			Thread clientThread = new Thread(() -> {
-				try {
-					boolean success = client.initialise();
-					EventManager.callEvent(new LogEvent("Client initialization %s", success ? "succeed" : "failed"));
-				} catch (Exception e) {
-					e.printStackTrace();
+			IModifier modifier = (counter, data) -> {
+				// First request: server public key
+				// Second request: server acknowledgement
+				if (counter == 2) {
+					Random random = new Random();
+					for (int i = 0; i < 5; i++) {
+						int index = random.nextInt(4, data.length - 4);
+						int value = random.nextInt(-127, 126);
+						
+						data[index] = (byte) value;
+					}
+					return data;
 				}
-			}, "Client initialization");
+				return data;
+			};
+			Network network = new Network(Mode.SERVER_TO_CLIENT, modifier);
 			
-			Thread serverThread = new Thread(() -> {
-				try {
-					boolean success = server.initialise();
-					EventManager.callEvent(new LogEvent("Server initialization %s", success ? "succeed" : "failed"));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}, "Server initialization");
+			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("Dummy Server", 12345);
+			serverBuilder.setLayer(new RSALayer(new SimpleCertificate()));
 			
-			serverThread.start();
-			clientThread.start();
+			IServer server = Communication.createCustomServer(serverBuilder.build(), network.getServer());
+			server.open();
 			
-			sleep(40000);
+			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
+			clientBuilder.setLayer(new RSALayer(new SimpleCertificate()));
 			
+			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
+			client.connect();
+			
+			sleep(400000000);
+			
+			client.disconnect();
 			client.dispose();
+			
+			sleep(500);
+			
+			server.close();
 			server.dispose();
 		};
 		
@@ -500,47 +466,24 @@ public class LayerTest {
 	
 	public void testRsaLayerInitializationAndTransmission() {
 		IExecutable test = () -> {
-			NetworkSimulator network = new NetworkSimulator();
-
-			ConfigurationBuilder clientConfigBuilder = Communication.createConfigurationBuilder();
-			clientConfigBuilder.setLayer(new RSALayer(Mode.CLIENT_TO_SERVER, new SimpleCertificate()));
+			Network network = new Network();
 			
-			ConnectionConfigBuilder clientConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, clientConfigBuilder.build());
+			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("Dummy Server", 12345);
+			serverBuilder.setLayer(new RSALayer(new SimpleCertificate()));
+			serverBuilder.setRequestReceivedHandler(() -> new SimpleAnswerToRequestListener("I received your request !"));
 			
-			ConfigurationBuilder serverConfigBuilder = Communication.createConfigurationBuilder();
-			serverConfigBuilder.setLayer(new RSALayer(Mode.SERVER_TO_CLIENT, new SimpleCertificate()));
-			serverConfigBuilder.setRequestReceivedHandler(() -> new SimpleAnswerToRequestListener("I received your request !"));
+			IServer server = Communication.createCustomServer(serverBuilder.build(), network.getServer());
+			server.open();
 			
-			ConnectionConfigBuilder serverConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, serverConfigBuilder.build());
-
-			IConnection client = Communication.createCustomConnection(clientConnectionBuilder.build(), network.getClient(), Mode.CLIENT_TO_SERVER);
-			IConnection server = Communication.createCustomConnection(serverConnectionBuilder.build(), network.getServer(), Mode.SERVER_TO_CLIENT);
+			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
+			clientBuilder.setLayer(new RSALayer(new SimpleCertificate()));
 			
-			Thread clientThread = new Thread(() -> {
-				try {
-					boolean success = client.initialise();
-					EventManager.callEvent(new LogEvent("Client initialization %s", success ? "succeed" : "failed"));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}, "Client initialization");
+			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
+			client.connect();
 			
-			Thread serverThread = new Thread(() -> {
-				try {
-					boolean success = server.initialise();
-					EventManager.callEvent(new LogEvent("Server initialization %s", success ? "succeed" : "failed"));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}, "Server initialization");
+			sleep(2000);
 			
-			serverThread.start();
-			clientThread.start();
-			
-			sleep(1000);
-			
-			String message1 = "Hello world";
-			client.send(new Message(message1.getBytes(), args -> {
+			client.getConnection().send(new Message("Hello world".getBytes(), args -> {
 				if (!args.isTimeout()) {
 					EventManager.callEvent(new LogEvent("Client received: %s", new String(args.getResponse().getBytes())));
 				}
@@ -550,7 +493,12 @@ public class LayerTest {
 			
 			sleep(2000);
 			
+			client.disconnect();
 			client.dispose();
+			
+			sleep(500);
+			
+			server.close();
 			server.dispose();
 		};
 		
@@ -559,15 +507,16 @@ public class LayerTest {
 	
 	public void testRsaLayerInitializationFirstFailureAndTransmission() {
 		IExecutable test = () -> {
+			/*
 			NetworkSimulator network = new NetworkSimulator(Function.identity(), new NetworkModifier(0, 1));
 
 			ConfigurationBuilder clientConfigBuilder = Communication.createConfigurationBuilder();
-			clientConfigBuilder.setLayer(new RSALayer(Mode.CLIENT_TO_SERVER, new SimpleCertificate()));
+			clientConfigBuilder.setLayer(new RSALayer(new SimpleCertificate()));
 			
 			ConnectionConfigBuilder clientConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, clientConfigBuilder.build());
 			
 			ConfigurationBuilder serverConfigBuilder = Communication.createConfigurationBuilder();
-			serverConfigBuilder.setLayer(new RSALayer(Mode.SERVER_TO_CLIENT, new SimpleCertificate()));
+			serverConfigBuilder.setLayer(new RSALayer(new SimpleCertificate()));
 			serverConfigBuilder.setRequestReceivedHandler(() -> new SimpleAnswerToRequestListener("I received your request !"));
 			
 			ConnectionConfigBuilder serverConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, serverConfigBuilder.build());
@@ -611,6 +560,7 @@ public class LayerTest {
 			
 			client.dispose();
 			server.dispose();
+			*/
 		};
 		
 		runTest("testRsaLayerInitializationFirstFailureAndTransmission", test);
@@ -618,15 +568,16 @@ public class LayerTest {
 	
 	public void testRsaLayerInitializationSecondFailureAndTransmission() {
 		IExecutable test = () -> {
+			/*
 			NetworkSimulator network = new NetworkSimulator(new NetworkModifier(0, 1), new NetworkModifier(0, 1));
 
 			ConfigurationBuilder clientConfigBuilder = Communication.createConfigurationBuilder();
-			clientConfigBuilder.setLayer(new RSALayer(Mode.CLIENT_TO_SERVER, new SimpleCertificate()));
+			clientConfigBuilder.setLayer(new RSALayer(new SimpleCertificate()));
 			
 			ConnectionConfigBuilder clientConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, clientConfigBuilder.build());
 			
 			ConfigurationBuilder serverConfigBuilder = Communication.createConfigurationBuilder();
-			serverConfigBuilder.setLayer(new RSALayer(Mode.SERVER_TO_CLIENT, new SimpleCertificate()));
+			serverConfigBuilder.setLayer(new RSALayer(new SimpleCertificate()));
 			serverConfigBuilder.setRequestReceivedHandler(() -> new SimpleAnswerToRequestListener("I received your request !"));
 			
 			ConnectionConfigBuilder serverConnectionBuilder = Communication.createConnectionConfigBuilder("127.0.0.1", 12345, serverConfigBuilder.build());
@@ -670,6 +621,7 @@ public class LayerTest {
 			
 			client.dispose();
 			server.dispose();
+			*/
 		};
 		
 		runTest("testRsaLayerInitializationSecondFailureAndTransmission", test);

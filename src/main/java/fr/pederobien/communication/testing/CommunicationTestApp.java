@@ -15,8 +15,8 @@ public class CommunicationTestApp
     {
     	EventLogger.instance().newLine(true).timeStamp(true).register();
 
-    	// runTest("Layer tests", () -> runLayerTests());
-    	runTest("Network tests", () -> runNetworkTest());
+    	// runTest("Network tests", () -> runNetworkTest());
+    	runTest("Layer tests", () -> runLayerTests());
     	// runTest("TCP tests", () -> runTcpCommunicationTest());
         
         // Asynchronous tests, wait a little bit before closing tests session
@@ -25,6 +25,30 @@ public class CommunicationTestApp
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+    }
+    
+    private static void runNetworkTest() {
+    	NetworkTest tests = new NetworkTest();
+    	
+    	tests.testServerInitialisation();
+    	tests.testClientAutomaticReconnection();
+    	tests.testClientAutomaticReconnectionButWithServerOpenedLater();
+    	tests.testClientAutomaticReconnectionButServerClosedLater();
+    	tests.testClientToServerCommunication();
+    	tests.testServerToClientCommunication();
+    	tests.testClientToServerWithCallback();
+    	tests.testClientToServerWithCallbackButTimeout();
+    	tests.testServerToClientWithCallback();
+    	tests.testServerToClientWithCallbackButTimeout();
+    	tests.testInitialisationFailure();
+    	tests.testSendingException();
+    	tests.testReceivingException();
+    	tests.testExtractionException();
+    	tests.testCallbackException();
+    	tests.testUnexpectedRequestException();
+    	tests.testUnstableClient();
+    	tests.testTwoClientsOneServer();
+    	tests.testNetworkIssues();
     }
     
     private static void runLayerTests() {
@@ -49,15 +73,6 @@ public class CommunicationTestApp
     	tests.testRsaLayerInitializationAndTransmission();
     	tests.testRsaLayerInitializationFirstFailureAndTransmission();
     	tests.testRsaLayerInitializationSecondFailureAndTransmission();
-    }
-    
-    private static void runNetworkTest() {
-    	NetworkTest tests = new NetworkTest();
-    	
-    	tests.testServerInitialisation();
-    	tests.testClientAutomaticReconnection();
-    	tests.testClientAutomaticReconnectionButWithServerOpenedLater();
-    	tests.testClientAutomaticReconnectionButServerClosedLater();
     }
     
     private static void runTcpCommunicationTest() {

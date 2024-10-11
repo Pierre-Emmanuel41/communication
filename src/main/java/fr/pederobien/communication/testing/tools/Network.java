@@ -10,9 +10,11 @@ import fr.pederobien.communication.impl.connection.ConnectionConfigBuilder;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.IClientImpl;
 import fr.pederobien.communication.interfaces.IConnection;
+import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.IConnectionImpl;
 import fr.pederobien.communication.interfaces.IServerConfig;
 import fr.pederobien.communication.interfaces.IServerImpl;
+import fr.pederobien.communication.testing.tools.NetworkSimulator.IModifier;
 import fr.pederobien.utils.Watchdog;
 
 public class Network {
@@ -22,13 +24,13 @@ public class Network {
 		/**
 		 * Modify or not the data sent from one point to another point.
 		 * 
-		 * @param local The address of the sender.
+		 * @param mode The direction the communication.
 		 * @param remote The address of the receiver.
 		 * @param data The data to send to the receiver.
 		 * 
 		 * @return The data the receiver will receive.
 		 */
-		byte[] simulate(Address local, Address remote, byte[] data);
+		byte[] simulate(Mode mode, Address remote, byte[] data);
 	}
 
 	public static enum ExceptionMode {
@@ -62,6 +64,15 @@ public class Network {
 	}
 
 	/**
+	 * Create a network to simulate data transmission.
+	 * 
+	 * @param simulator To simulate an issue while sending data.
+	 */
+	public Network(Mode mode, IModifier modifier) {
+		this(new NetworkSimulator(mode, modifier));
+	}
+
+	/**
 	 * Creates a network that does not modify data when sent from one point to another point.
 	 */
 	public Network() {
@@ -91,7 +102,7 @@ public class Network {
 		return new ClientImpl(network, mode);
 	}
 
-	public class Address {
+	public static class Address {
 		private String address;
 		private int port;
 
@@ -112,6 +123,18 @@ public class Network {
 		 */
 		public int getPort() {
 			return port;
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == null || !(obj instanceof Address))
+				return false;
+
+			if (this == obj)
+				return true;
+
+			Address other = (Address) obj;
+			return address.equals(other.getAddress()) && port == other.getPort();
 		}
 	}
 
@@ -174,14 +197,14 @@ public class Network {
 		/**
 		 * Send data to the remote.
 		 * 
-		 * @param local The address of the sender.
+		 * @param mode The direction of the communication.
 		 * @param remote The address of the remote.
 		 * @param data The data to send.
 		 */
-		protected void send(Address local, Address remote, byte[] data) {
+		protected void send(Mode mode, Address remote, byte[] data) {
 			for (NetworkSocket socket : sockets) {
 				if (socket.getLocal() == remote)
-					socket.notifyDataReceived(simulator.simulate(local, remote, data));
+					socket.notifyDataReceived(simulator.simulate(mode, remote, data));
 			}
 		}
 
@@ -265,7 +288,7 @@ public class Network {
 		 * @return The local address of the socket.
 		 */
 		protected Address notifyNewClient(Address remote) {
-			socket = new NetworkSocket(network, remote);
+			socket = new NetworkSocket(network, remote, Mode.SERVER_TO_CLIENT);
 			semaphore.release();
 			return socket.getLocal();
 		}
@@ -275,6 +298,7 @@ public class Network {
 		private static final AtomicInteger PORT = new AtomicInteger(1);
 		private Networkstakeholder network;
 		private Address local, remote;
+		private Mode mode;
 		private Semaphore semaphore;
 		private byte[] data;
 
@@ -283,12 +307,14 @@ public class Network {
 		 * 
 		 * @param network The network used to send/receive data from the remote.
 		 * @param remote The remote address of the socket.
+		 * @param mode The direction of the communication.
 		 */
-		public NetworkSocket(Networkstakeholder network, Address remote) {
+		public NetworkSocket(Networkstakeholder network, Address remote, Mode mode) {
 			this.network = network;
-			this.local = new Address("127.0.0.1", PORT.getAndIncrement());
 			this.remote = remote;
+			this.mode = mode;
 
+			local = new Address("127.0.0.1", PORT.getAndIncrement());
 			semaphore = new Semaphore(0);
 
 			network.registerSocket(this);
@@ -316,7 +342,7 @@ public class Network {
 		 * @param data The data to send.
 		 */
 		public void send(byte[] data) {
-			network.send(getLocal(), getRemote(), data);
+			network.send(mode, getRemote(), data);
 		}
 
 		/**
@@ -414,7 +440,7 @@ public class Network {
 
 		@Override
 		public void connectImpl(String address, int port, int connectionTimeout) throws Exception {
-			socket = new NetworkSocket(network, new Address(address, port));
+			socket = new NetworkSocket(network, new Address(address, port), Mode.CLIENT_TO_SERVER);
 			socket.connect(connectionTimeout);
 		}
 
