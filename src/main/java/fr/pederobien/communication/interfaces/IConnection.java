@@ -54,7 +54,7 @@ public interface IConnection {
 	boolean isDisposed();
 
 	/**
-	 * @return The mode of the connection, it can be from client to server of from server to client.
+	 * @return The configuration that holds connection parameters.
 	 */
-	Mode getMode();
+	IConnectionConfig getConfig();
 }

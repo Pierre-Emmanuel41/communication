@@ -5,11 +5,11 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import fr.pederobien.communication.impl.Communication;
-import fr.pederobien.communication.impl.connection.ConnectionConfigBuilder;
 import fr.pederobien.communication.impl.connection.TcpConnectionImpl;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.IClientImpl;
 import fr.pederobien.communication.interfaces.IConnection;
+import fr.pederobien.communication.interfaces.IConnectionConfig;
 
 public class TcpClientImpl implements IClientImpl {
 	private Socket socket;
@@ -33,9 +33,9 @@ public class TcpClientImpl implements IClientImpl {
 		String address = socket.getInetAddress().getHostName();
 		int port = socket.getPort();
 		
-		// Creating a connection configuration builder.
-		ConnectionConfigBuilder builder = Communication.createConnectionConfigBuilder(address, port, config);
+		// Creating a connection configuration.
+		IConnectionConfig configuration = Communication.createConnectionConfig(address, port, config);
 		
-		return Communication.createCustomConnection(builder.build(), new TcpConnectionImpl(socket));
+		return Communication.createCustomConnection(configuration, new TcpConnectionImpl(socket));
 	}
 }

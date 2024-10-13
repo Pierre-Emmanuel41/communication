@@ -6,11 +6,11 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import fr.pederobien.communication.impl.Communication;
-import fr.pederobien.communication.impl.connection.ConnectionConfigBuilder;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.IClientImpl;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IConnection.Mode;
+import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.IConnectionImpl;
 import fr.pederobien.communication.interfaces.IServerConfig;
 import fr.pederobien.communication.interfaces.IServerImpl;
@@ -449,10 +449,10 @@ public class Network {
 			String address = socket.getRemote().getAddress();
 			int port = socket.getRemote().getPort();
 
-			// Creating connection config builder
-			ConnectionConfigBuilder builder = Communication.createConnectionConfigBuilder(address, port, config);
+			// Creating a connection configuration.
+			IConnectionConfig configuration = Communication.createConnectionConfig(address, port, config);
 
-			return Communication.createCustomConnection(builder.build(), new Connection(socket, mode));
+			return Communication.createCustomConnection(configuration, new Connection(socket, mode));
 		}
 	}
 
@@ -481,10 +481,10 @@ public class Network {
 			String address = socket.getRemote().getAddress();
 			int port = socket.getRemote().getPort();
 
-			// Creating connection config builder
-			ConnectionConfigBuilder builder = Communication.createConnectionConfigBuilder(address, port, config);
+			// Creating a connection configuration.
+			IConnectionConfig configuration = Communication.createConnectionConfig(address, port, config);
 
-			return Communication.createCustomConnection(builder.build(), new Connection(socket, ExceptionMode.NONE));
+			return Communication.createCustomConnection(configuration, new Connection(socket, ExceptionMode.NONE));
 		}
 	}
 }

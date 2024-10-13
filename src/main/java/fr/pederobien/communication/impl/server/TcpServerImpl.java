@@ -4,9 +4,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import fr.pederobien.communication.impl.Communication;
-import fr.pederobien.communication.impl.connection.ConnectionConfigBuilder;
 import fr.pederobien.communication.impl.connection.TcpConnectionImpl;
 import fr.pederobien.communication.interfaces.IConnection;
+import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.IServerConfig;
 import fr.pederobien.communication.interfaces.IServerImpl;
 
@@ -38,10 +38,10 @@ public class TcpServerImpl implements IServerImpl {
 		String address = socket.getInetAddress().getHostName();
 		int port = socket.getPort();
 
-		// Creating a connection configuration builder.
-		ConnectionConfigBuilder builder = Communication.createConnectionConfigBuilder(address, port, config);
+		// Creating a connection configuration.
+		IConnectionConfig configuration = Communication.createConnectionConfig(address, port, config);
 		
-		return Communication.createCustomConnection(builder.build(), new TcpConnectionImpl(socket));
+		return Communication.createCustomConnection(configuration, new TcpConnectionImpl(socket));
 	}
 
 }

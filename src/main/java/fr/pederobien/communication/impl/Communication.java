@@ -3,7 +3,7 @@ package fr.pederobien.communication.impl;
 import fr.pederobien.communication.impl.client.ClientConfigBuilder;
 import fr.pederobien.communication.impl.client.CustomClient;
 import fr.pederobien.communication.impl.client.TcpClientImpl;
-import fr.pederobien.communication.impl.connection.ConnectionConfigBuilder;
+import fr.pederobien.communication.impl.connection.ConnectionConfig;
 import fr.pederobien.communication.impl.connection.CustomConnection;
 import fr.pederobien.communication.impl.server.CustomServer;
 import fr.pederobien.communication.impl.server.ServerConfigBuilder;
@@ -21,46 +21,27 @@ import fr.pederobien.communication.interfaces.IServerConfig;
 import fr.pederobien.communication.interfaces.IServerImpl;
 
 public class Communication {
-	
+
 	/**
-	 * Creates a builder in order to hold default parameters for a configuration.
-	 * 
-	 * @param mode The direction of the communication.
-	 * 
-	 * @return A builder to create a configuration common to a client and a server,
-	 *         to be used by a connection configuration.
-	 */
-	public static final ConfigurationBuilder createConfigurationBuilder(Mode mode) {
-		return new ConfigurationBuilder(mode);
-	}
-	
-	/**
-	 * @return A configuration with default values, to be used by a connection configuration.
-	 */
-	public static final IConfiguration createDefaultConfiguration(Mode mode) {
-		return createConfigurationBuilder(mode).build();
-	}
-	
-	/**
-	 * Creates a builder in order to configure a connection.
-	 * 
-	 * @param address The IP address of the remote.
-	 * @param port The port number of the remote.
-	 * @param config The object that holds common connection parameters.
-	 */
-	public static final ConnectionConfigBuilder createConnectionConfigBuilder(String address, int port, IConfiguration config) {
-		return new ConnectionConfigBuilder(address, port, config);
-	}
-	
-	/**
-	 * Creates a connection configuration.
+	 * Creates a configuration for a connection.
 	 * 
 	 * @param address The IP address of the remote.
 	 * @param port The port number of the remote.
 	 * @param mode The direction of the communication.
 	 */
-	public static final IConnectionConfig createDefaultConnectionConfig(String address, int port, Mode mode) {
-		return createConnectionConfigBuilder(address, port, createDefaultConfiguration(mode)).build();
+	public static final IConnectionConfig createConnectionConfig(String address, int port, Mode mode) {
+		return new ConnectionConfig(address, port, mode);
+	}
+
+	/**
+	 * Creates a configuration for a connection.
+	 * 
+	 * @param address The IP address of the remote.
+	 * @param port The port number of the remote.
+	 * @param configuration The configuration that holds the parameters for a connection.
+	 */
+	public static final IConnectionConfig createConnectionConfig(String address, int port, IConfiguration configuration) {
+		return new ConnectionConfig(address, port, configuration);
 	}
 
 	/**

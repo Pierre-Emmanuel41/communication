@@ -37,9 +37,9 @@ public class ClientExceptionImpl implements IClientImpl {
 	@Override
 	public IConnection onConnectionComplete(IClientConfig config) {
 		// Creates a connection configuration
-		IConnectionConfig connectionConfig = Communication.createDefaultConnectionConfig(address, port, Mode.CLIENT_TO_SERVER);
+		IConnectionConfig configuration = Communication.createConnectionConfig(address, port, Mode.CLIENT_TO_SERVER);
 
-		return Communication.createCustomConnection(connectionConfig, impl);
+		return Communication.createCustomConnection(configuration, impl);
 	}
 	
 	private class ConnectionExceptionImpl implements IConnectionImpl {

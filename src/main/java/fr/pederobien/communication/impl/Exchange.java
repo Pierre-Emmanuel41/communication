@@ -55,7 +55,7 @@ public class Exchange implements IExchange, IEventListener {
 
 	@Override
 	public Mode getMode() {
-		return connection.getMode();
+		return connection.getConfig().getMode();
 	}
 
 	/**

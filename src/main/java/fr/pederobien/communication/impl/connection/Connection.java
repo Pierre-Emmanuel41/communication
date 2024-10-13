@@ -97,7 +97,7 @@ public abstract class Connection implements IConnection {
 		unexpectedRequestQueue.start();
 		
 		// Initializing layer
-		return initialized = config.getLayer().initialise(exchange);
+		return initialized = getConfig().getLayer().initialise(exchange);
 	}
 	
 	@Override
@@ -151,14 +151,14 @@ public abstract class Connection implements IConnection {
 	}
 
 	@Override
-	public Mode getMode() {
-		return config.getMode();
+	public IConnectionConfig getConfig() {
+		return config;
 	}
 	
 	@Override
 	public String toString() {
-		String name = config.getMode() == Mode.CLIENT_TO_SERVER ? "Server" : "Client";
-		return String.format("[%s %s:%s]", name, config.getAddress(), config.getPort());
+		String name = getConfig().getMode() == Mode.CLIENT_TO_SERVER ? "Server" : "Client";
+		return String.format("[%s %s:%s]", name, getConfig().getAddress(), getConfig().getPort());
 	}
 	
 	/**
@@ -197,9 +197,9 @@ public abstract class Connection implements IConnection {
 	 * @param algo The unstable algorithm.
 	 */
 	protected void onUnstableConnection(String algo) {
-		String name = config.getMode() == Mode.CLIENT_TO_SERVER ? "Client" : "Server";
+		String name = getConfig().getMode() == Mode.CLIENT_TO_SERVER ? "Client" : "Server";
 		String formatter = "[%s %s:%s (%s)] - Too much exceptions in a row, closing connection";
-		String message = String.format(formatter, name, config.getAddress(), config.getPort(), algo);
+		String message = String.format(formatter, name, getConfig().getAddress(), getConfig().getPort(), algo);
 		EventManager.callEvent(new LogEvent(ELogLevel.ERROR, message));
 
 		setEnabled(false);
@@ -214,7 +214,7 @@ public abstract class Connection implements IConnection {
 	private void sendMessage(HeaderMessage message) {
 		if (isEnabled()) {
 			try {
-				byte[] data = config.getLayer().pack(message);
+				byte[] data = getConfig().getLayer().pack(message);
 
 				messageManager.start(message.getIdentifier());
 				sendImpl(data);
@@ -234,7 +234,7 @@ public abstract class Connection implements IConnection {
 		if (isEnabled()) {
 			byte[] raw = null;
 			try {
-				raw = receiveImpl(config.getReceivingBufferSize());
+				raw = receiveImpl(getConfig().getReceivingBufferSize());
 				
 				// When raw is null, a problem happened while waiting for receiving data from the remote
 				if (raw == null)
@@ -274,7 +274,7 @@ public abstract class Connection implements IConnection {
 			
 			try {
 				// Extracting requests from the raw bytes array received from the network
-				List<IHeaderMessage> requests = config.getLayer().unpack(raw);
+				List<IHeaderMessage> requests = getConfig().getLayer().unpack(raw);
 				
 				// For each received request
 				for (IHeaderMessage request : requests) {
@@ -333,7 +333,7 @@ public abstract class Connection implements IConnection {
 
 				if (!initialized)
 					exchange.notify(event);
-				else if (config.isAllowUnexpectedRequest())
+				else if (getConfig().isAllowUnexpectedRequest())
 					handler.onRequestReceivedEvent(event);
 
 				requestExceptionCounter = 0;
