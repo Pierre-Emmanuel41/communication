@@ -48,13 +48,13 @@ public class ConnectionConfigBuilder {
 	 * @return The configuration to use for a connection.
 	 */
 	public IConnectionConfig build() {
-		return new ClientConfig(this);
+		return new ConnectionConfig(this);
 	}
 	
-	private class ClientConfig implements IConnectionConfig {
+	private class ConnectionConfig implements IConnectionConfig {
 		private ConnectionConfigBuilder builder;
 		
-		public ClientConfig(ConnectionConfigBuilder builder) {
+		public ConnectionConfig(ConnectionConfigBuilder builder) {
 			this.builder = builder;
 		}
 
