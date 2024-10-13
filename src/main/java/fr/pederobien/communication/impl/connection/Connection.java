@@ -32,7 +32,7 @@ public abstract class Connection implements IConnection {
 	private BlockingQueueTask<byte[]> extractingQueue;
 	private BlockingQueueTask<CallbackManagement> callbackQueue;
 	private BlockingQueueTask<UnexpectedRequestEvent> unexpectedRequestQueue;
-	private CallbackManager messageManager;
+	private CallbackManager callbackManager;
 	private IDisposable disposable;
 	private boolean isEnabled;
 	private int sendingExceptionCounter;
@@ -63,7 +63,7 @@ public abstract class Connection implements IConnection {
 		extractingQueue = new BlockingQueueTask<byte[]>(String.format("%s[extract]", toString()), raw -> extractMessage(raw));
 		callbackQueue = new BlockingQueueTask<CallbackManagement>(String.format("%s[callback]", toString()), management -> callbackMessage(management));
 		unexpectedRequestQueue = new BlockingQueueTask<UnexpectedRequestEvent>(String.format("%s[dispatcher]", toString()), event -> unexpectedRequest(event));
-		messageManager = new CallbackManager(this);
+		callbackManager = new CallbackManager(this);
 		disposable = new Disposable();
 
 		sendingExceptionCounter = 0;
@@ -139,7 +139,7 @@ public abstract class Connection implements IConnection {
 			extractingQueue.dispose();
 			callbackQueue.dispose();
 			unexpectedRequestQueue.dispose();
-			messageManager.dispose();
+			callbackManager.dispose();
 
 			EventManager.callEvent(new ConnectionDisposedEvent(this));
 		}
@@ -216,7 +216,7 @@ public abstract class Connection implements IConnection {
 			try {
 				byte[] data = getConfig().getLayer().pack(message);
 
-				messageManager.start(message.getIdentifier());
+				callbackManager.start(message.getIdentifier());
 				sendImpl(data);
 	
 				sendingExceptionCounter = 0;
@@ -283,7 +283,7 @@ public abstract class Connection implements IConnection {
 					if (request.getRequestID() != 0) {
 
 						// Checking if there is a pending request
-						CallbackManagement management = messageManager.unregister(request);
+						CallbackManagement management = callbackManager.unregister(request);
 						
 						// Receiving expected response from the remote
 						if (management != null)
@@ -362,7 +362,7 @@ public abstract class Connection implements IConnection {
 		}
 
 		HeaderMessage header = new HeaderMessage(requestID, toSend);
-		messageManager.register(header.getIdentifier(), toSend);
+		callbackManager.register(header.getIdentifier(), toSend);
 		sendingQueue.add(header);
 
 		if (message.isSync()) {
