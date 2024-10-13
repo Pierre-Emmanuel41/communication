@@ -108,16 +108,6 @@ public abstract class Client implements IClient {
 	}
 
 	@Override
-	public int getConnectionTimeout() {
-		return config.getConnectionTimeout();
-	}
-
-	@Override
-	public int getReconnectionDelay() {
-		return config.getReconnectionDelay();
-	}
-
-	@Override
 	public EState getState() {
 		return state;
 	}
@@ -203,13 +193,13 @@ public abstract class Client implements IClient {
 	private boolean establishConnection(Object object) {
 		try {
 			// Attempting connection with the remote
-			connectImpl(getAddress(), getPort(), getConnectionTimeout());
+			connectImpl(getAddress(), getPort(), config.getConnectionTimeout());
 			return state == EState.CONNECTING;
 
 		} catch (Exception e) {
 			try {
 				// Wait before trying to reconnect to the remote
-				Thread.sleep(getReconnectionDelay());
+				Thread.sleep(config.getReconnectionDelay());
 
 				if (state == EState.CONNECTING) {
 					onLogEvent("Connection timeout, retrying");

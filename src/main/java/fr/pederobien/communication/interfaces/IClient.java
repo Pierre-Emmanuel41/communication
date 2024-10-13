@@ -65,16 +65,6 @@ public interface IClient {
 	 * @return The port number of the server.
 	 */
 	int getPort();
-	
-	/**
-	 * @return The value considered as a timeout in ms the client tries to connect to a server.
-	 */
-	int getConnectionTimeout();
-	
-	/**
-	 * @return The delay in ms before trying to reconnect to the server.
-	 */
-	int getReconnectionDelay();
 
 	/**
 	 * @return The current state of the client.
