@@ -13,7 +13,6 @@ public class ClientConfigBuilder {
 	private boolean isAutomaticReconnection;
 	private int reconnectionDelay;
 	private int receivingBufferSize;
-	private boolean allowUnexpectedRequest;
 	private ILayer layer;
 	private IRequestReceivedHandler handler;
 	private int maxUnstableCounter;
@@ -32,7 +31,6 @@ public class ClientConfigBuilder {
 		isAutomaticReconnection = true;
 		reconnectionDelay = 1000;
 		receivingBufferSize = 1024;
-		allowUnexpectedRequest = false;
 		layer = new SimpleLayer();
 		handler = new SimpleRequestReceivedHandler();
 		maxUnstableCounter = 5;
@@ -129,24 +127,6 @@ public class ClientConfigBuilder {
 	}
 	
 	/**
-	 * Set the behavior of the connection when an unexpected request has been received.
-	 * 
-	 * @param allowUnexpectedRequest True to execute the unexpected request, false otherwise.
-	 * 
-	 * @return This builder.
-	 */
-	public void setAllowUnexpectedRequest(boolean allowUnexpectedRequest) {
-		this.allowUnexpectedRequest = allowUnexpectedRequest;
-	}
-	
-	/**
-	 * @return True if an unexpected request has been received and should be executed, false otherwise.
-	 */
-	private boolean isAllowUnexpectedRequest() {
-		return allowUnexpectedRequest;
-	}
-	
-	/**
 	 * Set the layer responsible to encode/decode data.
 	 * 
 	 * @param layer The new layer.
@@ -228,11 +208,6 @@ public class ClientConfigBuilder {
 		@Override
 		public int getReceivingBufferSize() {
 			return builder.getReceivingBufferSize();
-		}
-
-		@Override
-		public boolean isAllowUnexpectedRequest() {
-			return builder.isAllowUnexpectedRequest();
 		}
 
 		@Override

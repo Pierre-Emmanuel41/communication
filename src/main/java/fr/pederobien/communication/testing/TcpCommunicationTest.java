@@ -130,7 +130,6 @@ public class TcpCommunicationTest {
 			sendToClient.start();
 			
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setAllowUnexpectedRequest(true);
 			clientBuilder.setRequestReceivedHandler(new SimpleClientListener(false));
 
 			IClient client = Communication.createTcpClient(clientBuilder.build());
@@ -237,7 +236,6 @@ public class TcpCommunicationTest {
 			sendToClient.start();
 			
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setAllowUnexpectedRequest(true);
 			clientBuilder.setRequestReceivedHandler(new SimpleAnswerToRequestListener("I guess I am !"));
 			
 			IClient client = Communication.createTcpClient(clientBuilder.build());
@@ -355,7 +353,6 @@ public class TcpCommunicationTest {
 			sendToClient.start();
 			
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setAllowUnexpectedRequest(true);
 			clientBuilder.setLayer(new ExceptionLayer(LayerExceptionMode.UNPACK));
 
 			IClient client = Communication.createTcpClient(clientBuilder.build());
@@ -424,7 +421,6 @@ public class TcpCommunicationTest {
 			sendToClient.start();
 			
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setAllowUnexpectedRequest(true);
 			clientBuilder.setRequestReceivedHandler(new SimpleClientListener(true));
 			
 			IClient client = Communication.createTcpClient(clientBuilder.build());
@@ -453,7 +449,6 @@ public class TcpCommunicationTest {
 			sendToClient.start();
 			
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setAllowUnexpectedRequest(true);
 			clientBuilder.setRequestReceivedHandler(new SimpleClientListener(true));
 			
 			IClient client = Communication.createTcpClient(clientBuilder.build());

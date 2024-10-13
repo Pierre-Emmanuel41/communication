@@ -10,7 +10,6 @@ public class ServerConfigBuilder {
 	private String name;
 	private int port;
 	private int receivingBufferSize;
-	private boolean allowUnexpectedRequest;
 	private ILayer layer;
 	private IRequestReceivedHandler handler;
 	
@@ -25,7 +24,6 @@ public class ServerConfigBuilder {
 		this.port = port;
 		
 		receivingBufferSize = 1024;
-		allowUnexpectedRequest = true;
 		layer = new SimpleLayer();
 		handler = new SimpleRequestReceivedHandler();
 	}
@@ -61,25 +59,6 @@ public class ServerConfigBuilder {
 	 */
 	private int getReceivingBufferSize() {
 		return receivingBufferSize;
-	}
-	
-	/**
-	 * Set the behavior of the connection when an unexpected request has been received.
-	 * 
-	 * @param allowUnexpectedRequest True to execute the unexpected request, false otherwise.
-	 * 
-	 * @return This builder.
-	 */
-	public ServerConfigBuilder setAllowUnexpectedRequest(boolean allowUnexpectedRequest) {
-		this.allowUnexpectedRequest = allowUnexpectedRequest;
-		return this;
-	}
-	
-	/**
-	 * @return True if an unexpected request has been received and should be executed, false otherwise.
-	 */
-	private boolean isAllowUnexpectedRequest() {
-		return allowUnexpectedRequest;
 	}
 	
 	/**
@@ -137,11 +116,6 @@ public class ServerConfigBuilder {
 		@Override
 		public int getReceivingBufferSize() {
 			return builder.getReceivingBufferSize();
-		}
-
-		@Override
-		public boolean isAllowUnexpectedRequest() {
-			return builder.isAllowUnexpectedRequest();
 		}
 
 		@Override

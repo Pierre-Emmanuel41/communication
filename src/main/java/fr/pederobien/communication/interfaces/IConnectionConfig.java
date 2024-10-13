@@ -32,18 +32,6 @@ public interface IConnectionConfig {
 	void setReceivingBufferSize(int receivingBufferSize);
 
 	/**
-	 * @return True if an unexpected request has been received and should be executed, false otherwise.
-	 */
-	boolean isAllowUnexpectedRequest();
-
-	/**
-	 * Handle or not a request when received from the remote.
-	 * 
-	 * @param isAllowUnexpectedRequest True to handle an unexpected request, false to ignore.
-	 */
-	void setAllowUnexpectedRequest(boolean isAllowUnexpectedRequest);
-
-	/**
 	 * @return The layer responsible to encode/decode data.
 	 */
 	ILayer getLayer();

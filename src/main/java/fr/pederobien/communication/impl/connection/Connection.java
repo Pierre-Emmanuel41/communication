@@ -311,7 +311,7 @@ public abstract class Connection implements IConnection {
 			try {
 				if (!initialized)
 					exchange.notify(event);
-				else if (getConfig().isAllowUnexpectedRequest())
+				else
 					getConfig().getRequestReceivedHandler().onRequestReceivedEvent(event);
 
 				requestExceptionCounter = 0;

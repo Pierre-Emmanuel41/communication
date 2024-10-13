@@ -16,12 +16,6 @@ public interface IConfiguration {
 	int getReceivingBufferSize();
 	
 	/**
-	 * @return True if an unexpected request has been received and should be executed, false otherwise.
-	 *         The default value is false for a client, true for a server.
-	 */
-	boolean isAllowUnexpectedRequest();
-	
-	/**
 	 * @return The layer responsible to encode/decode data. The default layer is {@link SimpleLayer}.
 	 */
 	ILayer getLayer();

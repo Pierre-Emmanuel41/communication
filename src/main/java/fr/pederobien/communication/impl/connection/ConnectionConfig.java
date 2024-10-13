@@ -59,16 +59,6 @@ public class ConnectionConfig implements IConnectionConfig {
 	}
 
 	@Override
-	public boolean isAllowUnexpectedRequest() {
-		return config.isAllowUnexpectedRequest();
-	}
-
-	@Override
-	public void setAllowUnexpectedRequest(boolean isAllowUnexpectedRequest) {
-		config.setAllowUnexpectedRequest(isAllowUnexpectedRequest);
-	}
-
-	@Override
 	public ILayer getLayer() {
 		return config.getLayer();
 	}
@@ -89,7 +79,6 @@ public class ConnectionConfig implements IConnectionConfig {
 		public ConnectionConfigDerived(String address, int port, IConfiguration configuration) {
 			config = new ConnectionConfigStandalone(address, port, configuration.getMode());
 			config.setReceivingBufferSize(configuration.getReceivingBufferSize());
-			config.setAllowUnexpectedRequest(configuration.isAllowUnexpectedRequest());
 			config.setLayer(config.getLayer());
 		}
 
@@ -119,16 +108,6 @@ public class ConnectionConfig implements IConnectionConfig {
 		}
 
 		@Override
-		public boolean isAllowUnexpectedRequest() {
-			return config.isAllowUnexpectedRequest();
-		}
-
-		@Override
-		public void setAllowUnexpectedRequest(boolean isAllowUnexpectedRequest) {
-			config.setAllowUnexpectedRequest(isAllowUnexpectedRequest);
-		}
-
-		@Override
 		public ILayer getLayer() {
 			return config.getLayer();
 		}
@@ -149,7 +128,6 @@ public class ConnectionConfig implements IConnectionConfig {
 		private int port;
 		private Mode mode;
 		private int receivingBufferSize;
-		private boolean isAllowUnexpectedRequest;
 		private ILayer layer;
 		private IRequestReceivedHandler handler;
 		
@@ -159,7 +137,6 @@ public class ConnectionConfig implements IConnectionConfig {
 			this.mode = mode;
 
 			receivingBufferSize = 1024;
-			isAllowUnexpectedRequest = true;
 			layer = new SimpleLayer();
 			handler = new SimpleRequestReceivedHandler();
 		}
@@ -187,16 +164,6 @@ public class ConnectionConfig implements IConnectionConfig {
 		@Override
 		public void setReceivingBufferSize(int receivingBufferSize) {
 			this.receivingBufferSize = receivingBufferSize;
-		}
-
-		@Override
-		public boolean isAllowUnexpectedRequest() {
-			return isAllowUnexpectedRequest;
-		}
-
-		@Override
-		public void setAllowUnexpectedRequest(boolean isAllowUnexpectedRequest) {
-			this.isAllowUnexpectedRequest = isAllowUnexpectedRequest;
 		}
 
 		@Override
