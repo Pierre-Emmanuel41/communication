@@ -133,7 +133,7 @@ public class NetworkTest {
 			Network network = new Network();
 
 			ServerConfigBuilder builder = Communication.createServerConfigBuilder("Dummy Server", 12345);
-			builder.setRequestReceivedHandler(() -> new SimpleServerListener());
+			builder.setRequestReceivedHandler(new SimpleServerListener());
 
 			IServer server = Communication.createCustomServer(builder.build(), network.getServer());
 			server.open();
@@ -172,7 +172,7 @@ public class NetworkTest {
 
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
 			clientBuilder.setAllowUnexpectedRequest(true);
-			clientBuilder.setRequestReceivedHandler(() -> new SimpleClientListener(false));
+			clientBuilder.setRequestReceivedHandler(new SimpleClientListener(false));
 
 			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
 			client.connect();
@@ -198,7 +198,7 @@ public class NetworkTest {
 			Network network = new Network();
 
 			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("Dummy Server", 12345);
-			serverBuilder.setRequestReceivedHandler(() -> new SimpleAnswerToRequestListener("I received your request !"));
+			serverBuilder.setRequestReceivedHandler(new SimpleAnswerToRequestListener("I received your request !"));
 
 			IServer server = Communication.createCustomServer(serverBuilder.build(), network.getServer());
 			server.open();
@@ -285,7 +285,7 @@ public class NetworkTest {
 
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
 			clientBuilder.setAllowUnexpectedRequest(true);
-			clientBuilder.setRequestReceivedHandler(() -> new SimpleAnswerToRequestListener("I guess I am !"));
+			clientBuilder.setRequestReceivedHandler(new SimpleAnswerToRequestListener("I guess I am !"));
 
 			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
 			client.connect();
@@ -461,7 +461,7 @@ public class NetworkTest {
 			Network network = new Network();
 
 			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("Dummy Server", 12345);
-			serverBuilder.setRequestReceivedHandler(() -> new SimpleAnswerToRequestListener("I received your request !"));
+			serverBuilder.setRequestReceivedHandler(new SimpleAnswerToRequestListener("I received your request !"));
 
 			IServer server = Communication.createCustomServer(serverBuilder.build(), network.getServer());
 			server.open();
@@ -510,7 +510,7 @@ public class NetworkTest {
 
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
 			clientBuilder.setAllowUnexpectedRequest(true);
-			clientBuilder.setRequestReceivedHandler(() -> new SimpleClientListener(true));
+			clientBuilder.setRequestReceivedHandler(new SimpleClientListener(true));
 
 			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
 			client.connect();
@@ -540,7 +540,7 @@ public class NetworkTest {
 
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
 			clientBuilder.setAllowUnexpectedRequest(true);
-			clientBuilder.setRequestReceivedHandler(() -> new SimpleClientListener(true));
+			clientBuilder.setRequestReceivedHandler(new SimpleClientListener(true));
 
 			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
 			client.connect();
@@ -573,7 +573,7 @@ public class NetworkTest {
 			sleep(5000);
 
 			ServerConfigBuilder builder = Communication.createServerConfigBuilder("Dummy Server", 12345);
-			builder.setRequestReceivedHandler(() -> new SimpleServerListener());
+			builder.setRequestReceivedHandler(new SimpleServerListener());
 
 			IServer server = Communication.createCustomServer(builder.build(), network.getServer());
 			server.open();
@@ -621,7 +621,7 @@ public class NetworkTest {
 			Network network = new Network(simulator);
 
 			ServerConfigBuilder builder = Communication.createServerConfigBuilder("Dummy builder", 12345);
-			builder.setRequestReceivedHandler(() -> new SimpleServerListener());
+			builder.setRequestReceivedHandler(new SimpleServerListener());
 
 			IServer server = Communication.createCustomServer(builder.build(), network.getServer());
 			server.open();

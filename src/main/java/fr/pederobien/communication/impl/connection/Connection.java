@@ -15,7 +15,6 @@ import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.IMessage;
-import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
 import fr.pederobien.utils.event.EventManager;
@@ -25,7 +24,6 @@ import fr.pederobien.utils.event.LogEvent.ELogLevel;
 public abstract class Connection implements IConnection {
 	private static final int MAX_EXCEPTION_NUMBER = 10;
 	private IConnectionConfig config;
-	private IRequestReceivedHandler handler;
 	private QueueManager queueManager;
 	private CallbackManager callbackManager;
 	private IDisposable disposable;
@@ -51,7 +49,6 @@ public abstract class Connection implements IConnection {
 	 */
 	protected Connection(IConnectionConfig config) {
 		this.config = config;
-		handler = config.getRequestReceivedHandler();
 		
 		queueManager = new QueueManager(config.getAddress(), config.getPort(), config.getMode());
 		queueManager.setSendingQueue(message -> sendMessage(message));
@@ -314,7 +311,7 @@ public abstract class Connection implements IConnection {
 				if (!initialized)
 					exchange.notify(event);
 				else if (getConfig().isAllowUnexpectedRequest())
-					handler.onRequestReceivedEvent(event);
+					getConfig().getRequestReceivedHandler().onRequestReceivedEvent(event);
 
 				requestExceptionCounter = 0;
 			} catch (Exception e) {

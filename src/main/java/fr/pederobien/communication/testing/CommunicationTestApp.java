@@ -15,9 +15,9 @@ public class CommunicationTestApp
     {
     	EventLogger.instance().newLine(true).timeStamp(true).register();
 
-    	// runTest("Network tests", () -> runNetworkTest());
+    	runTest("Network tests", () -> runNetworkTest());
     	runTest("Layer tests", () -> runLayerTests());
-    	// runTest("TCP tests", () -> runTcpCommunicationTest());
+    	runTest("TCP tests", () -> runTcpCommunicationTest());
         
         // Asynchronous tests, wait a little bit before closing tests session
         try {

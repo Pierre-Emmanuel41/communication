@@ -94,7 +94,7 @@ public class TcpCommunicationTest {
 	public void testClientToServerCommunication() {
 		Runnable test = () -> {
 			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("TCP server test", 12345);
-			serverBuilder.setRequestReceivedHandler(() -> new SimpleServerListener());
+			serverBuilder.setRequestReceivedHandler(new SimpleServerListener());
 
 			IServer server = Communication.createTcpServer(serverBuilder.build());
 			server.open();
@@ -131,7 +131,7 @@ public class TcpCommunicationTest {
 			
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
 			clientBuilder.setAllowUnexpectedRequest(true);
-			clientBuilder.setRequestReceivedHandler(() -> new SimpleClientListener(false));
+			clientBuilder.setRequestReceivedHandler(new SimpleClientListener(false));
 
 			IClient client = Communication.createTcpClient(clientBuilder.build());
 			client.connect();
@@ -155,7 +155,7 @@ public class TcpCommunicationTest {
 	public void testClientToServerWithCallback() {
 		Runnable test = () -> {
 			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("TCP server test", 12345);
-			serverBuilder.setRequestReceivedHandler(() -> new SimpleAnswerToRequestListener("I received your request !"));
+			serverBuilder.setRequestReceivedHandler(new SimpleAnswerToRequestListener("I received your request !"));
 
 			IServer server = Communication.createTcpServer(serverBuilder.build());
 			server.open();
@@ -238,7 +238,7 @@ public class TcpCommunicationTest {
 			
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
 			clientBuilder.setAllowUnexpectedRequest(true);
-			clientBuilder.setRequestReceivedHandler(() -> new SimpleAnswerToRequestListener("I guess I am !"));
+			clientBuilder.setRequestReceivedHandler(new SimpleAnswerToRequestListener("I guess I am !"));
 			
 			IClient client = Communication.createTcpClient(clientBuilder.build());
 			client.connect();
@@ -380,7 +380,7 @@ public class TcpCommunicationTest {
 	public void testCallbackException() {
 		Runnable test = () -> {
 			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("TCP server test", 12345);
-			serverBuilder.setRequestReceivedHandler(() -> new SimpleAnswerToRequestListener("I received your request !"));
+			serverBuilder.setRequestReceivedHandler(new SimpleAnswerToRequestListener("I received your request !"));
 			
 			IServer server = Communication.createTcpServer(serverBuilder.build());
 			server.open();
@@ -425,7 +425,7 @@ public class TcpCommunicationTest {
 			
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
 			clientBuilder.setAllowUnexpectedRequest(true);
-			clientBuilder.setRequestReceivedHandler(() -> new SimpleClientListener(true));
+			clientBuilder.setRequestReceivedHandler(new SimpleClientListener(true));
 			
 			IClient client = Communication.createTcpClient(clientBuilder.build());
 			client.connect();
@@ -454,7 +454,7 @@ public class TcpCommunicationTest {
 			
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
 			clientBuilder.setAllowUnexpectedRequest(true);
-			clientBuilder.setRequestReceivedHandler(() -> new SimpleClientListener(true));
+			clientBuilder.setRequestReceivedHandler(new SimpleClientListener(true));
 			
 			IClient client = Communication.createTcpClient(clientBuilder.build());
 			client.connect();
