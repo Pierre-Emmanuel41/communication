@@ -31,7 +31,7 @@ public abstract class Connection implements IConnection {
 	private BlockingQueueTask<Object> receivingQueue;
 	private BlockingQueueTask<byte[]> extractingQueue;
 	private BlockingQueueTask<CallbackManagement> callbackQueue;
-	private BlockingQueueTask<UnexpectedRequestEvent> unexpectedRequestQueue;
+	private BlockingQueueTask<RequestReceivedEvent> requestReceivedQueue;
 	private CallbackManager callbackManager;
 	private IDisposable disposable;
 	private boolean isEnabled;
@@ -62,7 +62,7 @@ public abstract class Connection implements IConnection {
 		receivingQueue = new BlockingQueueTask<Object>(String.format("%s[receive]", toString()), object -> receiveMessage(object));
 		extractingQueue = new BlockingQueueTask<byte[]>(String.format("%s[extract]", toString()), raw -> extractMessage(raw));
 		callbackQueue = new BlockingQueueTask<CallbackManagement>(String.format("%s[callback]", toString()), management -> callbackMessage(management));
-		unexpectedRequestQueue = new BlockingQueueTask<UnexpectedRequestEvent>(String.format("%s[dispatcher]", toString()), event -> unexpectedRequest(event));
+		requestReceivedQueue = new BlockingQueueTask<RequestReceivedEvent>(String.format("%s[dispatcher]", toString()), event -> dispatchRequestReceivedEvent(event));
 		callbackManager = new CallbackManager(this);
 		disposable = new Disposable();
 
@@ -94,7 +94,7 @@ public abstract class Connection implements IConnection {
 		callbackQueue.start();
 		
 		// Waiting for an unexpected request
-		unexpectedRequestQueue.start();
+		requestReceivedQueue.start();
 		
 		// Initializing layer
 		return initialized = getConfig().getLayer().initialise(exchange);
@@ -138,7 +138,7 @@ public abstract class Connection implements IConnection {
 			receivingQueue.dispose();
 			extractingQueue.dispose();
 			callbackQueue.dispose();
-			unexpectedRequestQueue.dispose();
+			requestReceivedQueue.dispose();
 			callbackManager.dispose();
 
 			EventManager.callEvent(new ConnectionDisposedEvent(this));
@@ -292,7 +292,7 @@ public abstract class Connection implements IConnection {
 
 					else
 						// Dispatching asynchronously a request received event.
-						unexpectedRequestQueue.add(new UnexpectedRequestEvent(request.getIdentifier(), request.getBytes()));
+						requestReceivedQueue.add(new RequestReceivedEvent(this, request.getBytes(), request.getIdentifier()));
 				}
 
 				extractingExceptionCounter = 0;
@@ -324,13 +324,11 @@ public abstract class Connection implements IConnection {
 	/**
 	 * Creates internally a request received event and dispatch it to the request received handler.
 	 * 
-	 * @param event The event that contains the identifier and the payload of the unexpected request.
+	 * @param event The event to dispatch.
 	 */
-	private void unexpectedRequest(UnexpectedRequestEvent unexpected) {
+	private void dispatchRequestReceivedEvent(RequestReceivedEvent event) {
 		if (isEnabled()) {
 			try {
-				RequestReceivedEvent event = new RequestReceivedEvent(this, unexpected.getPayload(), unexpected.getIdentifier());
-
 				if (!initialized)
 					exchange.notify(event);
 				else if (getConfig().isAllowUnexpectedRequest())
@@ -392,35 +390,5 @@ public abstract class Connection implements IConnection {
 	private void checkUnstable(int counter, String algo) {
 		if (counter == MAX_EXCEPTION_NUMBER)
 			onUnstableConnection(algo);
-	}
-	
-	private class UnexpectedRequestEvent {
-		private int identifier;
-		private byte[] payload;
-		
-		/**
-		 * Creates an unexpected request event.
-		 * 
-		 * @param identifier The identifier of the request.
-		 * @param payload The payload of the request.
-		 */
-		public UnexpectedRequestEvent(int identifier, byte[] payload) {
-			this.identifier = identifier;
-			this.payload = payload;
-		}
-		
-		/**
-		 * @return The identifier of the request.
-		 */
-		public int getIdentifier() {
-			return identifier;
-		}
-		
-		/**
-		 * @return The payload of the request.
-		 */
-		public byte[] getPayload() {
-			return payload;
-		}
 	}
 }
