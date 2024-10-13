@@ -16,7 +16,6 @@ import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.IMessage;
 import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
-import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
 import fr.pederobien.utils.event.EventManager;
@@ -27,11 +26,7 @@ public abstract class Connection implements IConnection {
 	private static final int MAX_EXCEPTION_NUMBER = 10;
 	private IConnectionConfig config;
 	private IRequestReceivedHandler handler;
-	private BlockingQueueTask<HeaderMessage> sendingQueue;
-	private BlockingQueueTask<Object> receivingQueue;
-	private BlockingQueueTask<byte[]> extractingQueue;
-	private BlockingQueueTask<CallbackManagement> callbackQueue;
-	private BlockingQueueTask<RequestReceivedEvent> requestReceivedQueue;
+	private QueueManager queueManager;
 	private CallbackManager callbackManager;
 	private IDisposable disposable;
 	private boolean isEnabled;
@@ -58,11 +53,13 @@ public abstract class Connection implements IConnection {
 		this.config = config;
 		handler = config.getRequestReceivedHandler();
 		
-		sendingQueue = new BlockingQueueTask<HeaderMessage>(String.format("%s[send]", toString()), message -> sendMessage(message));
-		receivingQueue = new BlockingQueueTask<Object>(String.format("%s[receive]", toString()), object -> receiveMessage(object));
-		extractingQueue = new BlockingQueueTask<byte[]>(String.format("%s[extract]", toString()), raw -> extractMessage(raw));
-		callbackQueue = new BlockingQueueTask<CallbackManagement>(String.format("%s[callback]", toString()), management -> callbackMessage(management));
-		requestReceivedQueue = new BlockingQueueTask<RequestReceivedEvent>(String.format("%s[dispatcher]", toString()), event -> dispatchRequestReceivedEvent(event));
+		queueManager = new QueueManager(config.getAddress(), config.getPort(), config.getMode());
+		queueManager.setSendingQueue(message -> sendMessage(message));
+		queueManager.setReceivingQueue(object -> receiveMessage(object));
+		queueManager.setExtractingQueue(raw -> extractMessage(raw));
+		queueManager.setCallbackQueue(management -> callbackMessage(management));
+		queueManager.setRequestReceivedQueue(event -> dispatchRequestReceivedEvent(event));
+
 		callbackManager = new CallbackManager(this);
 		disposable = new Disposable();
 
@@ -80,21 +77,8 @@ public abstract class Connection implements IConnection {
 	
 	@Override
 	public boolean initialise() throws Exception {
-		// Waiting for a message to be sent		
-		sendingQueue.start();
-		
-		// Waiting for receiving message from network
-		receivingQueue.start();
-		receivingQueue.add(new Object());
-		
-		// Waiting for data to extract
-		extractingQueue.start();
-		
-		// Waiting for callback to be called
-		callbackQueue.start();
-		
-		// Waiting for an unexpected request
-		requestReceivedQueue.start();
+		// Start each asynchronous queue
+		queueManager.start();
 		
 		// Initializing layer
 		return initialized = getConfig().getLayer().initialise(exchange);
@@ -134,11 +118,9 @@ public abstract class Connection implements IConnection {
 	public void dispose() {
 		if (disposable.dispose()) {
 			disposeImpl();
-			sendingQueue.dispose();
-			receivingQueue.dispose();
-			extractingQueue.dispose();
-			callbackQueue.dispose();
-			requestReceivedQueue.dispose();
+
+			// Dispose each asynchronous queue
+			queueManager.dispose();
 			callbackManager.dispose();
 
 			EventManager.callEvent(new ConnectionDisposedEvent(this));
@@ -167,7 +149,7 @@ public abstract class Connection implements IConnection {
 	 * @param management The management that hold the callback to execute.
 	 */
 	public void timeout(CallbackManagement management) {
-		callbackQueue.add(management);
+		queueManager.getCallbackQueue().add(management);
 	}
 	
 	/**
@@ -211,7 +193,7 @@ public abstract class Connection implements IConnection {
 	 * 
 	 * @param message The message to send.
 	 */
-	private void sendMessage(HeaderMessage message) {
+	private void sendMessage(IHeaderMessage message) {
 		if (isEnabled()) {
 			try {
 				byte[] data = getConfig().getLayer().pack(message);
@@ -243,7 +225,7 @@ public abstract class Connection implements IConnection {
 					EventManager.callEvent(new DataEvent(this, raw));
 
 					// Adding raw data for asynchronous extraction
-					extractingQueue.add(raw);
+					queueManager.getExtractingQueue().add(raw);
 				}
 
 				receivingExceptionCounter = 0;
@@ -253,12 +235,12 @@ public abstract class Connection implements IConnection {
 
 				if (!isDisposed())
 					// Waiting again for the reception
-					receivingQueue.add(new Object());
+					queueManager.getReceivingQueue().add(new Object());
 			} finally {
 				// If connection is not lost
 				if (raw != null) {
 					// Waiting again for the reception
-					receivingQueue.add(new Object());
+					queueManager.getReceivingQueue().add(new Object());
 				}
 			}
 		}
@@ -287,12 +269,12 @@ public abstract class Connection implements IConnection {
 						
 						// Receiving expected response from the remote
 						if (management != null)
-							callbackQueue.add(management);
+							queueManager.getCallbackQueue().add(management);
 					}
 
 					else
 						// Dispatching asynchronously a request received event.
-						requestReceivedQueue.add(new RequestReceivedEvent(this, request.getBytes(), request.getIdentifier()));
+						queueManager.getRequestReceivedQueue().add(new RequestReceivedEvent(this, request.getBytes(), request.getIdentifier()));
 				}
 
 				extractingExceptionCounter = 0;
@@ -359,9 +341,9 @@ public abstract class Connection implements IConnection {
 			});
 		}
 
-		HeaderMessage header = new HeaderMessage(requestID, toSend);
+		IHeaderMessage header = new HeaderMessage(requestID, toSend);
 		callbackManager.register(header.getIdentifier(), toSend);
-		sendingQueue.add(header);
+		queueManager.getSendingQueue().add(header);
 
 		if (message.isSync()) {
 			try {
