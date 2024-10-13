@@ -3,10 +3,8 @@ package fr.pederobien.communication.interfaces;
 import fr.pederobien.communication.interfaces.IConnection.Mode;
 
 public interface IClientConfig extends IConfiguration {
-	
-	/**
-	 * @return The mode of the connection.
-	 */
+
+	@Override
 	default Mode getMode() {
 		return Mode.CLIENT_TO_SERVER;
 	}

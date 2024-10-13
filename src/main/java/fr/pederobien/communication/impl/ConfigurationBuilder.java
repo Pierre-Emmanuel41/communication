@@ -4,22 +4,37 @@ import java.util.function.Supplier;
 
 import fr.pederobien.communication.impl.layer.SimpleLayer;
 import fr.pederobien.communication.interfaces.IConfiguration;
+import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.ILayer;
 import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
 
 public class ConfigurationBuilder {
+	private Mode mode;
 	private int receivingBufferSize;
 	private boolean allowUnexpectedRequest;
 	private ILayer layer;
 	private Supplier<IRequestReceivedHandler> handler;
 	
-	public ConfigurationBuilder() {
+	/**
+	 * Creates a builder to create configuration that holds connection parameters.
+	 * 
+	 * @param mode The direction of the communication.
+	 */
+	public ConfigurationBuilder(Mode mode) {
+		this.mode = mode;
 		receivingBufferSize = 1024;
 		allowUnexpectedRequest = true;
 		layer = new SimpleLayer();
 		handler = () -> new SimpleRequestReceivedHandler();
 	}
 	
+	/**
+	 * @return The direction of the communication.
+	 */
+	private Mode getMode() {
+		return mode;
+	}
+
 	/**
 	 * Set the size, in bytes, of the buffer to receive data from the network.
 	 * 
@@ -109,6 +124,11 @@ public class ConfigurationBuilder {
 		
 		public Configuration(ConfigurationBuilder builder) {
 			this.builder = builder;
+		}
+
+		@Override
+		public Mode getMode() {
+			return builder.getMode();
 		}
 
 		@Override

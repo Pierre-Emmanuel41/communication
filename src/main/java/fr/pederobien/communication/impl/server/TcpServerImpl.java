@@ -41,7 +41,7 @@ public class TcpServerImpl implements IServerImpl {
 		// Creating a connection configuration builder.
 		ConnectionConfigBuilder builder = Communication.createConnectionConfigBuilder(address, port, config);
 		
-		return Communication.createCustomConnection(builder.build(), new TcpConnectionImpl(socket), config.getMode());
+		return Communication.createCustomConnection(builder.build(), new TcpConnectionImpl(socket));
 	}
 
 }

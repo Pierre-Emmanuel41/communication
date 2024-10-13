@@ -23,18 +23,22 @@ import fr.pederobien.communication.interfaces.IServerImpl;
 public class Communication {
 	
 	/**
+	 * Creates a builder in order to hold default parameters for a configuration.
+	 * 
+	 * @param mode The direction of the communication.
+	 * 
 	 * @return A builder to create a configuration common to a client and a server,
 	 *         to be used by a connection configuration.
 	 */
-	public static final ConfigurationBuilder createConfigurationBuilder() {
-		return new ConfigurationBuilder();
+	public static final ConfigurationBuilder createConfigurationBuilder(Mode mode) {
+		return new ConfigurationBuilder(mode);
 	}
 	
 	/**
 	 * @return A configuration with default values, to be used by a connection configuration.
 	 */
-	public static final IConfiguration createDefaultConfiguration() {
-		return createConfigurationBuilder().build();
+	public static final IConfiguration createDefaultConfiguration(Mode mode) {
+		return createConfigurationBuilder(mode).build();
 	}
 	
 	/**
@@ -53,9 +57,10 @@ public class Communication {
 	 * 
 	 * @param address The IP address of the remote.
 	 * @param port The port number of the remote.
+	 * @param mode The direction of the communication.
 	 */
-	public static final IConnectionConfig createDefaultConnectionConfig(String address, int port) {
-		return createConnectionConfigBuilder(address, port, createDefaultConfiguration()).build();
+	public static final IConnectionConfig createDefaultConnectionConfig(String address, int port, Mode mode) {
+		return createConnectionConfigBuilder(address, port, createDefaultConfiguration(mode)).build();
 	}
 
 	/**
@@ -63,10 +68,9 @@ public class Communication {
 	 * 
 	 * @param config The object that holds the client configuration.
 	 * @param implementation The connection specific implementation for sending/receiving data from the remote.
-	 * @param mode Represent the direction of the connection.
 	 */
-	public static final IConnection createCustomConnection(IConnectionConfig config, IConnectionImpl implementation, Mode mode) {
-		return new CustomConnection(config, implementation, mode);
+	public static final IConnection createCustomConnection(IConnectionConfig config, IConnectionImpl implementation) {
+		return new CustomConnection(config, implementation);
 	}
 
 	/**

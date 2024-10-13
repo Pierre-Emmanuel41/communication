@@ -4,6 +4,7 @@ import fr.pederobien.communication.interfaces.IConfiguration;
 import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.ILayer;
 import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
+import fr.pederobien.communication.interfaces.IConnection.Mode;
 
 public class ConnectionConfigBuilder {
 	private String address;
@@ -66,6 +67,11 @@ public class ConnectionConfigBuilder {
 		@Override
 		public int getPort() {
 			return builder.getPort();
+		}
+
+		@Override
+		public Mode getMode() {
+			return builder.getConfig().getMode();
 		}
 
 		@Override

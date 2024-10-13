@@ -11,10 +11,9 @@ public class CustomConnection extends Connection {
 	 * 
 	 * @param config The object that holds the client configuration.
 	 * @param implementation The connection specific implementation for sending/receiving data from the remote.
-	 * @param mode Represent the direction of the connection.
 	 */
-	public CustomConnection(IConnectionConfig config, IConnectionImpl implementation, Mode mode) {
-		super(config, mode);
+	public CustomConnection(IConnectionConfig config, IConnectionImpl implementation) {
+		super(config);
 		
 		this.implementation = implementation;
 	}

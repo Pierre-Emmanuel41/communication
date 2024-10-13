@@ -1,5 +1,7 @@
 package fr.pederobien.communication.interfaces;
 
+import fr.pederobien.communication.interfaces.IConnection.Mode;
+
 public interface IConnectionConfig {
 
 	/**
@@ -12,6 +14,11 @@ public interface IConnectionConfig {
 	 */
 	int getPort();
 	
+	/**
+	 * @return The direction of the communication.
+	 */
+	Mode getMode();
+
 	/**
 	 * @return The size of the bytes array used to receive data from the remote.
 	 */

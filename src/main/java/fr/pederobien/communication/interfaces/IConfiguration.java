@@ -1,9 +1,15 @@
 package fr.pederobien.communication.interfaces;
 
 import fr.pederobien.communication.impl.layer.SimpleLayer;
+import fr.pederobien.communication.interfaces.IConnection.Mode;
 
 public interface IConfiguration {
 	
+	/**
+	 * @return The direction of the communication.
+	 */
+	Mode getMode();
+
 	/**
 	 * @return The size, in bytes, of the buffer used to receive data from the remote. The default value is 1024.
 	 */

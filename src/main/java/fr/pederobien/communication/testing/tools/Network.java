@@ -452,7 +452,7 @@ public class Network {
 			// Creating connection config builder
 			ConnectionConfigBuilder builder = Communication.createConnectionConfigBuilder(address, port, config);
 
-			return Communication.createCustomConnection(builder.build(), new Connection(socket, mode), config.getMode());
+			return Communication.createCustomConnection(builder.build(), new Connection(socket, mode));
 		}
 	}
 
@@ -484,7 +484,7 @@ public class Network {
 			// Creating connection config builder
 			ConnectionConfigBuilder builder = Communication.createConnectionConfigBuilder(address, port, config);
 
-			return Communication.createCustomConnection(builder.build(), new Connection(socket, ExceptionMode.NONE), config.getMode());
+			return Communication.createCustomConnection(builder.build(), new Connection(socket, ExceptionMode.NONE));
 		}
 	}
 }

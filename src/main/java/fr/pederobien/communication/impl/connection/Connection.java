@@ -26,7 +26,6 @@ import fr.pederobien.utils.event.LogEvent.ELogLevel;
 public abstract class Connection implements IConnection {
 	private static final int MAX_EXCEPTION_NUMBER = 10;
 	private IConnectionConfig config;
-	private Mode mode;
 	private IRequestReceivedHandler handler;
 	private BlockingQueueTask<HeaderMessage> sendingQueue;
 	private BlockingQueueTask<Object> receivingQueue;
@@ -54,11 +53,9 @@ public abstract class Connection implements IConnection {
 	 * Create an abstract connection that send asynchronously messages to the remote.
 	 * 
 	 * @param config The object that holds the connection configuration.
-	 * @param mode Represent the direction of the connection.
 	 */
-	protected Connection(IConnectionConfig config, Mode mode) {
+	protected Connection(IConnectionConfig config) {
 		this.config = config;
-		this.mode = mode;
 		handler = config.getRequestReceivedHandler();
 		
 		sendingQueue = new BlockingQueueTask<HeaderMessage>(String.format("%s[send]", toString()), message -> sendMessage(message));
@@ -155,12 +152,12 @@ public abstract class Connection implements IConnection {
 
 	@Override
 	public Mode getMode() {
-		return mode;
+		return config.getMode();
 	}
 	
 	@Override
 	public String toString() {
-		String name = mode == Mode.CLIENT_TO_SERVER ? "Server" : "Client";
+		String name = config.getMode() == Mode.CLIENT_TO_SERVER ? "Server" : "Client";
 		return String.format("[%s %s:%s]", name, config.getAddress(), config.getPort());
 	}
 	
@@ -200,7 +197,7 @@ public abstract class Connection implements IConnection {
 	 * @param algo The unstable algorithm.
 	 */
 	protected void onUnstableConnection(String algo) {
-		String name = mode == Mode.CLIENT_TO_SERVER ? "Client" : "Server";
+		String name = config.getMode() == Mode.CLIENT_TO_SERVER ? "Client" : "Server";
 		String formatter = "[%s %s:%s (%s)] - Too much exceptions in a row, closing connection";
 		String message = String.format(formatter, name, config.getAddress(), config.getPort(), algo);
 		EventManager.callEvent(new LogEvent(ELogLevel.ERROR, message));
