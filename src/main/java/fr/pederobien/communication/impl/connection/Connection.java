@@ -24,6 +24,7 @@ import fr.pederobien.utils.event.LogEvent.ELogLevel;
 public abstract class Connection implements IConnection {
 	private static final int MAX_EXCEPTION_NUMBER = 10;
 	private IConnectionConfig config;
+	private String name;
 	private QueueManager queueManager;
 	private CallbackManager callbackManager;
 	private IDisposable disposable;
@@ -50,7 +51,10 @@ public abstract class Connection implements IConnection {
 	protected Connection(IConnectionConfig config) {
 		this.config = config;
 		
-		queueManager = new QueueManager(config.getAddress(), config.getPort(), config.getMode());
+		String remote = config.getMode() == Mode.CLIENT_TO_SERVER ? "Server" : "Client";
+		name = String.format("%s %s:%s", remote, config.getAddress(), config.getPort());
+
+		queueManager = new QueueManager(name);
 		queueManager.setSendingQueue(message -> sendMessage(message));
 		queueManager.setReceivingQueue(object -> receiveMessage(object));
 		queueManager.setExtractingQueue(raw -> extractMessage(raw));
@@ -136,8 +140,7 @@ public abstract class Connection implements IConnection {
 	
 	@Override
 	public String toString() {
-		String name = getConfig().getMode() == Mode.CLIENT_TO_SERVER ? "Server" : "Client";
-		return String.format("[%s %s:%s]", name, getConfig().getAddress(), getConfig().getPort());
+		return String.format("[%s]", name);
 	}
 	
 	/**
@@ -176,9 +179,7 @@ public abstract class Connection implements IConnection {
 	 * @param algo The unstable algorithm.
 	 */
 	protected void onUnstableConnection(String algo) {
-		String name = getConfig().getMode() == Mode.CLIENT_TO_SERVER ? "Client" : "Server";
-		String formatter = "[%s %s:%s (%s)] - Too much exceptions in a row, closing connection";
-		String message = String.format(formatter, name, getConfig().getAddress(), getConfig().getPort(), algo);
+		String message = String.format("[%s (%s)] - Too much exceptions in a row, closing connection", name, algo);
 		EventManager.callEvent(new LogEvent(ELogLevel.ERROR, message));
 
 		setEnabled(false);

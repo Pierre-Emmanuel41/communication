@@ -3,7 +3,6 @@ package fr.pederobien.communication.impl.connection;
 import java.util.function.Consumer;
 
 import fr.pederobien.communication.event.RequestReceivedEvent;
-import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.utils.BlockingQueueTask;
 
@@ -18,12 +17,10 @@ public class QueueManager {
 	/**
 	 * Creates a manager for a connection.
 	 * 
-	 * @param address The address of the remote.
-	 * @param port The port number of the remote.
-	 * @param mode The direction of the communication.
+	 * @param name the connection name.
 	 */
-	public QueueManager(String address, int port, Mode mode) {
-		name = String.format("%s %s:%s", mode == Mode.CLIENT_TO_SERVER ? "Server" : "Client", address, port);
+	public QueueManager(String name) {
+		this.name = name;
 	}
 
 	/**
