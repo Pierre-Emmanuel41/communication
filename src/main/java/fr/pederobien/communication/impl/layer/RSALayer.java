@@ -19,10 +19,9 @@ import fr.pederobien.communication.impl.connection.HeaderMessage;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.interfaces.ICertificate;
 import fr.pederobien.communication.interfaces.IConnection.Mode;
-import fr.pederobien.communication.interfaces.IExchange;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;
-import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
+import fr.pederobien.communication.interfaces.IToken;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.ReadableByteWrapper;
 import fr.pederobien.utils.Watchdog;
@@ -45,8 +44,8 @@ public class RSALayer implements ILayer {
 	}
 	
 	@Override
-	public boolean initialise(IExchange exchange) throws Exception {
-		return implementation.initialise(exchange);
+	public boolean initialise(IToken token) throws Exception {
+		return implementation.initialise(token);
 	}
 
 	@Override
@@ -67,12 +66,12 @@ public class RSALayer implements ILayer {
 		}
 
 		@Override
-		public boolean initialise(IExchange exchange) throws Exception {
+		public boolean initialise(IToken token) throws Exception {
 			KeyExchange keyExchange;
-			if (exchange.getMode() == Mode.CLIENT_TO_SERVER)
-				keyExchange = new ClientToServerKeyExchange(exchange);
+			if (token.getMode() == Mode.CLIENT_TO_SERVER)
+				keyExchange = new ClientToServerKeyExchange(token);
 			else
-				keyExchange = new ServerToClientKeyExchange(exchange);
+				keyExchange = new ServerToClientKeyExchange(token);
 
 			boolean success =  keyExchange.exchange();
 			if (success) {
@@ -96,7 +95,7 @@ public class RSALayer implements ILayer {
 	}
 	
 	private abstract class KeyExchange {
-		private IExchange exchange;
+		private IToken token;
 		private PublicKey publicKey, remoteKey;
 		private PrivateKey privateKey;
 		
@@ -105,8 +104,8 @@ public class RSALayer implements ILayer {
 		 * 
 		 * @param exchange The exchange to send/receive data from the remote.
 		 */
-		public KeyExchange(IExchange exchange) {
-			this.exchange = exchange;
+		public KeyExchange(IToken token) {
+			this.token = token;
 		}
 		
 		/**
@@ -117,10 +116,10 @@ public class RSALayer implements ILayer {
 		protected abstract boolean exchange() throws Exception;
 
 		/**
-		 * @return The exchange used to send/receive data from the remote.
+		 * @return The token used to send/receive data from the remote.
 		 */
-		protected IExchange getExchange() {
-			return exchange;
+		protected IToken getToken() {
+			return token;
 		}
 
 		/**
@@ -186,8 +185,8 @@ public class RSALayer implements ILayer {
 		 * 
 		 * @param exchange The exchange to send/receive data from the remote.
 		 */
-		public ServerToClientKeyExchange(IExchange exchange) {
-			super(exchange);
+		public ServerToClientKeyExchange(IToken token) {
+			super(token);
 		}
 		
 		@Override
@@ -200,7 +199,7 @@ public class RSALayer implements ILayer {
 				createKeyPair();
 
 				// Step 1: Sending public key
-				getExchange().send(new Message(getPublicKey().getEncoded(), true, 1000000, args -> {
+				getToken().send(new Message(getPublicKey().getEncoded(), true, 10000, args -> {
 					if (!args.isTimeout()) {
 
 						// Step 2: Excepting remote public key
@@ -208,7 +207,7 @@ public class RSALayer implements ILayer {
 						if (getRemoteKey() != null) {
 
 							// Step 3: Sending positive acknowledgement
-							getExchange().answer(args.getIdentifier(), new Message(SUCCESS_PATTERN, true));
+							getToken().answer(args.getIdentifier(), new Message(SUCCESS_PATTERN, true));
 							success = true;
 						}
 					}
@@ -219,17 +218,17 @@ public class RSALayer implements ILayer {
 		}
 	}
 	
-	private class ClientToServerKeyExchange extends KeyExchange implements IUnexpectedRequestHandler {
+	private class ClientToServerKeyExchange extends KeyExchange {
 		private boolean success;
 		private WatchdogStakeholder watchdog;
 
 		/**
 		 * Creates a key exchange responsible to send and receive public key from the remote.
 		 * 
-		 * @param exchange The exchange to send/receive data from the remote.
+		 * @param token The exchange to send/receive data from the remote.
 		 */
-		public ClientToServerKeyExchange(IExchange exchange) {
-			super(exchange);
+		public ClientToServerKeyExchange(IToken token) {
+			super(token);
 			
 			success = false;
 		}
@@ -243,28 +242,26 @@ public class RSALayer implements ILayer {
 					createKeyPair();
 
 					// Waiting for receiving data from the remote
-					getExchange().receive(this);
+					RequestReceivedEvent event = getToken().receive();
+
+					// When the connection with the remote has been lost
+					if (event.getData() == null)
+						watchdog.cancel();
+					else {
+						setRemoteKey(parseRemotePublicKey(event.getData()));
+						if (getRemoteKey() != null) {
+
+							// Sending public key to remote
+							getToken().answer(event.getIdentifier(), new Message(getPublicKey().getEncoded(), true, 10000, args -> {
+								if (!args.isTimeout() && Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes()))
+									success = true;
+							}));
+						}
+					}
 				}
 			}, 35000);
 			
 			return watchdog.start();
-		}
-		
-		@Override
-		public void onUnexpectedRequestReceived(RequestReceivedEvent event) {
-			// When the connection with the remote has been lost
-			if (event.getData() == null)
-				watchdog.cancel();
-
-			setRemoteKey(parseRemotePublicKey(event.getData()));
-			if (getRemoteKey() != null) {
-
-				// Sending public key to remote
-				getExchange().answer(event.getIdentifier(), new Message(getPublicKey().getEncoded(), true, 10000, args -> {
-					if (!args.isTimeout() && Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes()))
-						success = true;
-				}));
-			}
 		}
 	}
 	
@@ -278,7 +275,7 @@ public class RSALayer implements ILayer {
 		}
 		
 		@Override
-		public boolean initialise(IExchange exchange) {
+		public boolean initialise(IToken token) {
 			throw new IllegalStateException("Layer already initialised");
 		}
 

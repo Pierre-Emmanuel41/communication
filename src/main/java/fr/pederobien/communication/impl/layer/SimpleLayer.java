@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fr.pederobien.communication.impl.connection.HeaderMessage;
-import fr.pederobien.communication.interfaces.IExchange;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;
+import fr.pederobien.communication.interfaces.IToken;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.ReadableByteWrapper;
 
@@ -21,7 +21,7 @@ public class SimpleLayer implements ILayer {
 	}
 
 	@Override
-	public boolean initialise(IExchange exchange) {
+	public boolean initialise(IToken token) {
 		return true;
 	}
 

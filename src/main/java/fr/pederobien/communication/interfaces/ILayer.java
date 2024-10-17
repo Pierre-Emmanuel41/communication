@@ -7,11 +7,11 @@ public interface ILayer {
 	/**
 	 * Initialize this layer if some requests should be sent to the remote before being used normally.
 	 * 
-	 * @param exchange The exchange used to send/receive data from the remote.
+	 * @param token The token used to send/receive data from the remote.
 	 * 
 	 * @return True if the layer is successfully initialized, false otherwise.
 	 */
-	boolean initialise(IExchange exchange) throws Exception ;
+	boolean initialise(IToken token) throws Exception ;
 
 	/**
 	 * Pack the identifier and the payload in order to be sent to the remote.

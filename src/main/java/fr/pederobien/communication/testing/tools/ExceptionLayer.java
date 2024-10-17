@@ -5,9 +5,9 @@ import java.util.List;
 
 import fr.pederobien.communication.impl.connection.HeaderMessage;
 import fr.pederobien.communication.impl.connection.Message;
-import fr.pederobien.communication.interfaces.IExchange;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;
+import fr.pederobien.communication.interfaces.IToken;
 
 public class ExceptionLayer implements ILayer {
 	
@@ -29,7 +29,7 @@ public class ExceptionLayer implements ILayer {
 	}
 
 	@Override
-	public boolean initialise(IExchange exchange) throws Exception {
+	public boolean initialise(IToken token) throws Exception {
 		if (mode == LayerExceptionMode.INITIALISATION)
 			throw new RuntimeException("Exception to test unstable counter");
 

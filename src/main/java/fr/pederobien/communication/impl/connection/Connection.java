@@ -9,12 +9,12 @@ import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.ConnectionUnstableEvent;
 import fr.pederobien.communication.event.DataEvent;
 import fr.pederobien.communication.event.RequestReceivedEvent;
-import fr.pederobien.communication.impl.Exchange;
 import fr.pederobien.communication.interfaces.ICallback.CallbackArgs;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.IMessage;
+import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
 import fr.pederobien.utils.event.EventManager;
@@ -28,16 +28,13 @@ public abstract class Connection implements IConnection {
 	private QueueManager queueManager;
 	private CallbackManager callbackManager;
 	private IDisposable disposable;
+	private IUnexpectedRequestHandler handler;
 	private boolean isEnabled;
 	private int sendingExceptionCounter;
 	private int receivingExceptionCounter;
 	private int extractingExceptionCounter;
 	private int callbackExceptionCounter;
 	private int requestExceptionCounter;
-	
-	// For connection initialization
-	private boolean initialized;
-	private Exchange exchange;
 	
 	// When the synchronous send has been called
 	private Semaphore semaphore;
@@ -70,9 +67,7 @@ public abstract class Connection implements IConnection {
 		callbackExceptionCounter = 0;
 		requestExceptionCounter = 0;
 		isEnabled = true;
-		initialized = false;
 
-		exchange = new Exchange(this);
 		semaphore = new Semaphore(0);
 	}
 	
@@ -82,7 +77,14 @@ public abstract class Connection implements IConnection {
 		queueManager.start();
 		
 		// Initializing layer
-		return initialized = getConfig().getLayer().initialise(exchange);
+		Token token = new Token(this);
+		handler = token;
+
+		boolean success = getConfig().getLayer().initialise(token);
+		token.dispose();
+
+		handler = getConfig().getOnUnexpectedRequestReceived();
+		return success;
 	}
 	
 	@Override
@@ -309,11 +311,7 @@ public abstract class Connection implements IConnection {
 	private void dispatchRequestReceivedEvent(RequestReceivedEvent event) {
 		if (isEnabled()) {
 			try {
-				if (!initialized)
-					exchange.notify(event);
-				else
-					getConfig().getOnUnexpectedRequestReceived().onUnexpectedRequestReceived(event);
-
+				handler.onUnexpectedRequestReceived(event);
 				requestExceptionCounter = 0;
 			} catch (Exception e) {
 				requestExceptionCounter++;
