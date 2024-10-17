@@ -13,7 +13,6 @@ import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.IClientImpl;
 import fr.pederobien.communication.interfaces.IConfiguration;
 import fr.pederobien.communication.interfaces.IConnection;
-import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.IConnectionImpl;
 import fr.pederobien.communication.interfaces.IServer;
@@ -21,17 +20,6 @@ import fr.pederobien.communication.interfaces.IServerConfig;
 import fr.pederobien.communication.interfaces.IServerImpl;
 
 public class Communication {
-
-	/**
-	 * Creates a configuration for a connection.
-	 * 
-	 * @param address The IP address of the remote.
-	 * @param port The port number of the remote.
-	 * @param mode The direction of the communication.
-	 */
-	public static final IConnectionConfig createConnectionConfig(String address, int port, Mode mode) {
-		return new ConnectionConfig(address, port, mode);
-	}
 
 	/**
 	 * Creates a configuration for a connection.

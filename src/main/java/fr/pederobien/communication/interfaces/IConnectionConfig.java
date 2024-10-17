@@ -25,23 +25,9 @@ public interface IConnectionConfig {
 	int getReceivingBufferSize();
 
 	/**
-	 * Set the size, in bytes, of the buffer to receive data from the remote.
-	 * 
-	 * @param receivingBufferSize The size, in bytes, of the buffer.
-	 */
-	void setReceivingBufferSize(int receivingBufferSize);
-
-	/**
 	 * @return The layer responsible to encode/decode data.
 	 */
 	ILayer getLayer();
-
-	/**
-	 * Set the layer to encode/decode data.
-	 * 
-	 * @param layer The layer to encode/decode data.
-	 */
-	void setLayer(ILayer layer);
 
 	/**
 	 * @return The handler to execute when an unexpected request has been received from the remote.

@@ -4,7 +4,6 @@ import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.IClientImpl;
 import fr.pederobien.communication.interfaces.IConnection;
-import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.IConnectionImpl;
 
@@ -37,7 +36,7 @@ public class ClientExceptionImpl implements IClientImpl {
 	@Override
 	public IConnection onConnectionComplete(IClientConfig config) {
 		// Creates a connection configuration
-		IConnectionConfig configuration = Communication.createConnectionConfig(address, port, Mode.CLIENT_TO_SERVER);
+		IConnectionConfig configuration = Communication.createConnectionConfig(address, port, config);
 
 		return Communication.createCustomConnection(configuration, impl);
 	}
