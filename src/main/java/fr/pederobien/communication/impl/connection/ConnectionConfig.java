@@ -3,7 +3,7 @@ package fr.pederobien.communication.impl.connection;
 import fr.pederobien.communication.interfaces.IConfiguration;
 import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.IConnectionConfig;
-import fr.pederobien.communication.interfaces.ILayer;
+import fr.pederobien.communication.interfaces.ILayerInitializer;
 import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 
 public class ConnectionConfig implements IConnectionConfig {
@@ -45,8 +45,8 @@ public class ConnectionConfig implements IConnectionConfig {
 	}
 
 	@Override
-	public ILayer getLayer() {
-		return configuration.getLayer();
+	public ILayerInitializer getLayerInitializer() {
+		return configuration.getLayerInitializer();
 	}
 
 	@Override

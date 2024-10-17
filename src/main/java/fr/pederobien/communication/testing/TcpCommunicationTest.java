@@ -3,6 +3,7 @@ package fr.pederobien.communication.testing;
 import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.client.ClientConfigBuilder;
 import fr.pederobien.communication.impl.connection.Message;
+import fr.pederobien.communication.impl.layer.LayerInitializer;
 import fr.pederobien.communication.impl.server.ServerConfigBuilder;
 import fr.pederobien.communication.interfaces.IClient;
 import fr.pederobien.communication.interfaces.IServer;
@@ -353,7 +354,7 @@ public class TcpCommunicationTest {
 			sendToClient.start();
 			
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setLayer(new ExceptionLayer(LayerExceptionMode.UNPACK));
+			clientBuilder.setLayerInitializer(new LayerInitializer(new ExceptionLayer(LayerExceptionMode.UNPACK)));
 
 			IClient client = Communication.createTcpClient(clientBuilder.build());
 			client.connect();

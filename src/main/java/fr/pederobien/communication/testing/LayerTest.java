@@ -11,7 +11,7 @@ import fr.pederobien.communication.impl.connection.HeaderMessage;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.layer.CertifiedLayer;
 import fr.pederobien.communication.impl.layer.Encapsuler;
-import fr.pederobien.communication.impl.layer.RSALayer;
+import fr.pederobien.communication.impl.layer.RsaLayerInitializer;
 import fr.pederobien.communication.impl.layer.SimpleLayer;
 import fr.pederobien.communication.impl.layer.Splitter;
 import fr.pederobien.communication.impl.server.ServerConfigBuilder;
@@ -354,13 +354,13 @@ public class LayerTest {
 			Network network = new Network();
 
 			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("Dummy Server", 12345);
-			serverBuilder.setLayer(new RSALayer(new SimpleCertificate()));
+			serverBuilder.setLayerInitializer(new RsaLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createCustomServer(serverBuilder.build(), network.getServer());
 			server.open();
 
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setLayer(new RSALayer(new SimpleCertificate()));
+			clientBuilder.setLayerInitializer(new RsaLayerInitializer(new SimpleCertificate()));
 
 			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
 			client.connect();
@@ -394,13 +394,13 @@ public class LayerTest {
 			Network network = new Network(Mode.CLIENT_TO_SERVER, modifier);
 
 			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("Dummy Server", 12345);
-			serverBuilder.setLayer(new RSALayer(new SimpleCertificate()));
+			serverBuilder.setLayerInitializer(new RsaLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createCustomServer(serverBuilder.build(), network.getServer());
 			server.open();
 
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setLayer(new RSALayer(new SimpleCertificate()));
+			clientBuilder.setLayerInitializer(new RsaLayerInitializer(new SimpleCertificate()));
 
 			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
 			client.connect();
@@ -439,13 +439,13 @@ public class LayerTest {
 			Network network = new Network(Mode.SERVER_TO_CLIENT, modifier);
 			
 			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("Dummy Server", 12345);
-			serverBuilder.setLayer(new RSALayer(new SimpleCertificate()));
+			serverBuilder.setLayerInitializer(new RsaLayerInitializer(new SimpleCertificate()));
 			
 			IServer server = Communication.createCustomServer(serverBuilder.build(), network.getServer());
 			server.open();
 			
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setLayer(new RSALayer(new SimpleCertificate()));
+			clientBuilder.setLayerInitializer(new RsaLayerInitializer(new SimpleCertificate()));
 			
 			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
 			client.connect();
@@ -469,14 +469,14 @@ public class LayerTest {
 			Network network = new Network();
 			
 			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("Dummy Server", 12345);
-			serverBuilder.setLayer(new RSALayer(new SimpleCertificate()));
+			serverBuilder.setLayerInitializer(new RsaLayerInitializer(new SimpleCertificate()));
 			serverBuilder.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I received your request !"));
 			
 			IServer server = Communication.createCustomServer(serverBuilder.build(), network.getServer());
 			server.open();
 			
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setLayer(new RSALayer(new SimpleCertificate()));
+			clientBuilder.setLayerInitializer(new RsaLayerInitializer(new SimpleCertificate()));
 			
 			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
 			client.connect();

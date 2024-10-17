@@ -3,15 +3,6 @@ package fr.pederobien.communication.interfaces;
 import java.util.List;
 
 public interface ILayer {
-	
-	/**
-	 * Initialize this layer if some requests should be sent to the remote before being used normally.
-	 * 
-	 * @param token The token used to send/receive data from the remote.
-	 * 
-	 * @return True if the layer is successfully initialized, false otherwise.
-	 */
-	boolean initialise(IToken token) throws Exception ;
 
 	/**
 	 * Pack the identifier and the payload in order to be sent to the remote.

@@ -1,8 +1,8 @@
 package fr.pederobien.communication.impl.server;
 
 import fr.pederobien.communication.impl.connection.UnexpectedRequestReceivedHandler;
-import fr.pederobien.communication.impl.layer.SimpleLayer;
-import fr.pederobien.communication.interfaces.ILayer;
+import fr.pederobien.communication.impl.layer.LayerInitializer;
+import fr.pederobien.communication.interfaces.ILayerInitializer;
 import fr.pederobien.communication.interfaces.IServerConfig;
 import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 
@@ -10,7 +10,7 @@ public class ServerConfigBuilder {
 	private String name;
 	private int port;
 	private int receivingBufferSize;
-	private ILayer layer;
+	private ILayerInitializer layerInitializer;
 	private IUnexpectedRequestHandler handler;
 	
 	/**
@@ -24,7 +24,7 @@ public class ServerConfigBuilder {
 		this.port = port;
 		
 		receivingBufferSize = 1024;
-		layer = new SimpleLayer();
+		layerInitializer = new LayerInitializer();
 		handler = new UnexpectedRequestReceivedHandler();
 	}
 	
@@ -62,22 +62,22 @@ public class ServerConfigBuilder {
 	}
 	
 	/**
-	 * Set the layer responsible to encode/decode data.
+	 * Set how a layer must be initialized.
 	 * 
-	 * @param layer The new layer.
+	 * @param layerInitializer The initialisation sequence.
 	 * 
 	 * @return This builder.
 	 */
-	public ServerConfigBuilder setLayer(ILayer layer) {
-		this.layer = layer;
+	public ServerConfigBuilder setLayerInitializer(ILayerInitializer layerInitializer) {
+		this.layerInitializer = layerInitializer;
 		return this;
 	}
 	
 	/**
-	 * @return The layer to encode/decode data.
+	 * @return An object that specify how a layer must be initialized.
 	 */
-	private ILayer getLayer() {
-		return layer;
+	private ILayerInitializer getLayerInitializer() {
+		return layerInitializer;
 	}
 	
 	/**
@@ -119,8 +119,8 @@ public class ServerConfigBuilder {
 		}
 
 		@Override
-		public ILayer getLayer() {
-			return builder.getLayer();
+		public ILayerInitializer getLayerInitializer() {
+			return builder.getLayerInitializer();
 		}
 
 		@Override

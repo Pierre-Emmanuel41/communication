@@ -6,7 +6,6 @@ import java.util.List;
 import fr.pederobien.communication.impl.connection.HeaderMessage;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;
-import fr.pederobien.communication.interfaces.IToken;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.ReadableByteWrapper;
 
@@ -18,11 +17,6 @@ public class SimpleLayer implements ILayer {
 	 */
 	public SimpleLayer() {
 		encapsuler = new Encapsuler("(~@=", "#.?)");
-	}
-
-	@Override
-	public boolean initialise(IToken token) {
-		return true;
 	}
 
 	@Override

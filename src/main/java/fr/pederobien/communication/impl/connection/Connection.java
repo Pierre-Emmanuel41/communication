@@ -13,6 +13,7 @@ import fr.pederobien.communication.interfaces.ICallback.CallbackArgs;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
+import fr.pederobien.communication.interfaces.ILayerInitializer;
 import fr.pederobien.communication.interfaces.IMessage;
 import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 import fr.pederobien.utils.Disposable;
@@ -28,6 +29,7 @@ public abstract class Connection implements IConnection {
 	private QueueManager queueManager;
 	private CallbackManager callbackManager;
 	private IDisposable disposable;
+	private ILayerInitializer layerInitializer;
 	private IUnexpectedRequestHandler handler;
 	private boolean isEnabled;
 	private int sendingExceptionCounter;
@@ -60,6 +62,7 @@ public abstract class Connection implements IConnection {
 
 		callbackManager = new CallbackManager(this);
 		disposable = new Disposable();
+		layerInitializer = config.getLayerInitializer().copy();
 
 		sendingExceptionCounter = 0;
 		receivingExceptionCounter = 0;
@@ -80,7 +83,7 @@ public abstract class Connection implements IConnection {
 		Token token = new Token(this);
 		handler = token;
 
-		boolean success = getConfig().getLayer().initialise(token);
+		boolean success = layerInitializer.initialize(token);
 		token.dispose();
 
 		handler = getConfig().getOnUnexpectedRequestReceived();
@@ -196,7 +199,7 @@ public abstract class Connection implements IConnection {
 	private void sendMessage(IHeaderMessage message) {
 		if (isEnabled()) {
 			try {
-				byte[] data = getConfig().getLayer().pack(message);
+				byte[] data = layerInitializer.getLayer().pack(message);
 
 				callbackManager.start(message.getIdentifier());
 				sendImpl(data);
@@ -256,7 +259,7 @@ public abstract class Connection implements IConnection {
 			
 			try {
 				// Extracting requests from the raw bytes array received from the network
-				List<IHeaderMessage> requests = getConfig().getLayer().unpack(raw);
+				List<IHeaderMessage> requests = layerInitializer.getLayer().unpack(raw);
 				
 				// For each received request
 				for (IHeaderMessage request : requests) {

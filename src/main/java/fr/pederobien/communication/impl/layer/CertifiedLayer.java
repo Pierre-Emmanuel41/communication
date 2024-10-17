@@ -7,7 +7,6 @@ import fr.pederobien.communication.impl.connection.HeaderMessage;
 import fr.pederobien.communication.interfaces.ICertificate;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;
-import fr.pederobien.communication.interfaces.IToken;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.ReadableByteWrapper;
 
@@ -24,11 +23,6 @@ public class CertifiedLayer implements ILayer {
 		this.certificate = certificate;
 		
 		encapsuler = new Encapsuler("(~@=", "#.?)");
-	}
-	
-	@Override
-	public boolean initialise(IToken token) throws Exception {
-		return true;
 	}
 
 	@Override

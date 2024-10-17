@@ -1,9 +1,9 @@
 package fr.pederobien.communication.impl.client;
 
 import fr.pederobien.communication.impl.connection.UnexpectedRequestReceivedHandler;
-import fr.pederobien.communication.impl.layer.SimpleLayer;
+import fr.pederobien.communication.impl.layer.LayerInitializer;
 import fr.pederobien.communication.interfaces.IClientConfig;
-import fr.pederobien.communication.interfaces.ILayer;
+import fr.pederobien.communication.interfaces.ILayerInitializer;
 import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 
 public class ClientConfigBuilder {
@@ -13,7 +13,7 @@ public class ClientConfigBuilder {
 	private boolean isAutomaticReconnection;
 	private int reconnectionDelay;
 	private int receivingBufferSize;
-	private ILayer layer;
+	private ILayerInitializer layerInitializer;
 	private IUnexpectedRequestHandler handler;
 	private int maxUnstableCounter;
 	
@@ -31,7 +31,7 @@ public class ClientConfigBuilder {
 		isAutomaticReconnection = true;
 		reconnectionDelay = 1000;
 		receivingBufferSize = 1024;
-		layer = new SimpleLayer();
+		layerInitializer = new LayerInitializer();
 		handler = new UnexpectedRequestReceivedHandler();
 		maxUnstableCounter = 5;
 	}
@@ -127,22 +127,22 @@ public class ClientConfigBuilder {
 	}
 	
 	/**
-	 * Set the layer responsible to encode/decode data.
+	 * Set how a layer must be initialized.
 	 * 
-	 * @param layer The new layer.
+	 * @param layerInitializer The initialisation sequence.
 	 * 
 	 * @return This builder.
 	 */
-	public ClientConfigBuilder setLayer(ILayer layer) {
-		this.layer = layer;
+	public ClientConfigBuilder setLayerInitializer(ILayerInitializer layerInitializer) {
+		this.layerInitializer = layerInitializer;
 		return this;
 	}
 	
 	/**
-	 * @return The layer to encode/decode data.
+	 * @return An object that specify how a layer must be initialized.
 	 */
-	private ILayer getLayer() {
-		return layer;
+	private ILayerInitializer getLayerInitializer() {
+		return layerInitializer;
 	}
 	
 	/**
@@ -211,8 +211,8 @@ public class ClientConfigBuilder {
 		}
 
 		@Override
-		public ILayer getLayer() {
-			return builder.getLayer();
+		public ILayerInitializer getLayerInitializer() {
+			return builder.getLayerInitializer();
 		}
 
 		@Override

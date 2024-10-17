@@ -27,7 +27,7 @@ public interface IConnectionConfig {
 	/**
 	 * @return The layer responsible to encode/decode data.
 	 */
-	ILayer getLayer();
+	ILayerInitializer getLayerInitializer();
 
 	/**
 	 * @return The handler to execute when an unexpected request has been received from the remote.

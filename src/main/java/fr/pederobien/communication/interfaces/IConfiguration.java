@@ -1,6 +1,5 @@
 package fr.pederobien.communication.interfaces;
 
-import fr.pederobien.communication.impl.layer.SimpleLayer;
 import fr.pederobien.communication.interfaces.IConnection.Mode;
 
 public interface IConfiguration {
@@ -16,9 +15,9 @@ public interface IConfiguration {
 	int getReceivingBufferSize();
 	
 	/**
-	 * @return The layer responsible to encode/decode data. The default layer is {@link SimpleLayer}.
+	 * @return An object that specify how a layer must be initialized.
 	 */
-	ILayer getLayer();
+	ILayerInitializer getLayerInitializer();
 	
 	/**
 	 * @return The handler to execute when an unexpected request has been received from the remote.

@@ -5,6 +5,7 @@ import java.util.Random;
 import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.client.ClientConfigBuilder;
 import fr.pederobien.communication.impl.connection.Message;
+import fr.pederobien.communication.impl.layer.LayerInitializer;
 import fr.pederobien.communication.impl.server.ServerConfigBuilder;
 import fr.pederobien.communication.interfaces.IClient;
 import fr.pederobien.communication.interfaces.IServer;
@@ -349,7 +350,9 @@ public class NetworkTest {
 			server.open();
 
 			ClientConfigBuilder builder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			builder.setLayer(new ExceptionLayer(LayerExceptionMode.INITIALISATION));
+			builder.setLayerInitializer(new LayerInitializer(new ExceptionLayer(), token -> {
+				throw new RuntimeException("Exception to test unstable counter");
+			}));
 
 			IClient client = Communication.createCustomClient(builder.build(), network.newClient());
 			client.connect();
@@ -432,7 +435,7 @@ public class NetworkTest {
 			sendToClient.start();
 
 			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setLayer(new ExceptionLayer(LayerExceptionMode.UNPACK));
+			clientBuilder.setLayerInitializer(new LayerInitializer(new ExceptionLayer(LayerExceptionMode.UNPACK)));
 
 			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
 			client.connect();

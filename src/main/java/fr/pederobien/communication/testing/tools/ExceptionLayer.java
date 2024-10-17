@@ -7,18 +7,17 @@ import fr.pederobien.communication.impl.connection.HeaderMessage;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;
-import fr.pederobien.communication.interfaces.IToken;
 
 public class ExceptionLayer implements ILayer {
-	
+
 	public enum LayerExceptionMode {
-		INITIALISATION,
+		NONE,
 		PACK,
 		UNPACK
 	}
-	
+
 	private LayerExceptionMode mode;
-	
+
 	/**
 	 * Creates a layer that throw an exception when the pack/unpack method is called.
 	 * 
@@ -28,12 +27,11 @@ public class ExceptionLayer implements ILayer {
 		this.mode = mode;
 	}
 
-	@Override
-	public boolean initialise(IToken token) throws Exception {
-		if (mode == LayerExceptionMode.INITIALISATION)
-			throw new RuntimeException("Exception to test unstable counter");
-
-		return true;
+	/**
+	 * Creates a layer that does not throw any exception.
+	 */
+	public ExceptionLayer() {
+		this(LayerExceptionMode.NONE);
 	}
 
 	@Override
@@ -53,5 +51,4 @@ public class ExceptionLayer implements ILayer {
 		messages.add(new HeaderMessage(0, new Message(raw)));
 		return messages;
 	}
-
 }
