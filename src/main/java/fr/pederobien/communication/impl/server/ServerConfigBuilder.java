@@ -1,17 +1,17 @@
 package fr.pederobien.communication.impl.server;
 
-import fr.pederobien.communication.impl.SimpleRequestReceivedHandler;
+import fr.pederobien.communication.impl.connection.UnexpectedRequestReceivedHandler;
 import fr.pederobien.communication.impl.layer.SimpleLayer;
 import fr.pederobien.communication.interfaces.ILayer;
-import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
 import fr.pederobien.communication.interfaces.IServerConfig;
+import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 
 public class ServerConfigBuilder {
 	private String name;
 	private int port;
 	private int receivingBufferSize;
 	private ILayer layer;
-	private IRequestReceivedHandler handler;
+	private IUnexpectedRequestHandler handler;
 	
 	/**
 	 * Creates a builder in order to a configuration a server.
@@ -25,7 +25,7 @@ public class ServerConfigBuilder {
 		
 		receivingBufferSize = 1024;
 		layer = new SimpleLayer();
-		handler = new SimpleRequestReceivedHandler();
+		handler = new UnexpectedRequestReceivedHandler();
 	}
 	
 	/**
@@ -87,7 +87,7 @@ public class ServerConfigBuilder {
 	 * 
 	 * @return This builder.
 	 */
-	public ServerConfigBuilder setRequestReceivedHandler(IRequestReceivedHandler handler) {
+	public ServerConfigBuilder setOnUnexpectedRequestReceived(IUnexpectedRequestHandler handler) {
 		this.handler = handler;
 		return this;
 	}
@@ -95,7 +95,7 @@ public class ServerConfigBuilder {
 	/**
 	 * @return The handler to execute when an unexpected request has been received from the remote.
 	 */
-	private IRequestReceivedHandler getRequestReceivedHandler() {
+	private IUnexpectedRequestHandler getOnUnexpectedRequestReceived() {
 		return handler;
 	}
 	
@@ -124,8 +124,8 @@ public class ServerConfigBuilder {
 		}
 
 		@Override
-		public IRequestReceivedHandler getRequestReceivedHandler() {
-			return builder.getRequestReceivedHandler();
+		public IUnexpectedRequestHandler getOnUnexpectedRequestReceived() {
+			return builder.getOnUnexpectedRequestReceived();
 		}
 
 		@Override

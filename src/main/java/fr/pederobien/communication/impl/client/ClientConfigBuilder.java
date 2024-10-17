@@ -1,10 +1,10 @@
 package fr.pederobien.communication.impl.client;
 
-import fr.pederobien.communication.impl.SimpleRequestReceivedHandler;
+import fr.pederobien.communication.impl.connection.UnexpectedRequestReceivedHandler;
 import fr.pederobien.communication.impl.layer.SimpleLayer;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.ILayer;
-import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
+import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 
 public class ClientConfigBuilder {
 	private String address;
@@ -14,7 +14,7 @@ public class ClientConfigBuilder {
 	private int reconnectionDelay;
 	private int receivingBufferSize;
 	private ILayer layer;
-	private IRequestReceivedHandler handler;
+	private IUnexpectedRequestHandler handler;
 	private int maxUnstableCounter;
 	
 	/**
@@ -32,7 +32,7 @@ public class ClientConfigBuilder {
 		reconnectionDelay = 1000;
 		receivingBufferSize = 1024;
 		layer = new SimpleLayer();
-		handler = new SimpleRequestReceivedHandler();
+		handler = new UnexpectedRequestReceivedHandler();
 		maxUnstableCounter = 5;
 	}
 	
@@ -152,7 +152,7 @@ public class ClientConfigBuilder {
 	 * 
 	 * @return This builder.
 	 */
-	public ClientConfigBuilder setRequestReceivedHandler(IRequestReceivedHandler handler) {
+	public ClientConfigBuilder setOnUnexpectedRequestReceived(IUnexpectedRequestHandler handler) {
 		this.handler = handler;
 		return this;
 	}
@@ -160,7 +160,7 @@ public class ClientConfigBuilder {
 	/**
 	 * @return The handler to execute when an unexpected request has been received from the remote.
 	 */
-	private IRequestReceivedHandler getRequestReceivedHandler() {
+	private IUnexpectedRequestHandler getOnUnexpectedRequestReceived() {
 		return handler;
 	}
 	
@@ -216,8 +216,8 @@ public class ClientConfigBuilder {
 		}
 
 		@Override
-		public IRequestReceivedHandler getRequestReceivedHandler() {
-			return builder.getRequestReceivedHandler();
+		public IUnexpectedRequestHandler getOnUnexpectedRequestReceived() {
+			return builder.getOnUnexpectedRequestReceived();
 		}
 
 		@Override

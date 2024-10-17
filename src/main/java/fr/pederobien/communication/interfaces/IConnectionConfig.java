@@ -46,5 +46,5 @@ public interface IConnectionConfig {
 	/**
 	 * @return The handler to execute when an unexpected request has been received from the remote.
 	 */
-	IRequestReceivedHandler getRequestReceivedHandler();
+	IUnexpectedRequestHandler getOnUnexpectedRequestReceived();
 }

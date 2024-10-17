@@ -22,7 +22,7 @@ import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.IExchange;
 import fr.pederobien.communication.interfaces.IHeaderMessage;
 import fr.pederobien.communication.interfaces.ILayer;
-import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
+import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.ReadableByteWrapper;
 import fr.pederobien.utils.Watchdog;
@@ -219,7 +219,7 @@ public class RSALayer implements ILayer {
 		}
 	}
 	
-	private class ClientToServerKeyExchange extends KeyExchange implements IRequestReceivedHandler {
+	private class ClientToServerKeyExchange extends KeyExchange implements IUnexpectedRequestHandler {
 		private boolean success;
 		private WatchdogStakeholder watchdog;
 
@@ -251,7 +251,7 @@ public class RSALayer implements ILayer {
 		}
 		
 		@Override
-		public void onRequestReceivedEvent(RequestReceivedEvent event) {
+		public void onUnexpectedRequestReceived(RequestReceivedEvent event) {
 			// When the connection with the remote has been lost
 			if (event.getData() == null)
 				watchdog.cancel();

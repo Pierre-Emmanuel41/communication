@@ -470,7 +470,7 @@ public class LayerTest {
 			
 			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("Dummy Server", 12345);
 			serverBuilder.setLayer(new RSALayer(new SimpleCertificate()));
-			serverBuilder.setRequestReceivedHandler(new SimpleAnswerToRequestListener("I received your request !"));
+			serverBuilder.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I received your request !"));
 			
 			IServer server = Communication.createCustomServer(serverBuilder.build(), network.getServer());
 			server.open();

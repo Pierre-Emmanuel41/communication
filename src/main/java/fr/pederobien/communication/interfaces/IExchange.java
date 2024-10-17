@@ -24,7 +24,7 @@ public interface IExchange {
 	 * 
 	 * @return The event associated to the received data.
 	 */
-	void receive(IRequestReceivedHandler handler) throws InterruptedException;
+	void receive(IUnexpectedRequestHandler handler) throws InterruptedException;
 
 	/**
 	 * @return The mode of the underlying connection.

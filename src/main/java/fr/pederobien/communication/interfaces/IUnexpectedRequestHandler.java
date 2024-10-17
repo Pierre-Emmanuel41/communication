@@ -2,12 +2,12 @@ package fr.pederobien.communication.interfaces;
 
 import fr.pederobien.communication.event.RequestReceivedEvent;
 
-public interface IRequestReceivedHandler {
+public interface IUnexpectedRequestHandler {
 
 	/**
-	 * Called when an unexpected request has been received from the remote.
+	 * Method called when an unexpected request is received from the remote.
 	 * 
 	 * @param event The event that contains the unexpected request.
 	 */
-	void onRequestReceivedEvent(RequestReceivedEvent event);
+	void onUnexpectedRequestReceived(RequestReceivedEvent event);
 }

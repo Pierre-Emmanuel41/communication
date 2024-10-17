@@ -1,11 +1,11 @@
 package fr.pederobien.communication.testing.tools;
 
 import fr.pederobien.communication.event.RequestReceivedEvent;
-import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
+import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.LogEvent;
 
-public class SimpleClientListener implements IRequestReceivedHandler {
+public class SimpleClientListener implements IUnexpectedRequestHandler {
 	private boolean exceptionMode;
 	
 	/**
@@ -18,7 +18,7 @@ public class SimpleClientListener implements IRequestReceivedHandler {
 	}
 
 	@Override
-	public void onRequestReceivedEvent(RequestReceivedEvent event) {
+	public void onUnexpectedRequestReceived(RequestReceivedEvent event) {
 		if (exceptionMode)
 			throw new RuntimeException("Exception to test unstable counter");
 

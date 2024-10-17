@@ -8,7 +8,7 @@ import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.IExchange;
 import fr.pederobien.communication.interfaces.IMessage;
-import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
+import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;
@@ -38,7 +38,7 @@ public class Exchange implements IExchange, IEventListener {
 	}
 
 	@Override
-	public void receive(IRequestReceivedHandler handler) throws InterruptedException {
+	public void receive(IUnexpectedRequestHandler handler) throws InterruptedException {
 		// Waiting for receiving data from remote
 		receive.acquire();
 		receive.drainPermits();
@@ -47,7 +47,7 @@ public class Exchange implements IExchange, IEventListener {
 		Thread.sleep(10);
 		
 		// Handling received data
-		handler.onRequestReceivedEvent(event);
+		handler.onUnexpectedRequestReceived(event);
 		
 		// Notifying the data has been handled
 		handled.release();

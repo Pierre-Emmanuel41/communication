@@ -312,7 +312,7 @@ public abstract class Connection implements IConnection {
 				if (!initialized)
 					exchange.notify(event);
 				else
-					getConfig().getRequestReceivedHandler().onRequestReceivedEvent(event);
+					getConfig().getOnUnexpectedRequestReceived().onUnexpectedRequestReceived(event);
 
 				requestExceptionCounter = 0;
 			} catch (Exception e) {

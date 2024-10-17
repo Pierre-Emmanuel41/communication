@@ -1,12 +1,11 @@
 package fr.pederobien.communication.impl.connection;
 
-import fr.pederobien.communication.impl.SimpleRequestReceivedHandler;
 import fr.pederobien.communication.impl.layer.SimpleLayer;
 import fr.pederobien.communication.interfaces.IConfiguration;
+import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.IConnectionConfig;
 import fr.pederobien.communication.interfaces.ILayer;
-import fr.pederobien.communication.interfaces.IRequestReceivedHandler;
-import fr.pederobien.communication.interfaces.IConnection.Mode;
+import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 
 public class ConnectionConfig implements IConnectionConfig {
 	private IConnectionConfig config;
@@ -69,8 +68,8 @@ public class ConnectionConfig implements IConnectionConfig {
 	}
 
 	@Override
-	public IRequestReceivedHandler getRequestReceivedHandler() {
-		return config.getRequestReceivedHandler();
+	public IUnexpectedRequestHandler getOnUnexpectedRequestReceived() {
+		return config.getOnUnexpectedRequestReceived();
 	}
 	
 	private class ConnectionConfigDerived implements IConnectionConfig {
@@ -118,8 +117,8 @@ public class ConnectionConfig implements IConnectionConfig {
 		}
 
 		@Override
-		public IRequestReceivedHandler getRequestReceivedHandler() {
-			return config.getRequestReceivedHandler();
+		public IUnexpectedRequestHandler getOnUnexpectedRequestReceived() {
+			return config.getOnUnexpectedRequestReceived();
 		}
 	}
 	
@@ -129,7 +128,7 @@ public class ConnectionConfig implements IConnectionConfig {
 		private Mode mode;
 		private int receivingBufferSize;
 		private ILayer layer;
-		private IRequestReceivedHandler handler;
+		private IUnexpectedRequestHandler handler;
 		
 		public ConnectionConfigStandalone(String address, int port, Mode mode) {
 			this.address = address;
@@ -138,7 +137,7 @@ public class ConnectionConfig implements IConnectionConfig {
 
 			receivingBufferSize = 1024;
 			layer = new SimpleLayer();
-			handler = new SimpleRequestReceivedHandler();
+			handler = new UnexpectedRequestReceivedHandler();
 		}
 
 		@Override
@@ -177,7 +176,7 @@ public class ConnectionConfig implements IConnectionConfig {
 		}
 
 		@Override
-		public IRequestReceivedHandler getRequestReceivedHandler() {
+		public IUnexpectedRequestHandler getOnUnexpectedRequestReceived() {
 			return handler;
 		}
 	}
