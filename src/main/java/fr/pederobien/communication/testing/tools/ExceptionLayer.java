@@ -28,7 +28,7 @@ public class ExceptionLayer implements ILayer {
 	}
 
 	/**
-	 * Creates a layer that does not throw any exception.
+	 * Creates a layer that does not throw any exception when the pack/unpack method is called.
 	 */
 	public ExceptionLayer() {
 		this(LayerExceptionMode.NONE);

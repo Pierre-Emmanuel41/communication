@@ -2,11 +2,11 @@ package fr.pederobien.communication.testing;
 
 import java.util.Random;
 
+import fr.pederobien.communication.impl.ClientConfig;
 import fr.pederobien.communication.impl.Communication;
-import fr.pederobien.communication.impl.client.ClientConfigBuilder;
+import fr.pederobien.communication.impl.ServerConfig;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.layer.LayerInitializer;
-import fr.pederobien.communication.impl.server.ServerConfigBuilder;
 import fr.pederobien.communication.interfaces.IClient;
 import fr.pederobien.communication.interfaces.IServer;
 import fr.pederobien.communication.testing.tools.CallbackSendMessageToClientOnceConnected;
@@ -45,11 +45,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			ClientConfigBuilder builder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			builder.setConnectionTimeout(500);
-			builder.setReconnectionDelay(500);
-
-			IClient client = Communication.createCustomClient(builder.build(), network.newClient());
+			IClient client = Communication.createDefaultCustomClient("127.0.0.1", 12345, network.newClient());
 			client.connect();
 
 			sleep(5000);
@@ -65,11 +61,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			ClientConfigBuilder builder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			builder.setConnectionTimeout(500);
-			builder.setReconnectionDelay(500);
-
-			IClient client = Communication.createCustomClient(builder.build(), network.newClient());
+			IClient client = Communication.createDefaultCustomClient("127.0.0.1", 12345, network.newClient());
 			client.connect();
 
 			sleep(3000);
@@ -100,11 +92,7 @@ public class NetworkTest {
 
 			sleep(500);
 
-			ClientConfigBuilder builder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			builder.setConnectionTimeout(500);
-			builder.setReconnectionDelay(500);
-
-			IClient client = Communication.createCustomClient(builder.build(), network.newClient());
+			IClient client = Communication.createDefaultCustomClient("127.0.0.1", 12345, network.newClient());
 			client.connect();
 
 			sleep(1000);
@@ -133,10 +121,10 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			ServerConfigBuilder builder = Communication.createServerConfigBuilder("Dummy Server", 12345);
-			builder.setOnUnexpectedRequestReceived(new SimpleServerListener());
+			ServerConfig serverConfig = Communication.createServerConfig("Dummy Server", 12345);
+			serverConfig.setOnUnexpectedRequestReceived(new SimpleServerListener());
 
-			IServer server = Communication.createCustomServer(builder.build(), network.getServer());
+			IServer server = Communication.createCustomServer(serverConfig, network.getServer());
 			server.open();
 
 			IClient client = Communication.createDefaultCustomClient("127.0.0.1", 12345, network.newClient());
@@ -171,10 +159,10 @@ public class NetworkTest {
 			SimpleSendMessageToClientOnceConnected sendToClient = new SimpleSendMessageToClientOnceConnected(server, "You are connected !", 1);
 			sendToClient.start();
 
-			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setOnUnexpectedRequestReceived(new SimpleClientListener(false));
+			ClientConfig clientConfig = Communication.createClientConfig("127.0.0.1", 12345);
+			clientConfig.setOnUnexpectedRequestReceived(new SimpleClientListener(false));
 
-			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
+			IClient client = Communication.createCustomClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(1000);
@@ -197,10 +185,10 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("Dummy Server", 12345);
-			serverBuilder.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I received your request !"));
+			ServerConfig serverConfig = Communication.createServerConfig("Dummy Server", 12345);
+			serverConfig.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I received your request !"));
 
-			IServer server = Communication.createCustomServer(serverBuilder.build(), network.getServer());
+			IServer server = Communication.createCustomServer(serverConfig, network.getServer());
 			server.open();
 
 			IClient client = Communication.createDefaultCustomClient("127.0.0.1", 12345, network.newClient());
@@ -283,10 +271,10 @@ public class NetworkTest {
 
 			sendToClient.start();
 
-			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I guess I am !"));
+			ClientConfig clientConfig = Communication.createClientConfig("127.0.0.1", 12345);
+			clientConfig.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I guess I am !"));
 
-			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
+			IClient client = Communication.createCustomClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(2000);
@@ -349,12 +337,12 @@ public class NetworkTest {
 			IServer server = Communication.createDefaultCustomServer("Dummy Server", 12345, network.getServer());
 			server.open();
 
-			ClientConfigBuilder builder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			builder.setLayerInitializer(new LayerInitializer(new ExceptionLayer(), token -> {
+			ClientConfig serverConfig = Communication.createClientConfig("127.0.0.1", 12345);
+			serverConfig.setLayerInitializer(new LayerInitializer(new ExceptionLayer(), token -> {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
-			IClient client = Communication.createCustomClient(builder.build(), network.newClient());
+			IClient client = Communication.createCustomClient(serverConfig, network.newClient());
 			client.connect();
 
 			sleep(2000);
@@ -434,10 +422,10 @@ public class NetworkTest {
 			SimpleSendMessageToClientOnceConnected sendToClient = new SimpleSendMessageToClientOnceConnected(server, "I'm spamming you !", 10);
 			sendToClient.start();
 
-			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setLayerInitializer(new LayerInitializer(new ExceptionLayer(LayerExceptionMode.UNPACK)));
+			ClientConfig clientConfig = Communication.createClientConfig("127.0.0.1", 12345);
+			clientConfig.setLayerInitializer(new LayerInitializer(new ExceptionLayer(LayerExceptionMode.UNPACK)));
 
-			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
+			IClient client = Communication.createCustomClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(3000);
@@ -460,10 +448,10 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("Dummy Server", 12345);
-			serverBuilder.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I received your request !"));
+			ServerConfig serverConfig = Communication.createServerConfig("Dummy Server", 12345);
+			serverConfig.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I received your request !"));
 
-			IServer server = Communication.createCustomServer(serverBuilder.build(), network.getServer());
+			IServer server = Communication.createCustomServer(serverConfig, network.getServer());
 			server.open();
 
 			IClient client = Communication.createDefaultCustomClient("127.0.0.1", 12345, network.newClient());
@@ -508,10 +496,10 @@ public class NetworkTest {
 			SimpleSendMessageToClientOnceConnected sendToClient = new SimpleSendMessageToClientOnceConnected(server, "I'm spamming you", 10);
 			sendToClient.start();
 
-			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setOnUnexpectedRequestReceived(new SimpleClientListener(true));
+			ClientConfig clientConfig = Communication.createClientConfig("127.0.0.1", 12345);
+			clientConfig.setOnUnexpectedRequestReceived(new SimpleClientListener(true));
 
-			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
+			IClient client = Communication.createCustomClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(3000);
@@ -537,10 +525,10 @@ public class NetworkTest {
 			SimpleSendMessageToClientOnceConnected sendToClient = new SimpleSendMessageToClientOnceConnected(server, "I'm spamming you !", 10);
 			sendToClient.start();
 
-			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setOnUnexpectedRequestReceived(new SimpleClientListener(true));
+			ClientConfig clientConfig = Communication.createClientConfig("127.0.0.1", 12345);
+			clientConfig.setOnUnexpectedRequestReceived(new SimpleClientListener(true));
 
-			IClient client = Communication.createCustomClient(clientBuilder.build(), network.newClient());
+			IClient client = Communication.createCustomClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(12000);
@@ -561,24 +549,20 @@ public class NetworkTest {
 		IExecutable tests = () -> {
 			Network network = new Network();
 
-			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setConnectionTimeout(500);
-			clientBuilder.setReconnectionDelay(500);
-
-			IClient client1 = Communication.createCustomClient(clientBuilder.build(), network.newClient());
+			IClient client1 = Communication.createDefaultCustomClient("127.0.0.1", 12345, network.newClient());
 			client1.connect();
 
 			sleep(5000);
 
-			ServerConfigBuilder builder = Communication.createServerConfigBuilder("Dummy Server", 12345);
-			builder.setOnUnexpectedRequestReceived(new SimpleServerListener());
+			ServerConfig serverConfig = Communication.createServerConfig("Dummy Server", 12345);
+			serverConfig.setOnUnexpectedRequestReceived(new SimpleServerListener());
 
-			IServer server = Communication.createCustomServer(builder.build(), network.getServer());
+			IServer server = Communication.createCustomServer(serverConfig, network.getServer());
 			server.open();
 
 			sleep(2000);
 
-			IClient client2 = Communication.createCustomClient(clientBuilder.build(), network.newClient());
+			IClient client2 = Communication.createDefaultCustomClient("127.0.0.1", 12345, network.newClient());
 			client2.connect();
 
 			sleep(2000);
@@ -618,10 +602,10 @@ public class NetworkTest {
 
 			Network network = new Network(simulator);
 
-			ServerConfigBuilder builder = Communication.createServerConfigBuilder("Dummy builder", 12345);
-			builder.setOnUnexpectedRequestReceived(new SimpleServerListener());
+			ServerConfig serverConfig = Communication.createServerConfig("Dummy serverConfig", 12345);
+			serverConfig.setOnUnexpectedRequestReceived(new SimpleServerListener());
 
-			IServer server = Communication.createCustomServer(builder.build(), network.getServer());
+			IServer server = Communication.createCustomServer(serverConfig, network.getServer());
 			server.open();
 
 			IClient client = Communication.createDefaultCustomClient("127.0.0.1", 12345, network.newClient());

@@ -1,10 +1,10 @@
 package fr.pederobien.communication.testing;
 
+import fr.pederobien.communication.impl.ClientConfig;
 import fr.pederobien.communication.impl.Communication;
-import fr.pederobien.communication.impl.client.ClientConfigBuilder;
+import fr.pederobien.communication.impl.ServerConfig;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.layer.LayerInitializer;
-import fr.pederobien.communication.impl.server.ServerConfigBuilder;
 import fr.pederobien.communication.interfaces.IClient;
 import fr.pederobien.communication.interfaces.IServer;
 import fr.pederobien.communication.testing.tools.CallbackSendMessageToClientOnceConnected;
@@ -94,10 +94,10 @@ public class TcpCommunicationTest {
 	
 	public void testClientToServerCommunication() {
 		Runnable test = () -> {
-			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("TCP server test", 12345);
-			serverBuilder.setOnUnexpectedRequestReceived(new SimpleServerListener());
+			ServerConfig serverConfig = Communication.createServerConfig("TCP server test", 12345);
+			serverConfig.setOnUnexpectedRequestReceived(new SimpleServerListener());
 
-			IServer server = Communication.createTcpServer(serverBuilder.build());
+			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 			
 			IClient client = Communication.createDefaultTcpClient("127.0.0.1", 12345);
@@ -130,10 +130,10 @@ public class TcpCommunicationTest {
 			SimpleSendMessageToClientOnceConnected sendToClient = new SimpleSendMessageToClientOnceConnected(server, "You are connected !", 1);
 			sendToClient.start();
 			
-			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setOnUnexpectedRequestReceived(new SimpleClientListener(false));
+			ClientConfig clientConfig = Communication.createClientConfig("127.0.0.1", 12345);
+			clientConfig.setOnUnexpectedRequestReceived(new SimpleClientListener(false));
 
-			IClient client = Communication.createTcpClient(clientBuilder.build());
+			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 			
 			sleep(1000);
@@ -154,10 +154,10 @@ public class TcpCommunicationTest {
 	
 	public void testClientToServerWithCallback() {
 		Runnable test = () -> {
-			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("TCP server test", 12345);
-			serverBuilder.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I received your request !"));
+			ServerConfig serverConfig = Communication.createServerConfig("TCP server test", 12345);
+			serverConfig.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I received your request !"));
 
-			IServer server = Communication.createTcpServer(serverBuilder.build());
+			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 			
 			IClient client = Communication.createDefaultTcpClient("127.0.0.1", 12345);
@@ -236,10 +236,10 @@ public class TcpCommunicationTest {
 			
 			sendToClient.start();
 			
-			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I guess I am !"));
+			ClientConfig clientConfig = Communication.createClientConfig("127.0.0.1", 12345);
+			clientConfig.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I guess I am !"));
 			
-			IClient client = Communication.createTcpClient(clientBuilder.build());
+			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 			
 			sleep(1000);
@@ -274,7 +274,7 @@ public class TcpCommunicationTest {
 			
 			sendToClient.start();
 			
-			IClient client = Communication.createTcpClient(Communication.createDefaultClientConfig("127.0.0.1", 12345));
+			IClient client = Communication.createDefaultTcpClient("127.0.0.1", 12345);
 			client.connect();
 			
 			sleep(2000);
@@ -298,8 +298,7 @@ public class TcpCommunicationTest {
 			IServer server = Communication.createDefaultTcpServer("TCP server test", 12345);
 			server.open();
 			
-			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			IClient client = Communication.createCustomClient(clientBuilder.build(), new ClientExceptionImpl(ClientExceptionMode.SENDING));
+			IClient client = Communication.createDefaultCustomClient("127.0.0.1", 12345, new ClientExceptionImpl(ClientExceptionMode.SENDING));
 			client.connect();
 			
 			sleep(1000);
@@ -327,8 +326,7 @@ public class TcpCommunicationTest {
 			IServer server = Communication.createDefaultTcpServer("TCP server test", 12345);
 			server.open();
 			
-			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			IClient client = Communication.createCustomClient(clientBuilder.build(), new ClientExceptionImpl(ClientExceptionMode.RECEIVING));
+			IClient client = Communication.createDefaultCustomClient("127.0.0.1", 12345, new ClientExceptionImpl(ClientExceptionMode.RECEIVING));
 			client.connect();
 			
 			sleep(3000);
@@ -353,10 +351,10 @@ public class TcpCommunicationTest {
 			SimpleSendMessageToClientOnceConnected sendToClient = new SimpleSendMessageToClientOnceConnected(server, "I'm spamming you !", 10);
 			sendToClient.start();
 			
-			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setLayerInitializer(new LayerInitializer(new ExceptionLayer(LayerExceptionMode.UNPACK)));
+			ClientConfig clientConfig = Communication.createClientConfig("127.0.0.1", 12345);
+			clientConfig.setLayerInitializer(new LayerInitializer(new ExceptionLayer(LayerExceptionMode.UNPACK)));
 
-			IClient client = Communication.createTcpClient(clientBuilder.build());
+			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 			
 			sleep(3000);
@@ -377,10 +375,10 @@ public class TcpCommunicationTest {
 	
 	public void testCallbackException() {
 		Runnable test = () -> {
-			ServerConfigBuilder serverBuilder = Communication.createServerConfigBuilder("TCP server test", 12345);
-			serverBuilder.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I received your request !"));
+			ServerConfig serverConfig = Communication.createServerConfig("TCP server test", 12345);
+			serverConfig.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I received your request !"));
 			
-			IServer server = Communication.createTcpServer(serverBuilder.build());
+			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 			
 			IClient client = Communication.createDefaultTcpClient("127.0.0.1", 12345);
@@ -421,10 +419,10 @@ public class TcpCommunicationTest {
 			SimpleSendMessageToClientOnceConnected sendToClient = new SimpleSendMessageToClientOnceConnected(server, "I'm spamming you", 10);
 			sendToClient.start();
 			
-			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setOnUnexpectedRequestReceived(new SimpleClientListener(true));
+			ClientConfig clientConfig = Communication.createClientConfig("127.0.0.1", 12345);
+			clientConfig.setOnUnexpectedRequestReceived(new SimpleClientListener(true));
 			
-			IClient client = Communication.createTcpClient(clientBuilder.build());
+			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 			
 			sleep(3000);
@@ -449,10 +447,10 @@ public class TcpCommunicationTest {
 			SimpleSendMessageToClientOnceConnected sendToClient = new SimpleSendMessageToClientOnceConnected(server, "I'm spamming you !", 10);
 			sendToClient.start();
 			
-			ClientConfigBuilder clientBuilder = Communication.createClientConfigBuilder("127.0.0.1", 12345);
-			clientBuilder.setOnUnexpectedRequestReceived(new SimpleClientListener(true));
+			ClientConfig clientConfig = Communication.createClientConfig("127.0.0.1", 12345);
+			clientConfig.setOnUnexpectedRequestReceived(new SimpleClientListener(true));
 			
-			IClient client = Communication.createTcpClient(clientBuilder.build());
+			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 			
 			sleep(12000);

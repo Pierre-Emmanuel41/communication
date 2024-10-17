@@ -1,12 +1,10 @@
 package fr.pederobien.communication.impl;
 
-import fr.pederobien.communication.impl.client.ClientConfigBuilder;
 import fr.pederobien.communication.impl.client.CustomClient;
 import fr.pederobien.communication.impl.client.TcpClientImpl;
 import fr.pederobien.communication.impl.connection.ConnectionConfig;
 import fr.pederobien.communication.impl.connection.CustomConnection;
 import fr.pederobien.communication.impl.server.CustomServer;
-import fr.pederobien.communication.impl.server.ServerConfigBuilder;
 import fr.pederobien.communication.impl.server.TcpServerImpl;
 import fr.pederobien.communication.interfaces.IClient;
 import fr.pederobien.communication.interfaces.IClientConfig;
@@ -43,23 +41,13 @@ public class Communication {
 	}
 
 	/**
-	 * Creates a builder in order to configure a client.
+	 * Creates a configuration that holds parameters for a client.
 	 * 
-	 * @param address The IP address of the server.
-	 * @param port The port number of the server.
+	 * @param address The address of the remote.
+	 * @param port The port number of the remote.
 	 */
-	public static final ClientConfigBuilder createClientConfigBuilder(String address, int port) {
-		return new ClientConfigBuilder(address, port);
-	}
-
-	/**
-	 * Creates a builder in order to configure a client.
-	 * 
-	 * @param address The IP address of the server.
-	 * @param port The port number of the server.
-	 */
-	public static final IClientConfig createDefaultClientConfig(String address, int port) {
-		return createClientConfigBuilder(address, port).build();
+	public static final ClientConfig createClientConfig(String address, int port) {
+		return new ClientConfig(address, port);
 	}
 
 	/**
@@ -80,7 +68,7 @@ public class Communication {
 	 * @param implementation The client specific implementation to connect/disconnect from the server.
 	 */
 	public static final IClient createDefaultCustomClient(String address, int port, IClientImpl implementation) {
-		return new CustomClient(createDefaultClientConfig(address, port), implementation);
+		return new CustomClient(createClientConfig(address, port), implementation);
 	}
 
 	/**
@@ -99,27 +87,17 @@ public class Communication {
 	 * @param port The port number of the server.
 	 */
 	public static final IClient createDefaultTcpClient(String address, int port) {
-		return createTcpClient(createDefaultClientConfig(address, port));
+		return createTcpClient(createClientConfig(address, port));
 	}
 
 	/**
-	 * Creates a builder in order to a configuration a server.
+	 * Creates a configuration that holds the parameters for a server.
 	 * 
-	 * @param name The name of the server.
-	 * @param port The port number of the server.
+	 * @param name The server's name.
+	 * @param port The server port number.
 	 */
-	public static final ServerConfigBuilder createServerConfigBuilder(String name, int port) {
-		return new ServerConfigBuilder(name, port);
-	}
-
-	/**
-	 * Creates a default server configuration.
-	 * 
-	 * @param name The name of the server.
-	 * @param port The port number of the server.
-	 */
-	public static final IServerConfig createDefaultServerConfig(String name, int port) {
-		return createServerConfigBuilder(name, port).build();
+	public static final ServerConfig createServerConfig(String name, int port) {
+		return new ServerConfig(name, port);
 	}
 
 	/**
@@ -140,7 +118,7 @@ public class Communication {
 	 * @param implementation The server specific implementation to open/close the server.
 	 */
 	public static final IServer createDefaultCustomServer(String name, int port, IServerImpl implementation) {
-		return new CustomServer(createDefaultServerConfig(name, port), implementation);
+		return new CustomServer(createServerConfig(name, port), implementation);
 	}
 
 	/**
@@ -159,6 +137,6 @@ public class Communication {
 	 * @param port The port number of the server.
 	 */
 	public static final IServer createDefaultTcpServer(String name, int port) {
-		return createTcpServer(createDefaultServerConfig(name, port));
+		return createTcpServer(createServerConfig(name, port));
 	}
 }
