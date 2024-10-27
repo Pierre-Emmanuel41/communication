@@ -15,7 +15,7 @@ import fr.pederobien.communication.interfaces.ILayer;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.ReadableByteWrapper;
 
-public class RSALayer implements ILayer {
+public class RsaLayer implements ILayer {
 	private PrivateKey privateKey;
 	private PublicKey remoteKey;
 	private Splitter splitter;
@@ -27,7 +27,7 @@ public class RSALayer implements ILayer {
 	 * @param privateKey The private key to decode.
 	 * @param remoteKey The remote public key to encode.
 	 */
-	public RSALayer(PrivateKey privateKey, PublicKey remoteKey) {
+	public RsaLayer(PrivateKey privateKey, PublicKey remoteKey) {
 		this.privateKey = privateKey;
 		this.remoteKey = remoteKey;
 

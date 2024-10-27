@@ -6,7 +6,7 @@ import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.function.Function;
 
-import fr.pederobien.communication.impl.layer.RSALayer;
+import fr.pederobien.communication.impl.layer.RsaLayer;
 import fr.pederobien.communication.interfaces.ILayer;
 import fr.pederobien.communication.interfaces.IToken;
 
@@ -46,7 +46,7 @@ public class RsaKeyExchange {
 	 */
 	public ILayer exchange() {
 		if (keyExchange != null && keyExchange.exchange())
-			return new RSALayer(keyExchange.getPrivateKey(), keyExchange.getRemoteKey());
+			return new RsaLayer(keyExchange.getPrivateKey(), keyExchange.getRemoteKey());
 
 		return null;
 	}
