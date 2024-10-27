@@ -1,7 +1,5 @@
 package fr.pederobien.communication.impl.server;
 
-import fr.pederobien.communication.event.ConnectionLostEvent;
-import fr.pederobien.communication.event.ConnectionUnstableEvent;
 import fr.pederobien.communication.event.NewClientEvent;
 import fr.pederobien.communication.event.ServerCloseEvent;
 import fr.pederobien.communication.event.ServerUnstableEvent;
@@ -11,9 +9,7 @@ import fr.pederobien.communication.interfaces.server.IServerConfig;
 import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
-import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
-import fr.pederobien.utils.event.IEventListener;
 import fr.pederobien.utils.event.LogEvent;
 import fr.pederobien.utils.event.LogEvent.ELogLevel;
 
@@ -209,50 +205,9 @@ public abstract class Server implements IServer {
 			onLogEvent(ELogLevel.ERROR, "Initialisation failure");
 		}
 		else {
-			// Monitor the created connection
-			new ConnectionListener(this, connection);
 
 			// Notifying observers that a client is connected
-			EventManager.callEvent(new NewClientEvent(connection, this));
-		}
-	}
-	
-	private class ConnectionListener implements IEventListener {
-		private IServer server;
-		private IConnection connection;
-
-		/**
-		 * Creates a listener to monitor the given connection.
-		 *
-		 * @param connection The connection to monitor.
-		 */
-		public ConnectionListener(IServer server, IConnection connection) {
-			this.server = server;
-			this.connection = connection;
-
-			EventManager.registerListener(this);
-		}
-
-		@EventHandler
-		private void onConnectionLost(ConnectionLostEvent event) {
-			if (connection == event.getConnection()) {
-				connection.dispose();
-			}
-		}
-		
-		@EventHandler
-		private void onConnectionUnstable(ConnectionUnstableEvent event) {
-			if (connection == event.getConnection()) {
-				connection.dispose();
-			}
-		}
-		
-		@EventHandler
-		private void onServerClose(ServerCloseEvent event) {
-			if (server == event.getServer()) {
-				connection.dispose();
-				EventManager.unregisterListener(this);
-			}
+			EventManager.callEvent(new NewClientEvent(new Client(this, connection)));
 		}
 	}
 }

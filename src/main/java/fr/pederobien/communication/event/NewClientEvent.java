@@ -2,35 +2,33 @@ package fr.pederobien.communication.event;
 
 import java.util.StringJoiner;
 
-import fr.pederobien.communication.interfaces.connection.IConnection;
-import fr.pederobien.communication.interfaces.server.IServer;
+import fr.pederobien.communication.interfaces.server.IClient;
 
-public class NewClientEvent extends ConnectionEvent {
-	private IServer server;
+public class NewClientEvent extends ServerEvent {
+	private IClient client;
 
 	/**
-	 * Creates an event thrown when a new TCP client is connected to a TCP server.
+	 * Creates an event thrown when a new client is connected to a server.
 	 * 
-	 * @param connection The client connection.
-	 * @param server     The server to which the client is connected.
+	 * @param client The client involved in this event.
 	 */
-	public NewClientEvent(IConnection connection, IServer server) {
-		super(connection);
-		this.server = server;
+	public NewClientEvent(IClient client) {
+		super(client.getServer());
+		this.client = client;
 	}
 
 	/**
-	 * @return The server to which the client is connected.
+	 * @return The client involved in this event.
 	 */
-	public IServer getServer() {
-		return server;
+	public IClient getClient() {
+		return client;
 	}
 
 	@Override
 	public String toString() {
 		StringJoiner joiner = new StringJoiner(", ", "{", "}");
 		joiner.add("server=" + getServer());
-		joiner.add("connection=" + getConnection());
+		joiner.add("client=" + getClient());
 		return String.format("%s_%s", getName(), joiner);
 	}
 }

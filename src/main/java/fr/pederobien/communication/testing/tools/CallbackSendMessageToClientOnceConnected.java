@@ -36,6 +36,6 @@ public class CallbackSendMessageToClientOnceConnected implements IEventListener 
 	@EventHandler
 	private void onNewClientEvent(NewClientEvent event) {
 		if (event.getServer() == server)
-			event.getConnection().send(new Message("You are connected".getBytes(), callback));
+			event.getClient().getConnection().send(new Message("You are connected".getBytes(), callback));
 	}
 }
