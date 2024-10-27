@@ -7,7 +7,6 @@ import fr.pederobien.communication.event.ConnectionDisposedEvent;
 import fr.pederobien.communication.event.ConnectionEnableChangedEvent;
 import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.ConnectionUnstableEvent;
-import fr.pederobien.communication.event.DataEvent;
 import fr.pederobien.communication.event.RequestReceivedEvent;
 import fr.pederobien.communication.interfaces.ICallback.CallbackArgs;
 import fr.pederobien.communication.interfaces.IConnection;
@@ -224,12 +223,9 @@ public abstract class Connection implements IConnection {
 				// When raw is null, a problem happened while waiting for receiving data from the remote
 				if (raw == null)
 					EventManager.callEvent(new ConnectionLostEvent(this));
-				else {
-					EventManager.callEvent(new DataEvent(this, raw));
-
+				else
 					// Adding raw data for asynchronous extraction
 					queueManager.getExtractingQueue().add(raw);
-				}
 
 				receivingExceptionCounter = 0;
 			} catch (Exception exception) {
