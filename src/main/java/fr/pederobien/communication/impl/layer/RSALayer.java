@@ -28,6 +28,9 @@ public class RSALayer implements ILayer {
 	 * @param remoteKey The remote public key to encode.
 	 */
 	public RSALayer(PrivateKey privateKey, PublicKey remoteKey) {
+		this.privateKey = privateKey;
+		this.remoteKey = remoteKey;
+
 		splitter = new Splitter(200);
 		encapsuler = new Encapsuler("(~@=", "#.?)");
 	}
