@@ -21,7 +21,7 @@ public class LayerInitializer implements ILayerInitializer {
 		this.initialisation = initialisation;
 		this.initialisationSequence = initialisationSequence;
 
-		impl = new NotInitializedState(initialisation, initialisationSequence);
+		impl = new NotInitializedState();
 	}
 	
 	/**
@@ -60,13 +60,6 @@ public class LayerInitializer implements ILayerInitializer {
 	}
 	
 	private class NotInitializedState implements ILayerInitializer {
-		private ILayer initialisation;
-		private Function<IToken, ILayer> initialisationSequence;
-
-		protected NotInitializedState(ILayer initialisation, Function<IToken, ILayer> initialisationSequence) {
-			this.initialisation = initialisation;
-			this.initialisationSequence = initialisationSequence;
-		}
 
 		@Override
 		public boolean initialize(IToken token) throws Exception {
