@@ -61,8 +61,11 @@ public class RsaLayer implements ILayer {
 
 		// Step 2: Decode each packet
 		List<byte[]> decrypted = new ArrayList<byte[]>();
-		for (byte[] packet : unpacked)
-			decrypted.add(decode(packet));
+		for (byte[] packet : unpacked) {
+			byte[] decoded = decode(packet);
+			if (decoded != null)
+				decrypted.add(decode(packet));
+		}
 
 		// Step 3: Concatenating decrypted packet in one message
 		Map<Integer, byte[]> messages = splitter.unpack(decrypted);
@@ -99,8 +102,12 @@ public class RsaLayer implements ILayer {
 	 * @return A bytes array corresponding to the decoded result.
 	 */
 	private byte[] decode(byte[] data) throws Exception {
-		Cipher cipher = Cipher.getInstance("RSA");
-		cipher.init(Cipher.DECRYPT_MODE, privateKey);
-		return cipher.doFinal(Base64.getDecoder().decode(data));
+		try {
+			Cipher cipher = Cipher.getInstance("RSA");
+			cipher.init(Cipher.DECRYPT_MODE, privateKey);
+			return cipher.doFinal(Base64.getDecoder().decode(data));
+		} catch (Exception e) {
+			return null;
+		}
 	}
 }

@@ -67,6 +67,11 @@ public class CommunicationTestApp
     	tests.testCertifiedLayerTwoMessages();
     	tests.testCertifiedLayerLastMessageTruncated();
     	tests.testCertifiedLayerOneCorruptedMessage();
+    	tests.testRsaLayerOneMessage();
+    	tests.testRsaLayerTwoMessages();
+    	tests.testRsaLayerLastMessageTruncated();
+    	tests.testRsaLayerOneCorruptedMessage();
+    	tests.testRsaLayerOneBigMessage();
     	tests.testRsaLayerInitialization();
     	tests.testRsaLayerInitializationFailureClientToServer();
     	tests.testRsaLayerInitializationFailureServerAcknowledgement();

@@ -1,5 +1,7 @@
 package fr.pederobien.communication.testing;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +14,7 @@ import fr.pederobien.communication.impl.connection.HeaderMessage;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.layer.CertifiedLayer;
 import fr.pederobien.communication.impl.layer.Encapsuler;
+import fr.pederobien.communication.impl.layer.RsaLayer;
 import fr.pederobien.communication.impl.layer.RsaLayerInitializer;
 import fr.pederobien.communication.impl.layer.SimpleLayer;
 import fr.pederobien.communication.impl.layer.Splitter;
@@ -347,6 +350,155 @@ public class LayerTest {
 		};
 
 		runTest("testCertifiedLayerOneCorruptedMessage", test);
+	}
+
+	public void testRsaLayerOneMessage() {
+		IExecutable test = () -> {
+			KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+			generator.initialize(2048);
+
+			KeyPair pairA = generator.generateKeyPair();
+			KeyPair pairB = generator.generateKeyPair();
+
+			ILayer rsaA = new RsaLayer(pairA.getPrivate(), pairB.getPublic());
+			ILayer rsaB = new RsaLayer(pairB.getPrivate(), pairA.getPublic());
+
+			String message = "Hello World";
+
+			byte[] toSend = rsaA.pack(new HeaderMessage(0, new Message(message.getBytes())));
+
+			List<IHeaderMessage> messages = rsaB.unpack(toSend);
+
+			for (IHeaderMessage received : messages)
+				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+		};
+
+		runTest("testRsaLayerOneMessage", test);
+	}
+
+	public void testRsaLayerTwoMessages() {
+		IExecutable test = () -> {
+			KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+			generator.initialize(2048);
+
+			KeyPair pairA = generator.generateKeyPair();
+			KeyPair pairB = generator.generateKeyPair();
+
+			ILayer rsaA = new RsaLayer(pairA.getPrivate(), pairB.getPublic());
+			ILayer rsaB = new RsaLayer(pairB.getPrivate(), pairA.getPublic());
+
+			String message = "Hello World";
+			String message1 = message.concat(" 1");
+			String message2 = message.concat(" 2");
+
+			byte[] toSend1 = rsaA.pack(new HeaderMessage(0, new Message(message1.getBytes())));
+			byte[] toSend2 = rsaA.pack(new HeaderMessage(0, new Message(message2.getBytes())));
+
+			byte[] total = new byte[toSend1.length + toSend2.length];
+			System.arraycopy(toSend1, 0, total, 0, toSend1.length);
+			System.arraycopy(toSend2, 0, total, toSend1.length, toSend2.length);
+
+			List<IHeaderMessage> messages = rsaB.unpack(total);
+
+			for (IHeaderMessage received : messages)
+				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+		};
+
+		runTest("testRsaLayerTwoMessages", test);
+	}
+
+	public void testRsaLayerLastMessageTruncated() {
+		IExecutable test = () -> {
+			KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+			generator.initialize(2048);
+
+			KeyPair pairA = generator.generateKeyPair();
+			KeyPair pairB = generator.generateKeyPair();
+
+			ILayer rsaA = new RsaLayer(pairA.getPrivate(), pairB.getPublic());
+			ILayer rsaB = new RsaLayer(pairB.getPrivate(), pairA.getPublic());
+
+			String message = "Hello World";
+			String message1 = message.concat(" 1");
+			String message2 = message.concat(" 2");
+
+			byte[] toSend1 = rsaA.pack(new HeaderMessage(0, new Message(message1.getBytes())));
+			byte[] toSend2 = rsaA.pack(new HeaderMessage(0, new Message(message2.getBytes())));
+
+			byte[] total = new byte[toSend1.length + toSend2.length - 5];
+			System.arraycopy(toSend1, 0, total, 0, toSend1.length);
+			System.arraycopy(toSend2, 0, total, toSend1.length, toSend2.length - 5);
+
+			List<IHeaderMessage> messages = rsaB.unpack(total);
+			for (IHeaderMessage received : messages)
+				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+
+			// Remaining bytes
+			byte[] remaining = new byte[5];
+			System.arraycopy(toSend2, toSend2.length - 5, remaining, 0, 5);
+
+			messages = rsaB.unpack(remaining);
+			for (IHeaderMessage received : messages)
+				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+		};
+
+		runTest("testRsaLayerLastMessageTruncated", test);
+	}
+
+	public void testRsaLayerOneCorruptedMessage() {
+		IExecutable test = () -> {
+			KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+			generator.initialize(2048);
+
+			KeyPair pairA = generator.generateKeyPair();
+			KeyPair pairB = generator.generateKeyPair();
+
+			ILayer rsaA = new RsaLayer(pairA.getPrivate(), pairB.getPublic());
+			ILayer rsaB = new RsaLayer(pairB.getPrivate(), pairA.getPublic());
+
+			String message = "Hello World";
+
+			byte[] toSend = rsaA.pack(new HeaderMessage(0, new Message(message.getBytes())));
+
+			// Simulating corruption: modifying message
+			byte[] corrupted = new byte[toSend.length];
+			System.arraycopy(toSend, 0, corrupted, 0, toSend.length);
+			corrupted[5] = 'g';
+
+			List<IHeaderMessage> messages = rsaB.unpack(corrupted);
+			EventManager.callEvent(new LogEvent("Expecting no message, size: %s", messages.size()));
+		};
+
+		runTest("testRsaLayerOneCorruptedMessage", test);
+	}
+
+	public void testRsaLayerOneBigMessage() {
+		IExecutable test = () -> {
+			KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+			generator.initialize(2048);
+
+			KeyPair pairA = generator.generateKeyPair();
+			KeyPair pairB = generator.generateKeyPair();
+
+			ILayer rsaA = new RsaLayer(pairA.getPrivate(), pairB.getPublic());
+			ILayer rsaB = new RsaLayer(pairB.getPrivate(), pairA.getPublic());
+
+			byte[] message = new byte[500];
+			for (int i = 0; i < 200; i++)
+				message[i] = 'a';
+			for (int i = 200; i < 400; i++)
+				message[i] = 'b';
+			for (int i = 400; i < 499; i++)
+				message[i] = 'c';
+
+			byte[] toSend = rsaA.pack(new HeaderMessage(0, new Message(message)));
+
+			List<IHeaderMessage> messages = rsaB.unpack(toSend);
+			for (IHeaderMessage received : messages)
+				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+		};
+
+		runTest("testRsaLayerOneBigMessage", test);
 	}
 
 	public void testRsaLayerInitialization() {
