@@ -3,8 +3,8 @@ package fr.pederobien.communication.impl.connection;
 import java.util.HashMap;
 import java.util.Map;
 
-import fr.pederobien.communication.interfaces.IHeaderMessage;
-import fr.pederobien.communication.interfaces.IMessage;
+import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
+import fr.pederobien.communication.interfaces.connection.IMessage;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
 

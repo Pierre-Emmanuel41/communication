@@ -1,8 +1,8 @@
 package fr.pederobien.communication.impl.server;
 
-import fr.pederobien.communication.interfaces.IConnection;
-import fr.pederobien.communication.interfaces.IServerConfig;
-import fr.pederobien.communication.interfaces.IServerImpl;
+import fr.pederobien.communication.interfaces.connection.IConnection;
+import fr.pederobien.communication.interfaces.server.IServerConfig;
+import fr.pederobien.communication.interfaces.server.IServerImpl;
 
 public class CustomServer extends Server {
 	private IServerImpl implementation;

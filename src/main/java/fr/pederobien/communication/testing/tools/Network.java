@@ -6,14 +6,14 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import fr.pederobien.communication.impl.Communication;
-import fr.pederobien.communication.interfaces.IClientConfig;
-import fr.pederobien.communication.interfaces.IClientImpl;
-import fr.pederobien.communication.interfaces.IConnection;
-import fr.pederobien.communication.interfaces.IConnection.Mode;
-import fr.pederobien.communication.interfaces.IConnectionConfig;
-import fr.pederobien.communication.interfaces.IConnectionImpl;
-import fr.pederobien.communication.interfaces.IServerConfig;
-import fr.pederobien.communication.interfaces.IServerImpl;
+import fr.pederobien.communication.interfaces.client.IClientConfig;
+import fr.pederobien.communication.interfaces.client.IClientImpl;
+import fr.pederobien.communication.interfaces.connection.IConnection;
+import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
+import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
+import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
+import fr.pederobien.communication.interfaces.server.IServerConfig;
+import fr.pederobien.communication.interfaces.server.IServerImpl;
 import fr.pederobien.communication.testing.tools.NetworkSimulator.IModifier;
 import fr.pederobien.utils.Watchdog;
 

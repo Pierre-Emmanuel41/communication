@@ -1,4 +1,6 @@
-package fr.pederobien.communication.interfaces;
+package fr.pederobien.communication.interfaces.layer;
+
+import fr.pederobien.communication.interfaces.IToken;
 
 public interface ILayerInitializer {
 

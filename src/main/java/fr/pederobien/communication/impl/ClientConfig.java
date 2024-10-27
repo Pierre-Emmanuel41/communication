@@ -1,7 +1,7 @@
 package fr.pederobien.communication.impl;
 
-import fr.pederobien.communication.interfaces.IClientConfig;
-import fr.pederobien.communication.interfaces.IConnection.Mode;
+import fr.pederobien.communication.interfaces.client.IClientConfig;
+import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 
 public class ClientConfig extends Configuration implements IClientConfig {
 	private String address;

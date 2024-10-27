@@ -5,10 +5,10 @@ import java.net.Socket;
 
 import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.connection.TcpConnectionImpl;
-import fr.pederobien.communication.interfaces.IConnection;
-import fr.pederobien.communication.interfaces.IConnectionConfig;
-import fr.pederobien.communication.interfaces.IServerConfig;
-import fr.pederobien.communication.interfaces.IServerImpl;
+import fr.pederobien.communication.interfaces.connection.IConnection;
+import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
+import fr.pederobien.communication.interfaces.server.IServerConfig;
+import fr.pederobien.communication.interfaces.server.IServerImpl;
 
 public class TcpServerImpl implements IServerImpl {
 	private ServerSocket serverSocket;

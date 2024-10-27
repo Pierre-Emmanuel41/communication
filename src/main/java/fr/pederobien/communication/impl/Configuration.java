@@ -2,9 +2,9 @@ package fr.pederobien.communication.impl;
 
 import fr.pederobien.communication.impl.layer.LayerInitializer;
 import fr.pederobien.communication.interfaces.IConfiguration;
-import fr.pederobien.communication.interfaces.IConnection.Mode;
-import fr.pederobien.communication.interfaces.ILayerInitializer;
 import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
+import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
+import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
 
 public class Configuration implements IConfiguration {
 	private Mode mode;

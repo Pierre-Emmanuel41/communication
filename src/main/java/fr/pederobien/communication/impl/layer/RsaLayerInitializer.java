@@ -1,7 +1,7 @@
 package fr.pederobien.communication.impl.layer;
 
 import fr.pederobien.communication.impl.keyexchange.RsaKeyExchange;
-import fr.pederobien.communication.interfaces.ICertificate;
+import fr.pederobien.communication.interfaces.layer.ICertificate;
 
 public class RsaLayerInitializer extends LayerInitializer {
 	

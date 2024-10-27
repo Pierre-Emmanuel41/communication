@@ -3,7 +3,7 @@ package fr.pederobien.communication.impl.connection;
 import java.util.function.Consumer;
 
 import fr.pederobien.communication.event.RequestReceivedEvent;
-import fr.pederobien.communication.interfaces.IHeaderMessage;
+import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
 import fr.pederobien.utils.BlockingQueueTask;
 
 public class QueueManager {

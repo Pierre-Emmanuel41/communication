@@ -4,11 +4,11 @@ import java.util.concurrent.Semaphore;
 
 import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.RequestReceivedEvent;
-import fr.pederobien.communication.interfaces.IConnection;
-import fr.pederobien.communication.interfaces.IConnection.Mode;
-import fr.pederobien.communication.interfaces.IMessage;
 import fr.pederobien.communication.interfaces.IToken;
 import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
+import fr.pederobien.communication.interfaces.connection.IConnection;
+import fr.pederobien.communication.interfaces.connection.IMessage;
+import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
 import fr.pederobien.utils.event.EventHandler;

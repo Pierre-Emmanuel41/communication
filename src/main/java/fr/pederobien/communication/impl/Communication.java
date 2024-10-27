@@ -6,16 +6,16 @@ import fr.pederobien.communication.impl.connection.ConnectionConfig;
 import fr.pederobien.communication.impl.connection.CustomConnection;
 import fr.pederobien.communication.impl.server.CustomServer;
 import fr.pederobien.communication.impl.server.TcpServerImpl;
-import fr.pederobien.communication.interfaces.IClient;
-import fr.pederobien.communication.interfaces.IClientConfig;
-import fr.pederobien.communication.interfaces.IClientImpl;
 import fr.pederobien.communication.interfaces.IConfiguration;
-import fr.pederobien.communication.interfaces.IConnection;
-import fr.pederobien.communication.interfaces.IConnectionConfig;
-import fr.pederobien.communication.interfaces.IConnectionImpl;
-import fr.pederobien.communication.interfaces.IServer;
-import fr.pederobien.communication.interfaces.IServerConfig;
-import fr.pederobien.communication.interfaces.IServerImpl;
+import fr.pederobien.communication.interfaces.client.IClient;
+import fr.pederobien.communication.interfaces.client.IClientConfig;
+import fr.pederobien.communication.interfaces.client.IClientImpl;
+import fr.pederobien.communication.interfaces.connection.IConnection;
+import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
+import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
+import fr.pederobien.communication.interfaces.server.IServer;
+import fr.pederobien.communication.interfaces.server.IServerConfig;
+import fr.pederobien.communication.interfaces.server.IServerImpl;
 
 public class Communication {
 

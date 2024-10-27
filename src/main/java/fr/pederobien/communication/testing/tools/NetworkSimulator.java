@@ -1,6 +1,6 @@
 package fr.pederobien.communication.testing.tools;
 
-import fr.pederobien.communication.interfaces.IConnection.Mode;
+import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 import fr.pederobien.communication.testing.tools.Network.Address;
 import fr.pederobien.communication.testing.tools.Network.INetworkSimulator;
 

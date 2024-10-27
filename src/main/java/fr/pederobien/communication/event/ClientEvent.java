@@ -1,6 +1,6 @@
 package fr.pederobien.communication.event;
 
-import fr.pederobien.communication.interfaces.IClient;
+import fr.pederobien.communication.interfaces.client.IClient;
 
 public class ClientEvent extends CommunicationEvent {
 	private IClient client;

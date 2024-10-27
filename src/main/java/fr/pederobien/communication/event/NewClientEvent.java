@@ -2,8 +2,8 @@ package fr.pederobien.communication.event;
 
 import java.util.StringJoiner;
 
-import fr.pederobien.communication.interfaces.IConnection;
-import fr.pederobien.communication.interfaces.IServer;
+import fr.pederobien.communication.interfaces.connection.IConnection;
+import fr.pederobien.communication.interfaces.server.IServer;
 
 public class NewClientEvent extends ConnectionEvent {
 	private IServer server;

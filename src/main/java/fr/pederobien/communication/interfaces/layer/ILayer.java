@@ -1,6 +1,8 @@
-package fr.pederobien.communication.interfaces;
+package fr.pederobien.communication.interfaces.layer;
 
 import java.util.List;
+
+import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
 
 public interface ILayer {
 

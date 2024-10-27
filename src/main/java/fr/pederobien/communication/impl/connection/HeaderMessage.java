@@ -2,8 +2,8 @@ package fr.pederobien.communication.impl.connection;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import fr.pederobien.communication.interfaces.IHeaderMessage;
-import fr.pederobien.communication.interfaces.IMessage;
+import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
+import fr.pederobien.communication.interfaces.connection.IMessage;
 
 public class HeaderMessage implements IHeaderMessage {
 	private static final AtomicInteger IDENTIFIER_GENERATOR = new AtomicInteger(1);

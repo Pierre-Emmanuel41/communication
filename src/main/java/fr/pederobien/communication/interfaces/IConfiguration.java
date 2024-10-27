@@ -1,6 +1,7 @@
 package fr.pederobien.communication.interfaces;
 
-import fr.pederobien.communication.interfaces.IConnection.Mode;
+import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
+import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
 
 public interface IConfiguration {
 	

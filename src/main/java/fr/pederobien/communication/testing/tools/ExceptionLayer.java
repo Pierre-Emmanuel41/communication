@@ -5,8 +5,8 @@ import java.util.List;
 
 import fr.pederobien.communication.impl.connection.HeaderMessage;
 import fr.pederobien.communication.impl.connection.Message;
-import fr.pederobien.communication.interfaces.IHeaderMessage;
-import fr.pederobien.communication.interfaces.ILayer;
+import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
+import fr.pederobien.communication.interfaces.layer.ILayer;
 
 public class ExceptionLayer implements ILayer {
 

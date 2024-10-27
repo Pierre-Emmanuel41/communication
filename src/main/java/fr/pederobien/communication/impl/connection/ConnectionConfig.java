@@ -1,10 +1,10 @@
 package fr.pederobien.communication.impl.connection;
 
 import fr.pederobien.communication.interfaces.IConfiguration;
-import fr.pederobien.communication.interfaces.IConnection.Mode;
-import fr.pederobien.communication.interfaces.IConnectionConfig;
-import fr.pederobien.communication.interfaces.ILayerInitializer;
 import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
+import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
+import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
+import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
 
 public class ConnectionConfig implements IConnectionConfig {
 	private String address;

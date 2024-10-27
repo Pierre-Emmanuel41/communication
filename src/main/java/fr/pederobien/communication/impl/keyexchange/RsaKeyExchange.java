@@ -7,8 +7,8 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.function.Function;
 
 import fr.pederobien.communication.impl.layer.RsaLayer;
-import fr.pederobien.communication.interfaces.ILayer;
 import fr.pederobien.communication.interfaces.IToken;
+import fr.pederobien.communication.interfaces.layer.ILayer;
 
 public class RsaKeyExchange {
 	private AsymmetricKeyExchange keyExchange;

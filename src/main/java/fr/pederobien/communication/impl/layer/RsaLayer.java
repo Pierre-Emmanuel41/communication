@@ -10,8 +10,8 @@ import java.util.Map;
 import javax.crypto.Cipher;
 
 import fr.pederobien.communication.impl.connection.HeaderMessage;
-import fr.pederobien.communication.interfaces.IHeaderMessage;
-import fr.pederobien.communication.interfaces.ILayer;
+import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
+import fr.pederobien.communication.interfaces.layer.ILayer;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.ReadableByteWrapper;
 

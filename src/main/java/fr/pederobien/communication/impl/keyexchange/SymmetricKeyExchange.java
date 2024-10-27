@@ -8,8 +8,8 @@ import javax.crypto.SecretKey;
 
 import fr.pederobien.communication.event.RequestReceivedEvent;
 import fr.pederobien.communication.impl.connection.Message;
-import fr.pederobien.communication.interfaces.IConnection.Mode;
 import fr.pederobien.communication.interfaces.IToken;
+import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 import fr.pederobien.utils.Watchdog;
 import fr.pederobien.utils.Watchdog.WatchdogStakeholder;
 

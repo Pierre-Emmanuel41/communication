@@ -1,8 +1,8 @@
 package fr.pederobien.communication.impl.connection;
 
-import fr.pederobien.communication.interfaces.ICallback.CallbackArgs;
-import fr.pederobien.communication.interfaces.IHeaderMessage;
-import fr.pederobien.communication.interfaces.IMessage;
+import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
+import fr.pederobien.communication.interfaces.connection.IMessage;
+import fr.pederobien.communication.interfaces.connection.ICallback.CallbackArgs;
 
 public class CallbackManagement implements Runnable {
 	private CallbackManager manager;

@@ -1,6 +1,6 @@
 package fr.pederobien.communication.event;
 
-import fr.pederobien.communication.interfaces.IServer;
+import fr.pederobien.communication.interfaces.server.IServer;
 
 public class ServerEvent extends CommunicationEvent {
 	private IServer server;

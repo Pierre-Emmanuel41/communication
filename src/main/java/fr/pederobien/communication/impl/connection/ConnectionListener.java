@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 import fr.pederobien.communication.event.ConnectionDisposedEvent;
 import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.ConnectionUnstableEvent;
-import fr.pederobien.communication.interfaces.IConnection;
+import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;

@@ -1,4 +1,4 @@
-package fr.pederobien.communication.interfaces;
+package fr.pederobien.communication.interfaces.server;
 
 public interface IServer {
 	

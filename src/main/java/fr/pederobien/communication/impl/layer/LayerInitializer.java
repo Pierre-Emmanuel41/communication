@@ -2,9 +2,9 @@ package fr.pederobien.communication.impl.layer;
 
 import java.util.function.Function;
 
-import fr.pederobien.communication.interfaces.ILayer;
-import fr.pederobien.communication.interfaces.ILayerInitializer;
 import fr.pederobien.communication.interfaces.IToken;
+import fr.pederobien.communication.interfaces.layer.ILayer;
+import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
 
 public class LayerInitializer implements ILayerInitializer {
 	private ILayer initialisation;

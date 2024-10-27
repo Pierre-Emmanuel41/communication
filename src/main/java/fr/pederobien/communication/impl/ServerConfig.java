@@ -1,7 +1,7 @@
 package fr.pederobien.communication.impl;
 
-import fr.pederobien.communication.interfaces.IConnection.Mode;
-import fr.pederobien.communication.interfaces.IServerConfig;
+import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
+import fr.pederobien.communication.interfaces.server.IServerConfig;
 
 public class ServerConfig extends Configuration implements IServerConfig {
 	private String name;

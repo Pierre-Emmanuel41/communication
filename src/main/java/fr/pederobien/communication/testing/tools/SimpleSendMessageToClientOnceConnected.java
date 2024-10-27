@@ -2,7 +2,7 @@ package fr.pederobien.communication.testing.tools;
 
 import fr.pederobien.communication.event.NewClientEvent;
 import fr.pederobien.communication.impl.connection.Message;
-import fr.pederobien.communication.interfaces.IServer;
+import fr.pederobien.communication.interfaces.server.IServer;
 import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;

@@ -1,6 +1,8 @@
-package fr.pederobien.communication.interfaces;
+package fr.pederobien.communication.interfaces.connection;
 
-import fr.pederobien.communication.interfaces.IConnection.Mode;
+import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
+import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
+import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
 
 public interface IConnectionConfig {
 

@@ -1,11 +1,11 @@
 package fr.pederobien.communication.testing.tools;
 
 import fr.pederobien.communication.impl.Communication;
-import fr.pederobien.communication.interfaces.IClientConfig;
-import fr.pederobien.communication.interfaces.IClientImpl;
-import fr.pederobien.communication.interfaces.IConnection;
-import fr.pederobien.communication.interfaces.IConnectionConfig;
-import fr.pederobien.communication.interfaces.IConnectionImpl;
+import fr.pederobien.communication.interfaces.client.IClientConfig;
+import fr.pederobien.communication.interfaces.client.IClientImpl;
+import fr.pederobien.communication.interfaces.connection.IConnection;
+import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
+import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 
 public class ClientExceptionImpl implements IClientImpl {
 	

@@ -1,6 +1,7 @@
-package fr.pederobien.communication.interfaces;
+package fr.pederobien.communication.interfaces.client;
 
-import fr.pederobien.communication.interfaces.IConnection.Mode;
+import fr.pederobien.communication.interfaces.IConfiguration;
+import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 
 public interface IClientConfig extends IConfiguration {
 

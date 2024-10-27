@@ -1,6 +1,6 @@
 package fr.pederobien.communication.testing.tools;
 
-import fr.pederobien.communication.interfaces.ICertificate;
+import fr.pederobien.communication.interfaces.layer.ICertificate;
 import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.ReadableByteWrapper;
 

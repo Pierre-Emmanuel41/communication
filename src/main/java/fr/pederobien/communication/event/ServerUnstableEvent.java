@@ -2,7 +2,7 @@ package fr.pederobien.communication.event;
 
 import java.util.StringJoiner;
 
-import fr.pederobien.communication.interfaces.IServer;
+import fr.pederobien.communication.interfaces.server.IServer;
 
 public class ServerUnstableEvent extends ServerEvent {
 

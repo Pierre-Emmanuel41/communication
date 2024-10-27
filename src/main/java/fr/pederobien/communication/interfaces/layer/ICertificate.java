@@ -1,4 +1,4 @@
-package fr.pederobien.communication.interfaces;
+package fr.pederobien.communication.interfaces.layer;
 
 public interface ICertificate {
 

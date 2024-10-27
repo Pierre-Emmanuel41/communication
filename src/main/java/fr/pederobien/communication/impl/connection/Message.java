@@ -2,9 +2,9 @@ package fr.pederobien.communication.impl.connection;
 
 import java.util.function.Consumer;
 
-import fr.pederobien.communication.interfaces.ICallback;
-import fr.pederobien.communication.interfaces.ICallback.CallbackArgs;
-import fr.pederobien.communication.interfaces.IMessage;
+import fr.pederobien.communication.interfaces.connection.ICallback;
+import fr.pederobien.communication.interfaces.connection.IMessage;
+import fr.pederobien.communication.interfaces.connection.ICallback.CallbackArgs;
 
 public class Message implements IMessage {
 	private byte[] bytes;

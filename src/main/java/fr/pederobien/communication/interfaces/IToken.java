@@ -1,7 +1,8 @@
 package fr.pederobien.communication.interfaces;
 
 import fr.pederobien.communication.event.RequestReceivedEvent;
-import fr.pederobien.communication.interfaces.IConnection.Mode;
+import fr.pederobien.communication.interfaces.connection.IMessage;
+import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 
 public interface IToken {
 	

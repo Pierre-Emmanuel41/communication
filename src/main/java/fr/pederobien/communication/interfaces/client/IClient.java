@@ -1,4 +1,6 @@
-package fr.pederobien.communication.interfaces;
+package fr.pederobien.communication.interfaces.client;
+
+import fr.pederobien.communication.interfaces.connection.IConnection;
 
 public interface IClient {
 	

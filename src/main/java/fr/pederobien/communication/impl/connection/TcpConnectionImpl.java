@@ -3,7 +3,7 @@ package fr.pederobien.communication.impl.connection;
 import java.io.IOException;
 import java.net.Socket;
 
-import fr.pederobien.communication.interfaces.IConnectionImpl;
+import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 import fr.pederobien.utils.ByteWrapper;
 
 public class TcpConnectionImpl implements IConnectionImpl {

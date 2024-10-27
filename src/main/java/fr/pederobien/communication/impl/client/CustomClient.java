@@ -1,8 +1,8 @@
 package fr.pederobien.communication.impl.client;
 
-import fr.pederobien.communication.interfaces.IClientConfig;
-import fr.pederobien.communication.interfaces.IClientImpl;
-import fr.pederobien.communication.interfaces.IConnection;
+import fr.pederobien.communication.interfaces.client.IClientConfig;
+import fr.pederobien.communication.interfaces.client.IClientImpl;
+import fr.pederobien.communication.interfaces.connection.IConnection;
 
 public class CustomClient extends Client {
 	private IClientImpl implementation;

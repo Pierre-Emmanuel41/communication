@@ -2,7 +2,7 @@ package fr.pederobien.communication.event;
 
 import java.util.StringJoiner;
 
-import fr.pederobien.communication.interfaces.IClient;
+import fr.pederobien.communication.interfaces.client.IClient;
 
 public class ClientConnectedEvent extends ClientEvent {
 

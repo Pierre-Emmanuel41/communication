@@ -1,7 +1,7 @@
 package fr.pederobien.communication.impl.connection;
 
-import fr.pederobien.communication.interfaces.IConnectionConfig;
-import fr.pederobien.communication.interfaces.IConnectionImpl;
+import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
+import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 
 public class CustomConnection extends Connection {
 	private IConnectionImpl implementation;
