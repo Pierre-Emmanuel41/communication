@@ -1,14 +1,8 @@
 package fr.pederobien.communication.interfaces.client;
 
 import fr.pederobien.communication.interfaces.IConfiguration;
-import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 
 public interface IClientConfig extends IConfiguration {
-
-	@Override
-	default Mode getMode() {
-		return Mode.CLIENT_TO_SERVER;
-	}
 
 	/**
 	 * @return The IP address of the server.
