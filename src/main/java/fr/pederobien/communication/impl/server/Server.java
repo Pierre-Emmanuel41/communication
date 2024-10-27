@@ -193,37 +193,33 @@ public abstract class Server implements IServer {
 	private void initialiseConnection(IConnection connection) {
 		boolean initialised = false;
 
-		// Monitor the created connection
-		ConnectionListener listener = new ConnectionListener(this, connection);
-
 		try {
 			initialised = connection.initialise();
 		} catch (Exception e) {
 			// Do nothing
 		}
 
-		if (!initialised) {
-			onLogEvent(ELogLevel.ERROR, "Failure to initialise the connection with the remote %s", connection);
+		if (state != EState.OPENED) {
 			connection.dispose();
+			return;
+		}
+
+		if (!initialised) {
+			connection.dispose();
+			onLogEvent(ELogLevel.ERROR, "Initialisation failure");
 		}
 		else {
-			try {
-				// Adding delay to be sure connection has not been lost
-				Thread.sleep(100);
+			// Monitor the created connection
+			new ConnectionListener(this, connection);
 
-				if (listener.isAlive())
-					// Notifying observers that a client is connected
-					EventManager.callEvent(new NewClientEvent(connection, this));
-			} catch (Exception e) {
-				// Do nothing
-			}
+			// Notifying observers that a client is connected
+			EventManager.callEvent(new NewClientEvent(connection, this));
 		}
 	}
 	
 	private class ConnectionListener implements IEventListener {
 		private IServer server;
 		private IConnection connection;
-		private boolean isAlive;
 
 		/**
 		 * Creates a listener to monitor the given connection.
@@ -234,22 +230,12 @@ public abstract class Server implements IServer {
 			this.server = server;
 			this.connection = connection;
 
-			isAlive = true;
-
 			EventManager.registerListener(this);
-		}
-
-		/**
-		 * @return True if the connection is connected to the remote, false otherwise.
-		 */
-		public boolean isAlive() {
-			return isAlive;
 		}
 
 		@EventHandler
 		private void onConnectionLost(ConnectionLostEvent event) {
 			if (connection == event.getConnection()) {
-				isAlive = false;
 				connection.dispose();
 			}
 		}
@@ -257,7 +243,6 @@ public abstract class Server implements IServer {
 		@EventHandler
 		private void onConnectionUnstable(ConnectionUnstableEvent event) {
 			if (connection == event.getConnection()) {
-				isAlive = false;
 				connection.dispose();
 			}
 		}
@@ -265,7 +250,6 @@ public abstract class Server implements IServer {
 		@EventHandler
 		private void onServerClose(ServerCloseEvent event) {
 			if (server == event.getServer()) {
-				isAlive = false;
 				connection.dispose();
 				EventManager.unregisterListener(this);
 			}

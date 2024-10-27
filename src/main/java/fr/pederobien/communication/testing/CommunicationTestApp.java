@@ -17,6 +17,7 @@ public class CommunicationTestApp
 
     	runTest("Network tests", () -> runNetworkTest());
     	runTest("Layer tests", () -> runLayerTests());
+    	runTest("Layer initialisation tests", () -> runLayerInitialisationTest());
     	runTest("TCP tests", () -> runTcpCommunicationTest());
         
         // Asynchronous tests, wait a little bit before closing tests session
@@ -72,6 +73,11 @@ public class CommunicationTestApp
     	tests.testRsaLayerLastMessageTruncated();
     	tests.testRsaLayerOneCorruptedMessage();
     	tests.testRsaLayerOneBigMessage();
+    }
+
+    private static void runLayerInitialisationTest() {
+    	LayerInitialisationTest tests = new LayerInitialisationTest();
+
     	tests.testRsaLayerInitialization();
     	tests.testRsaLayerInitializationFailureClientToServer();
     	tests.testRsaLayerInitializationFailureServerAcknowledgement();
@@ -79,7 +85,7 @@ public class CommunicationTestApp
     	tests.testRsaLayerInitializationFirstFailureAndTransmission();
     	tests.testRsaLayerInitializationSecondFailureAndTransmission();
     }
-    
+
     private static void runTcpCommunicationTest() {
     	TcpCommunicationTest tests = new TcpCommunicationTest();
     	

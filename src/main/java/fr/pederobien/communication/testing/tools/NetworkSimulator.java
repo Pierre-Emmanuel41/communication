@@ -19,27 +19,35 @@ public class NetworkSimulator implements INetworkSimulator {
 		byte[] modify(int counter, byte[] data);
 	}
 
-	private Mode mode;
-	private IModifier modifier;
-	private int counter;
+	private IModifier clientToServerModifier, serverToClientModifier;
+	private int clientToServerCounter, serverToClientCounter;
 
 	/**
-	 * Creates a data modifier. It will modify the data sent from one point to another point.
+	 * Creates a network simulator. It will modify the data sent from one point to another point.
 	 * 
-	 * @param mode The direction of the communication on which this modifier is listening.
-	 * @param modifier To modify the data sent from one point to another point.
+	 * @param clientToServerModifier The modification to apply when the direction of communication
+	 *                               is CLIENT_TO_SERVER.
+	 * @param serverToClientModifier The modification to apply when the direction of communication
+	 *                               is SERVER_TO_CLIENT.
 	 */
-	public NetworkSimulator(Mode mode, IModifier modifier) {
-		this.mode = mode;
-		this.modifier = modifier;
+	public NetworkSimulator(IModifier clientToServerModifier, IModifier serverToClientModifier) {
+		this.clientToServerModifier = clientToServerModifier;
+		this.serverToClientModifier = serverToClientModifier;
 	}
 
 	@Override
 	public byte[] simulate(Mode mode, Address remote, byte[] data) {
-		if (this.mode != mode)
-			return data;
+		if (mode == Mode.CLIENT_TO_SERVER) {
+			clientToServerCounter++;
+			if (clientToServerModifier != null)
+				return clientToServerModifier.modify(clientToServerCounter, data);
+		}
+		else if (mode == Mode.SERVER_TO_CLIENT) {
+			serverToClientCounter++;
+			if (serverToClientModifier != null)
+				return serverToClientModifier.modify(serverToClientCounter, data);
+		}
 
-		counter++;
-		return modifier.modify(counter, data);
+		return data;
 	}
 }

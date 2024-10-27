@@ -66,10 +66,29 @@ public class Network {
 	/**
 	 * Create a network to simulate data transmission.
 	 * 
-	 * @param simulator To simulate an issue while sending data.
+	 * @param clientToServerModifier The modification to apply when the direction of communication
+	 *                               is CLIENT_TO_SERVER.
+	 * @param serverToClientModifier The modification to apply when the direction of communication
+	 *                               is SERVER_TO_CLIENT.
+	 */
+	public Network(IModifier clientToServer, IModifier serverToClient) {
+		this(new NetworkSimulator(clientToServer, serverToClient));
+	}
+
+	/**
+	 * Create a network to simulate data transmission.
+	 * 
+	 * @param clientToServerModifier The modification to apply when the direction of communication
+	 *                               is CLIENT_TO_SERVER.
+	 * @param serverToClientModifier The modification to apply when the direction of communication
+	 *                               is SERVER_TO_CLIENT.
 	 */
 	public Network(Mode mode, IModifier modifier) {
-		this(new NetworkSimulator(mode, modifier));
+		IModifier clientToServer = mode == Mode.CLIENT_TO_SERVER ? modifier : (counter, data) -> data;
+		IModifier serverToClient = mode == Mode.SERVER_TO_CLIENT ? modifier : (counter, data) -> data;
+
+		network = new Networkstakeholder(new NetworkSimulator(clientToServer, serverToClient));
+		server = new ServerImpl(network);
 	}
 
 	/**

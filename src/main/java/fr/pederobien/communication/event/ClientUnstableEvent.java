@@ -4,14 +4,14 @@ import java.util.StringJoiner;
 
 import fr.pederobien.communication.interfaces.IClient;
 
-public class ClientInitialisationFailureEvent extends ClientEvent {
+public class ClientUnstableEvent extends ClientEvent {
 
 	/**
 	 * Create a connection initialisation failure event.
 	 * 
 	 * @param client The client involved in this event.
 	 */
-	public ClientInitialisationFailureEvent(IClient client) {
+	public ClientUnstableEvent(IClient client) {
 		super(client);
 	}
 

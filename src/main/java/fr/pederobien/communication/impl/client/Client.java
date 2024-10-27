@@ -1,30 +1,26 @@
 package fr.pederobien.communication.impl.client;
 
 import fr.pederobien.communication.event.ClientConnectedEvent;
-import fr.pederobien.communication.event.ClientInitialisationFailureEvent;
-import fr.pederobien.communication.event.ConnectionLostEvent;
-import fr.pederobien.communication.event.ConnectionUnstableEvent;
+import fr.pederobien.communication.event.ClientUnstableEvent;
+import fr.pederobien.communication.impl.connection.ConnectionListener;
 import fr.pederobien.communication.interfaces.IClient;
 import fr.pederobien.communication.interfaces.IClientConfig;
 import fr.pederobien.communication.interfaces.IConnection;
 import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
-import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
-import fr.pederobien.utils.event.IEventListener;
 import fr.pederobien.utils.event.LogEvent;
 import fr.pederobien.utils.event.LogEvent.ELogLevel;
 
 public abstract class Client implements IClient {
-	private static final int MAX_EXCEPTION_COUNTER = 3;
 	private IClientConfig config;
 	private EState state;
 	private BlockingQueueTask<Object> connectionQueue;
 	private IConnection connection;
 	private ConnectionListener listener;
 	private IDisposable disposable;
-	private int initialisationExceptionCounter;
+	private int unstableCounter;
 	
 	/**
 	 * Create a client ready to be connected to a remote.
@@ -39,10 +35,9 @@ public abstract class Client implements IClient {
 		
 		String name = String.format("%s[reconnect]", toString(), config.getPort());
 		connectionQueue = new BlockingQueueTask<Object>(name, object -> startConnect(object));
-		listener = new ConnectionListener(config.getMaxUnstableCounterValue());
 		disposable = new Disposable();
 
-		initialisationExceptionCounter = 0;
+		unstableCounter = 0;
 	}
 	
 	@Override
@@ -224,99 +219,56 @@ public abstract class Client implements IClient {
 		IConnection connection = onConnectionComplete(config);
 
 		try {
-
 			// Attempting connection initialization
-			if (initialized = connection.initialise()) {
-				// Starting the monitoring of the connection
-				listener.start();
-
-				state = EState.CONNECTED;
-				onLogEvent("Connected to the remote");
-
-				// Notifying observers that the client is connected
-				EventManager.callEvent(new ClientConnectedEvent(this));
-			}
+			initialized = connection.initialise();
 		} catch (Exception e) {
-			// An issue happened during initialization, considering the connection uninitialized
-			initialized = false;
-		} finally {
-			if (!initialized) {
-				initialisationExceptionCounter++;
-				if (initialisationExceptionCounter == MAX_EXCEPTION_COUNTER) {
-					onLogEvent(ELogLevel.ERROR, "Failure to initialise the connection with the remote");
-					EventManager.callEvent(new ClientInitialisationFailureEvent(this));
-				}
-				else {
-					connection.dispose();
-					if (state == EState.CONNECTING)
-						connectionQueue.add(object);
-				}
-			}
+			// Do nothing
+		}
+		
+		if (state != EState.CONNECTING) {
+			connection.dispose();
+			return;
+		}
+		
+		if (!initialized) {
+			connection.dispose();
+			onLogEvent(ELogLevel.WARNING, "Initialisation failure");
+			reconnect();
+		}
+		else {
+			this.connection = connection;
+
+			// Starting the monitoring of the connection
+			listener = new ConnectionListener(getConnection());
+			listener.setOnConnectionLost(ignored -> reconnect());
+			listener.setOnConnectionUnstable(ignored -> reconnect());
+			listener.start();
+
+			state = EState.CONNECTED;
+			onLogEvent("Connected to the remote");
+
+			// Notifying observers that the client is connected
+			EventManager.callEvent(new ClientConnectedEvent(this));
 		}
 	}
-	
-	private class ConnectionListener implements IEventListener {
-		private int maxUnstableCounter;
-		private int unstableCounter;
 
-		/**
-		 * Creates a connection listener to trigger a connection lost or an unstable connection.
-		 * 
-		 * @param maxUnstableCounter The maximum value of the unstable counter before stopping
-		 *                           automatic reconnection.
-		 */
-		public ConnectionListener(int maxUnstableCounter) {
-			this.maxUnstableCounter = maxUnstableCounter;
-			unstableCounter = 0;
-		}
-		
-		/**
-		 * Start monitoring the underlying connection.
-		 */
-		public void start() {
-			EventManager.registerListener(this);
-		}
-		
-		/**
-		 * Stop monitoring the underlying connection.
-		 */
-		public void stop() {
-			EventManager.unregisterListener(this);
-		}
+	/**
+	 * Re-attempt to connect with the remote.
+	 */
+	private void reconnect() {
+		if (isDisposed())
+			return;
 
-		@EventHandler
-		private void onConnectionUnstable(ConnectionUnstableEvent event) {
-			startReconnection(event.getConnection());
-		}
-		
-		@EventHandler
-		private void onConnectionLost(ConnectionLostEvent event) {
-			startReconnection(event.getConnection());
-		}
-		
-		/**
-		 * Check if the connection is monitored by this event listener and start the automatic reconnection
-		 * if it is enabled.
-		 * 
-		 * @param connection The connection involved in a ConnectionUnstableEvent or in a ConnectionLostEvent.
-		 */
-		private void startReconnection(IConnection connection) {
-			if (isDisposed())
-				return;
+		disconnect();
 
-			if (connection == getConnection())
-			{
-				disconnect();
-				stop();
-
-				if (unstableCounter == maxUnstableCounter)
-					onLogEvent(ELogLevel.ERROR, "Client unstable, stopping automatic reconnection");
-				else if (config.isAutomaticReconnection()) {
-					unstableCounter++;
-					onLogEvent("Starting automatic reconnection");
-					connect();
-				}
-			}
+		if (unstableCounter == config.getMaxUnstableCounterValue()) {
+			onLogEvent(ELogLevel.ERROR, "stopping automatic reconnection");
+			EventManager.callEvent(new ClientUnstableEvent(this));
+		}
+		else if (config.isAutomaticReconnection()) {
+			unstableCounter++;
+			onLogEvent("Starting automatic reconnection");
+			connect();
 		}
 	}
 }
