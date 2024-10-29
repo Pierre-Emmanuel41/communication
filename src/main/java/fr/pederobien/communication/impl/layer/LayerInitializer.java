@@ -1,29 +1,28 @@
 package fr.pederobien.communication.impl.layer;
 
-import java.util.function.Function;
-
 import fr.pederobien.communication.interfaces.IToken;
 import fr.pederobien.communication.interfaces.layer.ILayer;
 import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
+import fr.pederobien.communication.interfaces.layer.IStep;
 
 public class LayerInitializer implements ILayerInitializer {
 	private ILayer initialisation;
-	private Function<IToken, ILayer> initialisationSequence;
+	private IStep first;
 	private ILayerInitializer impl;
-	
+
 	/**
 	 * Creates a layer initializer.
 	 * 
 	 * @param initialisation The layer to use for initialisation.
-	 * @param initialisationSequence A sequence to perform additional steps during initialisation.
+	 * @param first The first step of the initialisation sequence.
 	 */
-	public LayerInitializer(ILayer initialisation, Function<IToken, ILayer> initialisationSequence) {
+	public LayerInitializer(ILayer initialisation, IStep first) {
 		this.initialisation = initialisation;
-		this.initialisationSequence = initialisationSequence;
+		this.first = first;
 
-		impl = new NotInitializedState();
+		impl = new NotInitializedState(initialisation);
 	}
-	
+
 	/**
 	 * Creates a layer initializer with no initialisation sequence.
 	 * The given layer should not need to exchange information with the remote.
@@ -33,7 +32,7 @@ public class LayerInitializer implements ILayerInitializer {
 	public LayerInitializer(ILayer layer) {
 		this(layer, token -> layer);
 	}
-	
+
 	/**
 	 * Creates a layer initializer for a {@link SimpleLayer}
 	 * The given layer should not need to exchange information with the remote.
@@ -53,38 +52,48 @@ public class LayerInitializer implements ILayerInitializer {
 	public ILayer getLayer() {
 		return impl.getLayer();
 	}
-	
+
 	@Override
 	public ILayerInitializer copy() {
-		return new LayerInitializer(initialisation, initialisationSequence);
+		return new LayerInitializer(initialisation, first);
 	}
-	
+
 	private class NotInitializedState implements ILayerInitializer {
+		private ILayer layer;
+
+		public NotInitializedState(ILayer layer) {
+			this.layer = layer;
+		}
 
 		@Override
 		public boolean initialize(IToken token) throws Exception {
-			ILayer initialized = initialisationSequence.apply(token);
-			if (initialized == null)
+			IStep step = first;
+
+			do {
+				layer = step.apply(token);
+			} while ((layer != null) && (step = step.getNext()) != null);
+
+			if (layer == null)
 				return false;
 
-			impl = new InitializedState(initialized);
+			impl = new InitializedState(layer);
 			return true;
 		}
 
 		@Override
 		public ILayer getLayer() {
-			return initialisation;
+			return layer;
 		}
-		
+
 		@Override
 		public ILayerInitializer copy() {
 			return this;
 		}
 	}
-	
+
 	private class InitializedState implements ILayerInitializer {
 		private ILayer initialized;
-		
+
 		public InitializedState(ILayer initialized) {
 			this.initialized = initialized;
 		}
@@ -98,7 +107,7 @@ public class LayerInitializer implements ILayerInitializer {
 		public ILayer getLayer() {
 			return initialized;
 		}
-		
+
 		@Override
 		public ILayerInitializer copy() {
 			return this;
