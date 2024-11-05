@@ -9,15 +9,7 @@ public interface IStep {
 	 * 
 	 * @param token The token to use to send/receive data from the remote.
 	 * 
-	 * @return The layer to use for the next step if there is one,
-	 *         the layer to use once initialised otherwise.
+	 * @return The layer to use once this initialisation step is over.
 	 */
 	ILayer apply(IToken token);
-	
-	/**
-	 * @return The next step of the initialisation, can be null.
-	 */
-	default IStep getNext() {
-		return null;
-	}
 }

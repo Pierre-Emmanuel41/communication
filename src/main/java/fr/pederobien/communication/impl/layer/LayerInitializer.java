@@ -7,18 +7,18 @@ import fr.pederobien.communication.interfaces.layer.IStep;
 
 public class LayerInitializer implements ILayerInitializer {
 	private ILayer initialisation;
-	private IStep first;
+	private IStep[] steps;
 	private ILayerInitializer impl;
 
 	/**
 	 * Creates a layer initializer.
 	 * 
 	 * @param initialisation The layer to use for initialisation.
-	 * @param first The first step of the initialisation sequence.
+	 * @param steps A sequence to perform additional steps during initialisation.
 	 */
-	public LayerInitializer(ILayer initialisation, IStep first) {
+	public LayerInitializer(ILayer initialisation, IStep... steps) {
 		this.initialisation = initialisation;
-		this.first = first;
+		this.steps = steps;
 
 		impl = new NotInitializedState(initialisation);
 	}
@@ -55,7 +55,7 @@ public class LayerInitializer implements ILayerInitializer {
 
 	@Override
 	public ILayerInitializer copy() {
-		return new LayerInitializer(initialisation, first);
+		return new LayerInitializer(initialisation, steps);
 	}
 
 	private class NotInitializedState implements ILayerInitializer {
@@ -67,11 +67,8 @@ public class LayerInitializer implements ILayerInitializer {
 
 		@Override
 		public boolean initialize(IToken token) throws Exception {
-			IStep step = first;
-
-			do {
-				layer = step.apply(token);
-			} while ((layer != null) && (step = step.getNext()) != null);
+			for (int i = 0; (i < steps.length) && (layer != null); i++)
+				layer = steps[i].apply(token);
 
 			if (layer == null)
 				return false;
