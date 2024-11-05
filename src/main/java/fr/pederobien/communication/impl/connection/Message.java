@@ -72,7 +72,6 @@ public class Message implements IMessage {
 	 * Creates a message to send to the remote. No callback.
 	 * 
 	 * @param bytes The bytes of the message.
-	 * @param isSync True if this message shall be sent synchronously, false to send it asynchronously.
 	 */
 	public Message(byte[] bytes) {
 		this(bytes, false);
