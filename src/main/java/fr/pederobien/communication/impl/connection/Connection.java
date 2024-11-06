@@ -9,12 +9,13 @@ import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.ConnectionUnstableEvent;
 import fr.pederobien.communication.event.RequestReceivedEvent;
 import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
+import fr.pederobien.communication.interfaces.connection.ICallback.CallbackArgs;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
 import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
 import fr.pederobien.communication.interfaces.connection.IMessage;
-import fr.pederobien.communication.interfaces.connection.ICallback.CallbackArgs;
 import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
+import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
 import fr.pederobien.utils.event.EventManager;
@@ -25,7 +26,11 @@ public abstract class Connection implements IConnection {
 	private static final int MAX_EXCEPTION_NUMBER = 10;
 	private IConnectionConfig config;
 	private String name;
-	private QueueManager queueManager;
+	private BlockingQueueTask<IHeaderMessage> sendingQueue;
+	private BlockingQueueTask<Object> receivingQueue;
+	private BlockingQueueTask<byte[]> extractingQueue;
+	private BlockingQueueTask<CallbackManagement> callbackQueue;
+	private BlockingQueueTask<RequestReceivedEvent> requestReceivedQueue;
 	private CallbackManager callbackManager;
 	private IDisposable disposable;
 	private ILayerInitializer layerInitializer;
@@ -36,11 +41,11 @@ public abstract class Connection implements IConnection {
 	private int extractingExceptionCounter;
 	private int callbackExceptionCounter;
 	private int requestExceptionCounter;
-	
+
 	// When the synchronous send has been called
 	private Semaphore semaphore;
 	private CallbackArgs argument;
-	
+
 	/**
 	 * Create an abstract connection that send asynchronously messages to the remote.
 	 * 
@@ -48,16 +53,24 @@ public abstract class Connection implements IConnection {
 	 */
 	protected Connection(IConnectionConfig config) {
 		this.config = config;
-		
+
 		String remote = config.getMode() == Mode.CLIENT_TO_SERVER ? "Server" : "Client";
 		name = String.format("%s %s:%s", remote, config.getAddress(), config.getPort());
 
-		queueManager = new QueueManager(name);
-		queueManager.setSendingQueue(message -> sendMessage(message));
-		queueManager.setReceivingQueue(object -> receiveMessage(object));
-		queueManager.setExtractingQueue(raw -> extractMessage(raw));
-		queueManager.setCallbackQueue(management -> callbackMessage(management));
-		queueManager.setRequestReceivedQueue(event -> dispatchRequestReceivedEvent(event));
+		String queueName = String.format("[%s send]", name);
+		sendingQueue = new BlockingQueueTask<IHeaderMessage>(queueName, message -> sendMessage(message));
+
+		queueName = String.format("[%s receive]", name);
+		receivingQueue = new BlockingQueueTask<Object>(queueName, object -> receiveMessage(object));
+
+		queueName = String.format("[%s extract]", name);
+		extractingQueue = new BlockingQueueTask<byte[]>(queueName, raw -> extractMessage(raw));
+
+		queueName = String.format("[%s callback]", name);
+		callbackQueue = new BlockingQueueTask<CallbackManagement>(queueName, management -> callbackMessage(management));
+
+		queueName = String.format("[%s unexpected]", name);
+		requestReceivedQueue = new BlockingQueueTask<RequestReceivedEvent>(queueName, event -> dispatchRequestReceivedEvent(event));
 
 		callbackManager = new CallbackManager(this);
 		disposable = new Disposable();
@@ -72,12 +85,25 @@ public abstract class Connection implements IConnection {
 
 		semaphore = new Semaphore(0);
 	}
-	
+
 	@Override
 	public boolean initialise() throws Exception {
-		// Start each asynchronous queue
-		queueManager.start();
-		
+		// Waiting for a message to be sent
+		sendingQueue.start();
+
+		// Waiting for receiving message from network
+		receivingQueue.start();
+		receivingQueue.add(new Object());
+
+		// Waiting for data to extract
+		extractingQueue.start();
+
+		// Waiting for callback to be called
+		callbackQueue.start();
+
+		// Waiting for an unexpected request
+		requestReceivedQueue.start();
+
 		// Initializing layer
 		Token token = new Token(this);
 		handler = token;
@@ -88,7 +114,7 @@ public abstract class Connection implements IConnection {
 		handler = getConfig().getOnUnexpectedRequestReceived();
 		return success;
 	}
-	
+
 	@Override
 	public void send(IMessage message) {
 		disposable.checkDisposed();
@@ -96,7 +122,7 @@ public abstract class Connection implements IConnection {
 		if (isEnabled())
 			send(0, message);
 	}
-	
+
 	@Override
 	public void answer(int requestID, IMessage message) {
 		disposable.checkDisposed();
@@ -109,29 +135,34 @@ public abstract class Connection implements IConnection {
 	public boolean isEnabled() {
 		return isEnabled;
 	}
-	
+
 	@Override
 	public void setEnabled(boolean isEnabled) {
 		if (this.isEnabled == isEnabled)
 			return;
-		
+
 		this.isEnabled = isEnabled;
 		EventManager.callEvent(new ConnectionEnableChangedEvent(this, isEnabled));
 	}
-	
+
 	@Override
 	public void dispose() {
 		if (disposable.dispose()) {
 			disposeImpl();
 
-			// Dispose each asynchronous queue
-			queueManager.dispose();
+			// Dispose callback manager
 			callbackManager.dispose();
+
+			sendingQueue.dispose();
+			receivingQueue.dispose();
+			extractingQueue.dispose();
+			callbackQueue.dispose();
+			requestReceivedQueue.dispose();
 
 			EventManager.callEvent(new ConnectionDisposedEvent(this));
 		}
 	}
-	
+
 	@Override
 	public boolean isDisposed() {
 		return disposable.isDisposed();
@@ -141,21 +172,21 @@ public abstract class Connection implements IConnection {
 	public IConnectionConfig getConfig() {
 		return config;
 	}
-	
+
 	@Override
 	public String toString() {
 		return String.format("[%s]", name);
 	}
-	
+
 	/**
 	 * Execute the callback of the given callback management asynchronously.
 	 * 
 	 * @param management The management that hold the callback to execute.
 	 */
 	public void timeout(CallbackManagement management) {
-		queueManager.getCallbackQueue().add(management);
+		callbackQueue.add(management);
 	}
-	
+
 	/**
 	 * Connection specific implementation to send a message to the remote.
 	 * The bytes array is the result of the layer that has encapsulated the payload
@@ -164,19 +195,19 @@ public abstract class Connection implements IConnection {
 	 * @param data The byte array to send to the remote.
 	 */
 	protected abstract void sendImpl(byte[] data) throws Exception;
-	
+
 	/**
 	 * Connection specific implementation to receive bytes from the remote.
 	 * 
 	 * @param receivingBufferSize The size of the bytes array used to receive data from the remote.
 	 */
 	protected abstract byte[] receiveImpl(int receivingBufferSize) throws Exception;
-	
+
 	/**
 	 * Connection specific implementation to close definitively the connection with the remote.
 	 */
 	protected abstract void disposeImpl();
-	
+
 	/**
 	 * Throw an unstable connection event.
 	 * 
@@ -189,7 +220,7 @@ public abstract class Connection implements IConnection {
 		setEnabled(false);
 		EventManager.callEvent(new ConnectionUnstableEvent(this));
 	}
-	
+
 	/**
 	 * Send asynchronously a message to the remote.
 	 * 
@@ -202,7 +233,7 @@ public abstract class Connection implements IConnection {
 
 				callbackManager.start(message.getIdentifier());
 				sendImpl(data);
-	
+
 				sendingExceptionCounter = 0;
 			} catch (Exception exception) {
 				sendingExceptionCounter++;
@@ -210,22 +241,23 @@ public abstract class Connection implements IConnection {
 			}
 		}
 	}
-	
+
 	/**
 	 * Wait asynchronously for receiving data from the remote.
 	 */
 	private void receiveMessage(Object object) {
 		if (isEnabled()) {
 			byte[] raw = null;
+
 			try {
 				raw = receiveImpl(getConfig().getReceivingBufferSize());
-				
+
 				// When raw is null, a problem happened while waiting for receiving data from the remote
 				if (raw == null)
 					EventManager.callEvent(new ConnectionLostEvent(this));
 				else
 					// Adding raw data for asynchronous extraction
-					queueManager.getExtractingQueue().add(raw);
+					extractingQueue.add(raw);
 
 				receivingExceptionCounter = 0;
 			} catch (Exception exception) {
@@ -234,17 +266,17 @@ public abstract class Connection implements IConnection {
 
 				if (!isDisposed())
 					// Waiting again for the reception
-					queueManager.getReceivingQueue().add(new Object());
+					receivingQueue.add(new Object());
 			} finally {
 				// If connection is not lost
 				if (raw != null) {
 					// Waiting again for the reception
-					queueManager.getReceivingQueue().add(new Object());
+					receivingQueue.add(new Object());
 				}
 			}
 		}
 	}
-	
+
 	/**
 	 * Extract asynchronously the requests from the raw buffer.
 	 * 
@@ -252,28 +284,28 @@ public abstract class Connection implements IConnection {
 	 */
 	private void extractMessage(byte[] raw) {
 		if (isEnabled()) {
-			
+
 			try {
 				// Extracting requests from the raw bytes array received from the network
 				List<IHeaderMessage> requests = layerInitializer.getLayer().unpack(raw);
-				
+
 				// For each received request
 				for (IHeaderMessage request : requests) {
-					
+
 					// A 0 identifier means it does not correspond to a response to a request
 					if (request.getRequestID() != 0) {
 
 						// Checking if there is a pending request
 						CallbackManagement management = callbackManager.unregister(request);
-						
+
 						// Receiving expected response from the remote
 						if (management != null)
-							queueManager.getCallbackQueue().add(management);
+							callbackQueue.add(management);
 					}
 
 					else
 						// Dispatching asynchronously a request received event.
-						queueManager.getRequestReceivedQueue().add(new RequestReceivedEvent(this, request.getBytes(), request.getIdentifier()));
+						requestReceivedQueue.add(new RequestReceivedEvent(this, request.getBytes(), request.getIdentifier()));
 				}
 
 				extractingExceptionCounter = 0;
@@ -283,7 +315,7 @@ public abstract class Connection implements IConnection {
 			}
 		}
 	}
-	
+
 	/**
 	 * Execute the callback of the given management and check if a request (ie a response) should be sent back to the remote.
 	 * 
@@ -301,7 +333,7 @@ public abstract class Connection implements IConnection {
 			}
 		}
 	}
-	
+
 	/**
 	 * Creates internally a request received event and dispatch it to the request received handler.
 	 * 
@@ -318,7 +350,7 @@ public abstract class Connection implements IConnection {
 			}
 		}
 	}
-	
+
 	/**
 	 * Creates a header message to be sent to the remote.
 	 * 
@@ -338,7 +370,7 @@ public abstract class Connection implements IConnection {
 
 		IHeaderMessage header = new HeaderMessage(requestID, toSend);
 		callbackManager.register(header.getIdentifier(), toSend);
-		queueManager.getSendingQueue().add(header);
+		sendingQueue.add(header);
 
 		if (message.isSync()) {
 			try {
@@ -356,7 +388,7 @@ public abstract class Connection implements IConnection {
 				message.getCallback().apply(argument);
 		}
 	}
-	
+
 	/**
 	 * Check if the value of the counter equals the maximum exception counter. If so, an unstable connection event
 	 * is thrown.
