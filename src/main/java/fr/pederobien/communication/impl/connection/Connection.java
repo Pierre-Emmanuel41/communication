@@ -72,7 +72,7 @@ public abstract class Connection implements IConnection {
 		queueName = String.format("[%s unexpected]", name);
 		requestReceivedQueue = new BlockingQueueTask<RequestReceivedEvent>(queueName, event -> dispatchRequestReceivedEvent(event));
 
-		callbackManager = new CallbackManager(this);
+		callbackManager = new CallbackManager(callbackQueue);
 		disposable = new Disposable();
 		layerInitializer = config.getLayerInitializer().copy();
 

@@ -36,7 +36,7 @@ public class CallbackManagement implements Runnable {
 			isTimeout = true;
 			
 			/* Timeout, need to remove the pending message */
-			manager.timeout(this);
+			manager.removeAndExecute(this);
 		} catch (InterruptedException e) {
 			/* Do nothing */
 		}

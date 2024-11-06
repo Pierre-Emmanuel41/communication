@@ -5,11 +5,12 @@ import java.util.Map;
 
 import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
 import fr.pederobien.communication.interfaces.connection.IMessage;
+import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
 
 public class CallbackManager {
-	private Connection connection;
+	private BlockingQueueTask<CallbackManagement> callbackQueue;
 	private Map<Integer, CallbackManagement> pendingMessages;
 	private IDisposable disposable;
 	
@@ -18,8 +19,8 @@ public class CallbackManager {
 	 * 
 	 * @param connection The connection associated to this manager.
 	 */
-	public CallbackManager(Connection connection) {
-		this.connection = connection;
+	public CallbackManager(BlockingQueueTask<CallbackManagement> callbackQueue) {
+		this.callbackQueue = callbackQueue;
 		pendingMessages = new HashMap<Integer, CallbackManagement>();
 		disposable = new Disposable();
 	}
@@ -87,10 +88,10 @@ public class CallbackManager {
 	/**
 	 * Unregister the given callback management from this manager.
 	 * 
-	 * @param management The management for which a timeout occurred.
+	 * @param management The management to execute.
 	 */
-	public void timeout(CallbackManagement management) {
+	public void removeAndExecute(CallbackManagement management) {
 		pendingMessages.remove(management.getIdentifier());
-		connection.timeout(management);
+		callbackQueue.add(management);
 	}
 }
