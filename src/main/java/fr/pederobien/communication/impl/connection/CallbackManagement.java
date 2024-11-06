@@ -10,8 +10,8 @@ public class CallbackManagement implements Runnable {
 	private IMessage message;
 	private IHeaderMessage response;
 	private Thread timeoutThread;
-	private boolean isTimeout;
-	
+	private boolean isTimeout, isConnectionLost;
+
 	/**
 	 * Creates a callback management to monitor if a response has been received for a request.
 	 * 
@@ -23,8 +23,9 @@ public class CallbackManagement implements Runnable {
 		this.manager = manager;
 		this.identifier = identifier;
 		this.message = message;
-		
+
 		isTimeout = false;
+		isConnectionLost = false;
 		timeoutThread = new Thread(this, "[Timeout]");
 	}
 
@@ -34,35 +35,35 @@ public class CallbackManagement implements Runnable {
 			Thread.sleep(message.getCallback().getTimeout());
 
 			isTimeout = true;
-			
+
 			/* Timeout, need to remove the pending message */
 			manager.removeAndExecute(this);
 		} catch (InterruptedException e) {
 			/* Do nothing */
 		}
 	}
-	
+
 	/**
 	 * Interrupt the underlying thread waiting for a timeout to occur.
 	 */
 	public void cancel() {
 		timeoutThread.interrupt();
 	}
-	
+
 	/**
 	 * Start the underlying thread waiting for a timeout to occur.
 	 */
 	public void start() {
 		timeoutThread.start();
 	}
-	
+
 	/**
 	 * @return The identifier of the message.
 	 */
 	public int getIdentifier() {
 		return identifier;
 	}
-	
+
 	/**
 	 * Set the response of the message.
 	 * 
@@ -71,18 +72,24 @@ public class CallbackManagement implements Runnable {
 	public void setResponse(IHeaderMessage response) {
 		this.response = response;
 	}
-	
+
+	/**
+	 * Cancel the thread that monitor a timeout, remove this callback management from the pending list
+	 * and execute the associated callback.
+	 */
+	public void onConnectionLost() {
+		cancel();
+		isConnectionLost = true;
+		manager.removeAndExecute(this);
+	}
+
 	/**
 	 * Execute the callback of the underlying message.
-	 * 
-	 * @return The callback arguments to see if a request should be sent back to the remote as response for its response.
 	 */
-	public CallbackArgs apply() {
-		IMessage resp = isTimeout ? null : new Message(response.getBytes());
-		int identifier = isTimeout ? -1 : response.getIdentifier();
+	public void apply() {
+		IMessage resp = isTimeout || isConnectionLost ? null : new Message(response.getBytes());
+		int identifier = isTimeout || isConnectionLost ? -1 : response.getIdentifier();
 
-		CallbackArgs arguments = new CallbackArgs(identifier, resp, isTimeout);
-		message.getCallback().apply(arguments);
-		return arguments;
+		message.getCallback().apply(new CallbackArgs(identifier, resp, isTimeout, isConnectionLost));
 	}
 }

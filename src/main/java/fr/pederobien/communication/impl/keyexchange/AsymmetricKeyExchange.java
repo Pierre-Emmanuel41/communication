@@ -16,6 +16,7 @@ public class AsymmetricKeyExchange extends Exchange {
 	private KeyPairGenerator generator;
 	private Function<byte[], PublicKey> keyParser;
 	private boolean success;
+	private int counter;
 	private WatchdogStakeholder watchdog;
 	private PrivateKey privateKey;
 	private PublicKey remoteKey;
@@ -35,6 +36,7 @@ public class AsymmetricKeyExchange extends Exchange {
 		this.keyParser = keyParser;
 
 		success = false;
+		counter = 0;
 	}
 
 	/**
@@ -65,7 +67,6 @@ public class AsymmetricKeyExchange extends Exchange {
 
 	protected boolean doServerToClientExchange() throws Exception {
 		// Max three tries to exchange keys
-		int counter = 0;
 		while (!success && (counter++ < 3)) {
 
 			// Generating a new key to send
@@ -89,6 +90,8 @@ public class AsymmetricKeyExchange extends Exchange {
 						}
 					});
 				}
+				else if (args.isConnectionLost())
+					counter = 3;
 			});
 		}
 
@@ -125,6 +128,8 @@ public class AsymmetricKeyExchange extends Exchange {
 										success = true;
 								});
 							}
+							else if (args.isConnectionLost())
+								watchdog.cancel();
 						});
 					}
 				}

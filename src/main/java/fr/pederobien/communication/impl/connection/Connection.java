@@ -377,7 +377,7 @@ public abstract class Connection implements IConnection {
 				// Wait until the callback has been executed
 				semaphore.acquire();
 			} catch (Exception e) {
-				argument = new CallbackArgs(-1, null, true);
+				argument = new CallbackArgs(-1, null, true, false);
 			} finally {
 				// Always draining the semaphore to force the synchronous send
 				semaphore.drainPermits();

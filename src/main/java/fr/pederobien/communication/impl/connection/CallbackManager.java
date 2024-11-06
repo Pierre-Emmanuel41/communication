@@ -2,6 +2,8 @@ package fr.pederobien.communication.impl.connection;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
 import fr.pederobien.communication.interfaces.connection.IMessage;
@@ -58,9 +60,10 @@ public class CallbackManager {
 	 */
 	public void dispose() {
 		if (disposable.dispose()) {
-			for (Map.Entry<Integer, CallbackManagement> entry : pendingMessages.entrySet()) {
-				entry.getValue().cancel();
-			}
+			Set<Entry<Integer, CallbackManagement>> set = pendingMessages.entrySet();
+			for (Map.Entry<Integer, CallbackManagement> entry : set)
+				entry.getValue().onConnectionLost();
+
 			pendingMessages.clear();
 		}
 	}
