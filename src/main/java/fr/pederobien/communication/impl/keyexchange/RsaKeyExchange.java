@@ -31,7 +31,7 @@ public class RsaKeyExchange {
 				}
 			};
 	
-			keyExchange = new AsymmetricKeyExchange(token, generator, keyParser);
+			keyExchange = new AsymmetricKeyExchange(token, "RSA_Exchange", generator, keyParser);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -40,14 +40,12 @@ public class RsaKeyExchange {
 	/**
 	 * Perform the key exchange with the remote.
 	 * 
-	 * @param token The token to send/receive key from the remote.
-	 * 
 	 * @return True if the key exchange succeed, false otherwise.
 	 */
 	public ILayer exchange() {
-		if (keyExchange != null && keyExchange.exchange())
-			return new RsaLayer(keyExchange.getPrivateKey(), keyExchange.getRemoteKey());
+		if (keyExchange == null || !keyExchange.exchange())
+			return null;
 
-		return null;
+		return new RsaLayer(keyExchange.getPrivateKey(), keyExchange.getRemoteKey());
 	}
 }
