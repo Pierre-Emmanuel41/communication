@@ -17,11 +17,13 @@ public class RsaKeyExchange {
 	 * Creates a key exchange associated to the RSA algorithm.
 	 * 
 	 * @param token The token to perform key exchange.
+	 * @param keySize This is analgorithm-specific metric, such as modulus length,
+	 *                specified in number of bits.
 	 */
-	public RsaKeyExchange(IToken token) {
+	public RsaKeyExchange(IToken token, int keySize) {
 		try {
 			KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-			generator.initialize(2048);
+			generator.initialize(keySize);
 			
 			Function<byte[], PublicKey> keyParser = data -> {
 				try {
