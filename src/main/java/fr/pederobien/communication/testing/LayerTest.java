@@ -2,18 +2,26 @@ package fr.pederobien.communication.testing;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.SecureRandom;
+import java.security.spec.AlgorithmParameterSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+
 import fr.pederobien.communication.impl.connection.HeaderMessage;
 import fr.pederobien.communication.impl.connection.Message;
+import fr.pederobien.communication.impl.layer.AesLayer;
 import fr.pederobien.communication.impl.layer.CertifiedLayer;
 import fr.pederobien.communication.impl.layer.Encapsuler;
 import fr.pederobien.communication.impl.layer.RsaLayer;
 import fr.pederobien.communication.impl.layer.SimpleLayer;
 import fr.pederobien.communication.impl.layer.Splitter;
 import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
+import fr.pederobien.communication.interfaces.layer.ICertificate;
 import fr.pederobien.communication.interfaces.layer.ILayer;
 import fr.pederobien.communication.testing.tools.SimpleCertificate;
 import fr.pederobien.utils.IExecutable;
@@ -488,6 +496,142 @@ public class LayerTest {
 		};
 
 		runTest("testRsaLayerOneBigMessage", test);
+	}
+
+	public void testAesLayerOneMessage() {
+		IExecutable test = () -> {
+			KeyGenerator generator = KeyGenerator.getInstance("AES");
+			generator.init(128);
+			SecretKey secretKey = generator.generateKey();
+
+			byte[] iv = new byte[16];
+			SecureRandom random = new SecureRandom();
+			random.nextBytes(iv);
+			AlgorithmParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+
+			ICertificate certificate = new SimpleCertificate();
+			ILayer aesA = new AesLayer(certificate, secretKey, ivParameterSpec);
+			ILayer aesB = new AesLayer(certificate, secretKey, ivParameterSpec);
+
+			String message = "Hello World";
+
+			byte[] toSend = aesA.pack(new HeaderMessage(0, new Message(message.getBytes())));
+
+			List<IHeaderMessage> messages = aesB.unpack(toSend);
+
+			for (IHeaderMessage received : messages)
+				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+		};
+
+		runTest("testAesLayerOneMessage", test);
+	}
+
+	public void testAesLayerTwoMessages() {
+		IExecutable test = () -> {
+			KeyGenerator generator = KeyGenerator.getInstance("AES");
+			generator.init(128);
+			SecretKey secretKey = generator.generateKey();
+
+			byte[] iv = new byte[16];
+			SecureRandom random = new SecureRandom();
+			random.nextBytes(iv);
+			AlgorithmParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+
+			ICertificate certificate = new SimpleCertificate();
+			ILayer aesA = new AesLayer(certificate, secretKey, ivParameterSpec);
+			ILayer aesB = new AesLayer(certificate, secretKey, ivParameterSpec);
+
+			String message = "Hello World";
+			String message1 = message.concat(" 1");
+			String message2 = message.concat(" 2");
+
+			byte[] toSend1 = aesA.pack(new HeaderMessage(0, new Message(message1.getBytes())));
+			byte[] toSend2 = aesA.pack(new HeaderMessage(0, new Message(message2.getBytes())));
+
+			byte[] total = new byte[toSend1.length + toSend2.length];
+			System.arraycopy(toSend1, 0, total, 0, toSend1.length);
+			System.arraycopy(toSend2, 0, total, toSend1.length, toSend2.length);
+
+			List<IHeaderMessage> messages = aesB.unpack(total);
+
+			for (IHeaderMessage received : messages)
+				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+		};
+
+		runTest("testAesLayerTwoMessages", test);
+	}
+
+	public void testAesLayerLastMessageTruncated() {
+		IExecutable test = () -> {
+			KeyGenerator generator = KeyGenerator.getInstance("AES");
+			generator.init(128);
+			SecretKey secretKey = generator.generateKey();
+
+			byte[] iv = new byte[16];
+			SecureRandom random = new SecureRandom();
+			random.nextBytes(iv);
+			AlgorithmParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+
+			ICertificate certificate = new SimpleCertificate();
+			ILayer aesA = new AesLayer(certificate, secretKey, ivParameterSpec);
+			ILayer aesB = new AesLayer(certificate, secretKey, ivParameterSpec);
+
+			String message = "Hello World";
+			String message1 = message.concat(" 1");
+			String message2 = message.concat(" 2");
+
+			byte[] toSend1 = aesA.pack(new HeaderMessage(0, new Message(message1.getBytes())));
+			byte[] toSend2 = aesA.pack(new HeaderMessage(0, new Message(message2.getBytes())));
+
+			byte[] total = new byte[toSend1.length + toSend2.length - 5];
+			System.arraycopy(toSend1, 0, total, 0, toSend1.length);
+			System.arraycopy(toSend2, 0, total, toSend1.length, toSend2.length - 5);
+
+			List<IHeaderMessage> messages = aesB.unpack(total);
+			for (IHeaderMessage received : messages)
+				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+
+			// Remaining bytes
+			byte[] remaining = new byte[5];
+			System.arraycopy(toSend2, toSend2.length - 5, remaining, 0, 5);
+
+			messages = aesB.unpack(remaining);
+			for (IHeaderMessage received : messages)
+				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+		};
+
+		runTest("testAesLayerLastMessageTruncated", test);
+	}
+
+	public void testAesLayerOneCorruptedMessage() {
+		IExecutable test = () -> {
+			KeyGenerator generator = KeyGenerator.getInstance("AES");
+			generator.init(128);
+			SecretKey secretKey = generator.generateKey();
+
+			byte[] iv = new byte[16];
+			SecureRandom random = new SecureRandom();
+			random.nextBytes(iv);
+			AlgorithmParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+
+			ICertificate certificate = new SimpleCertificate();
+			ILayer aesA = new AesLayer(certificate, secretKey, ivParameterSpec);
+			ILayer aesB = new AesLayer(certificate, secretKey, ivParameterSpec);
+
+			String message = "Hello World";
+
+			byte[] toSend = aesA.pack(new HeaderMessage(0, new Message(message.getBytes())));
+
+			// Simulating corruption: modifying message
+			byte[] corrupted = new byte[toSend.length];
+			System.arraycopy(toSend, 0, corrupted, 0, toSend.length);
+			corrupted[5] = 'g';
+
+			List<IHeaderMessage> messages = aesB.unpack(corrupted);
+			EventManager.callEvent(new LogEvent("Expecting no message, size: %s", messages.size()));
+		};
+
+		runTest("testAesLayerOneCorruptedMessage", test);
 	}
 
 	private void runTest(String testName, IExecutable test) {

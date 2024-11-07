@@ -73,6 +73,10 @@ public class CommunicationTestApp
     	tests.testRsaLayerLastMessageTruncated();
     	tests.testRsaLayerOneCorruptedMessage();
     	tests.testRsaLayerOneBigMessage();
+    	tests.testAesLayerOneMessage();
+    	tests.testAesLayerTwoMessages();
+    	tests.testAesLayerLastMessageTruncated();
+    	tests.testAesLayerOneCorruptedMessage();
     }
 
     private static void runLayerInitialisationTest() {
@@ -83,7 +87,15 @@ public class CommunicationTestApp
     	tests.testRsaLayerInitializationFailureServerAcknowledgement();
     	tests.testRsaLayerInitializationAndTransmission();
     	tests.testRsaLayerInitializationFirstFailureAndTransmission();
-    	tests.testRsaLayerInitializationSecondFailureAndTransmission();
+    	tests.testAesLayerInitialization();
+    	tests.testAesLayerInitializationFailureClientToServer();
+    	tests.testAesLayerInitializationFailureServerAcknowledgement();
+    	tests.testAesLayerInitializationFailureIVExchange();
+    	tests.testAesLayerInitializationAndTransmission();
+    	tests.testAesLayerInitializationFirstFailureAndTransmission();
+    	tests.testAesLayerInitializationFirstIVFailureAndTransmission();
+    	tests.testAesSafeLayerInitializer();
+    	tests.testAesSafeLayerInitializerAndTransmission();
     }
 
     private static void runTcpCommunicationTest() {

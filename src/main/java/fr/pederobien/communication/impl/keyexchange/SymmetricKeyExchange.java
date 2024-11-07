@@ -7,113 +7,114 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
 import fr.pederobien.communication.event.RequestReceivedEvent;
-import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.interfaces.IToken;
-import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 import fr.pederobien.utils.Watchdog;
 import fr.pederobien.utils.Watchdog.WatchdogStakeholder;
 
-public class SymmetricKeyExchange {
-	public static final byte[] SUCCESS_PATTERN = "SUCCESS_PATTERN".getBytes();
-
-	private IToken token;
+public class SymmetricKeyExchange extends Exchange {
 	private KeyGenerator generator;
 	private Function<byte[], SecretKey> keyParser;
 	private boolean success;
+	private int counter;
 	private WatchdogStakeholder watchdog;
 	private SecretKey secretKey;
-	
+
 	/**
 	 * Creates a key exchange for symmetric encoding/decoding.
 	 * 
-	 * @param mode The direction of the communication.
-	 * @param generator An initialised key generator.
-	 * @param keyParser A function to parse the bytes corresponding to the remote key.
+	 * @param token The token used to send/receive data from the remote.
+	 * @param keyword A keyword to be used while sending the asymmetric key.
+	 *        This keyword shall be the same for the client and the server.
+	 * @param generator An initialised key pair generator.
+	 * @param keyParser A function to parse the bytes corresponding to the remote public key.
 	 */
-	public SymmetricKeyExchange(IToken token, KeyGenerator generator, Function<byte[], SecretKey> keyParser) {
-		this.token = token;
+	public SymmetricKeyExchange(IToken token, String keyword, KeyGenerator generator, Function<byte[], SecretKey> keyParser) {
+		super(token, keyword);
 		this.generator = generator;
 		this.keyParser = keyParser;
-	}
-	
-	/**
-	 * Perform the key exchange with the remote.
-	 * 
-	 * @return True if the key exchange succeed, false otherwise.
-	 */
-	public boolean exchange() throws Exception {
-		if (token.getMode() == Mode.CLIENT_TO_SERVER)
-			return keyExchangeClientToServer();
-		else if (token.getMode() == Mode.SERVER_TO_CLIENT)
-			return keyExchangeServerToClient();
 
-		return false;
+		success = false;
+		counter = 0;
 	}
-	
+
 	/**
 	 * @return The secret key received from the server.
 	 */
 	public SecretKey getRemoteKey() {
 		return secretKey;
 	}
-	
+
 	/**
 	 * @return Generate a secretKey to share with the remote.
 	 */
 	private SecretKey generateKey() {
 		return secretKey = generator.generateKey();
 	}
-	
-	private boolean keyExchangeServerToClient() throws Exception {
+
+	protected boolean doServerToClientExchange() throws Exception {
 		// Max three tries to exchange keys
-		int counter = 0;
 		while (!success && (counter++ < 3)) {
 
 			// Generating a new key to send
-			SecretKey keyToSend = generateKey();
+			byte[] keyToSend = generateKey().getEncoded();
 
 			// Step 1: Sending key
-			token.send(new Message(keyToSend.getEncoded(), true, 10000, args -> {
+			send(keyToSend, 2000, args -> {
 				if (!args.isTimeout()) {
 
 					// Step 2: Receiving remote key
-					SecretKey received = keyParser.apply(args.getResponse().getBytes());
-					if (received != null && received.equals(keyToSend)) {
+					unpackAndDo(args.getResponse().getBytes(), data -> {
+						if (Arrays.equals(data, keyToSend)) {
 
-						// Step 3: Sending positive acknowledgement
-						token.answer(args.getIdentifier(), new Message(SUCCESS_PATTERN, true));
-						success = true;
-					}
+							// Step 3: Sending positive acknowledgement
+							answer(args.getIdentifier(), SUCCESS_PATTERN);
+							success = true;
+						}
+					});
 				}
-			}));
+				else if (args.isConnectionLost())
+					counter = 3;
+			});
 		}
 
 		return success;
 	}
-	
-	private boolean keyExchangeClientToServer() throws Exception {
+
+	protected boolean doClientToServerExchange() throws Exception {
 		watchdog = Watchdog.create(() -> {
 			while (!success) {
-
 				// Waiting for initialisation to happen successfully
-				RequestReceivedEvent event = token.receive();
-				
+				RequestReceivedEvent event = receive();
+
 				// Connection with the remote has been lost
 				if (event.getData() == null)
 					watchdog.cancel();
 				else {
-					secretKey = keyParser.apply(event.getData());
-					if (secretKey != null) {
 
-						// Sending back the received key to remote
-						event.getConnection().answer(event.getIdentifier(), new Message(secretKey.getEncoded(), true, 10000, args -> {
-							if (!args.isTimeout() && Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes()))
-								success = true;
-						}));
+					// Storing key to be used if verified by server
+					byte[] key = event.getData();
+
+					// Data for symmetric exchange
+					if (key.length > 0) {
+						// Sending back the received key to the remote
+						answer(event.getIdentifier(), key, 2000, args -> {
+							if (!args.isTimeout()) {
+
+								// Extracting acknowledgement
+								unpackAndDo(args.getResponse().getBytes(), ack -> {
+									if (Arrays.equals(SUCCESS_PATTERN, ack)) {
+										secretKey = keyParser.apply(key);
+										success = true;
+									}
+								});
+							}
+							else if (args.isConnectionLost())
+								watchdog.cancel();
+						});
 					}
 				}
 			}
-		}, 35000);
+		}, 10000);
 		return watchdog.start();
 	}
 }
