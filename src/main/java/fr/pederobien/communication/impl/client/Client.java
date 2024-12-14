@@ -261,7 +261,7 @@ public abstract class Client implements IClient {
 
 		disconnect();
 
-		if (unstableCounter == config.getMaxUnstableCounterValue()) {
+		if (unstableCounter == config.getMaxUnstableCounterValue() - 1) {
 			onLogEvent(ELogLevel.ERROR, "stopping automatic reconnection");
 			EventManager.callEvent(new ClientUnstableEvent(this));
 		}

@@ -397,7 +397,7 @@ public abstract class Connection implements IConnection {
 	 * @param algo The unstable algorithm.
 	 */
 	private void checkUnstable(int counter, String algo) {
-		if (counter == MAX_EXCEPTION_NUMBER)
+		if (counter == MAX_EXCEPTION_NUMBER - 1)
 			onUnstableConnection(algo);
 	}
 }
