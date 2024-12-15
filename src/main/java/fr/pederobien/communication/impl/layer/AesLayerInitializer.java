@@ -10,7 +10,7 @@ public class AesLayerInitializer extends LayerInitializer {
 	 * 
 	 * @param certificate The certificate used to sign/authenticate the secret key received from the
 	 *                    remote as well as the data to send to the remote.
-	 * @param keySize The size, in bytes, of the AES key.
+	 * @param keySize The size, in bits, of the AES key.
 	 */
 	public AesLayerInitializer(ICertificate certificate, int keySize) {
 		super(new CertifiedLayer(certificate), token -> new AesKeyExchange(token, certificate, keySize).exchange());
