@@ -13,29 +13,41 @@ import fr.pederobien.utils.event.IEventListener;
 public class CallbackSendMessageToClientOnceConnected implements IEventListener {
 	private IServer server;
 	private Consumer<CallbackArgs> callback;
-	
-	public CallbackSendMessageToClientOnceConnected(IServer server, Consumer<CallbackArgs> callback) {
+	private int delay;
+
+	public CallbackSendMessageToClientOnceConnected(IServer server, Consumer<CallbackArgs> callback, int delay) {
 		this.server = server;
 		this.callback = callback;
+		this.delay = delay;
 	}
-	
+
+	public CallbackSendMessageToClientOnceConnected(IServer server, Consumer<CallbackArgs> callback) {
+		this(server, callback, 0);
+	}
+
 	/**
 	 * Start listening event bus to trigger {@link NewClientEvent}.
 	 */
 	public void start() {
 		EventManager.registerListener(this);
 	}
-	
+
 	/**
 	 * Unregister this event listener.
 	 */
 	public void stop() {
 		EventManager.unregisterListener(this);
 	}
-	
+
 	@EventHandler
 	private void onNewClientEvent(NewClientEvent event) {
-		if (event.getServer() == server)
+		if (event.getServer() == server) {
+			try {
+				Thread.sleep(delay);
+			} catch (Exception e) {
+				// Do nothing
+			}
 			event.getClient().getConnection().send(new Message("You are connected".getBytes(), callback));
+		}
 	}
 }
