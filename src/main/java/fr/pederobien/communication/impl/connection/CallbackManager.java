@@ -5,15 +5,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import fr.pederobien.communication.interfaces.connection.ICallback.CallbackArgs;
 import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
 import fr.pederobien.communication.interfaces.connection.IMessage;
-import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
 
 public class CallbackManager {
-	private BlockingQueueTask<CallbackManagement> callbackQueue;
-	private Map<Integer, CallbackManagement> pendingMessages;
+	private Map<Integer, Monitor> monitors;
 	private IDisposable disposable;
 	
 	/**
@@ -21,9 +20,8 @@ public class CallbackManager {
 	 * 
 	 * @param connection The connection associated to this manager.
 	 */
-	public CallbackManager(BlockingQueueTask<CallbackManagement> callbackQueue) {
-		this.callbackQueue = callbackQueue;
-		pendingMessages = new HashMap<Integer, CallbackManagement>();
+	public CallbackManager() {
+		monitors = new HashMap<Integer, Monitor>();
 		disposable = new Disposable();
 	}
 	
@@ -38,7 +36,7 @@ public class CallbackManager {
 
 		// When no timeout defined, no callback defined.
 		if (message.getCallback().getTimeout() > 0)
-			pendingMessages.put(identifier, new CallbackManagement(this, identifier, message));
+			monitors.put(identifier, new Monitor(identifier, message));
 	}
 	
 	/**
@@ -48,11 +46,11 @@ public class CallbackManager {
 	 * @param identifier The identifier of the message to monitor.
 	 */
 	public void start(int identifier) {
-		disposable.isDisposed();
+		disposable.checkDisposed();
 
-		CallbackManagement management = pendingMessages.get(identifier);
-		if (management != null)
-			management.start();
+		Monitor monitor = monitors.get(identifier);
+		if (monitor != null)
+			monitor.start();
 	}
 	
 	/**
@@ -60,11 +58,11 @@ public class CallbackManager {
 	 */
 	public void dispose() {
 		if (disposable.dispose()) {
-			Set<Entry<Integer, CallbackManagement>> set = pendingMessages.entrySet();
-			for (Map.Entry<Integer, CallbackManagement> entry : set)
-				entry.getValue().onConnectionLost();
+			Set<Entry<Integer, Monitor>> set = monitors.entrySet();
+			for (Map.Entry<Integer, Monitor> monitor : set)
+				monitor.getValue().dispatch(null, true);
 
-			pendingMessages.clear();
+			monitors.clear();
 		}
 	}
 	
@@ -73,28 +71,88 @@ public class CallbackManager {
 	 * for the requestID then the method returns null. If a pending request is registered for the requestID
 	 * It is canceled to avoid a timeout to occurs.
 	 * 
-	 * @param response The response that has been received from the remote.
-	 * 
-	 * @return The callback if there is a pending one, null otherwise.
+	 * @param header The response that has been received from the remote.
 	 */
-	public CallbackManagement unregister(IHeaderMessage response) {
-		disposable.checkDisposed();
-
-		CallbackManagement management = pendingMessages.remove(response.getRequestID());
-		if (management != null) {
-			management.cancel();
-			management.setResponse(response);
-		}
-		return management;
+	public void unregisterAndExecute(IHeaderMessage header) {
+		unregisterAndExec(header.getRequestID(), header);
 	}
 	
-	/**
-	 * Unregister the given callback management from this manager.
-	 * 
-	 * @param management The management to execute.
-	 */
-	public void removeAndExecute(CallbackManagement management) {
-		pendingMessages.remove(management.getIdentifier());
-		callbackQueue.add(management);
+	private void unregisterAndExec(int identifier, IHeaderMessage header) {
+		disposable.checkDisposed();
+		
+		Monitor monitor = monitors.remove(identifier);
+		if (monitor != null) {
+			monitor.stop();
+			monitor.dispatch(header, false);
+		}
+	}
+
+	private class Monitor {
+		private int identifier;
+		private IMessage request;
+		private Thread monitor;
+
+		/**
+		 * Creates a monitor to handle timeout.
+		 * 
+		 * @param identifier The identifier of the request.
+		 * @param request The request sent to the remote and waiting for a response.
+		 */
+		private Monitor(int identifier, IMessage request) {
+			this.identifier = identifier;
+			this.request = request;
+
+			monitor = new Thread(() -> monitor(), "[Timeout monitor]");
+		}
+
+		/**
+		 * Start the underlying thread waiting for a timeout to occur.
+		 */
+		public void start() {
+			monitor.start();
+		}
+
+		/**
+		 * Interrupt the underlying thread waiting for a timeout to occur.
+		 */
+		public void stop() {
+			monitor.interrupt();
+		}
+
+		/**
+		 * Execute the callback of the underlying request.
+		 * 
+		 * @param response The response received from the remote, or null if timeout occurs.
+		 * @param isConnectionLost True if the connection with the remote is lost, false otherwise.
+		 */
+		public void dispatch(IHeaderMessage response, boolean isConnectionLost) {
+			// Considering by default that timeout happened
+			int identifier = -1;
+			IMessage resp = null;
+			boolean isTimeout = true;
+
+			// No timeout happened
+			if (response != null) {
+				identifier = response.getIdentifier();
+				resp = new Message(response.getBytes());
+				isTimeout = false;
+			}
+
+			request.getCallback().apply(new CallbackArgs(identifier, resp, isTimeout, isConnectionLost));
+		}
+		
+		/**
+		 * Block until a timeout occurs or the response has been received.
+		 */
+		private void monitor() {
+			try {
+				Thread.sleep(request.getCallback().getTimeout());
+
+				// Timeout, need to remove the pending message
+				unregisterAndExec(identifier, null);
+			} catch (InterruptedException e) {
+				// Do nothing
+			}
+		}
 	}
 }

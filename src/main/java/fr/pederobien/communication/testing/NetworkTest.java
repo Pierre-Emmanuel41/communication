@@ -306,7 +306,7 @@ public class NetworkTest {
 					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected message received: %s", received));
 				}
 				else
-					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Expected timeout occurred"));
+					EventManager.callEvent(new LogEvent("Expected timeout occurred"));
 			});
 
 			sendToClient.start();
@@ -490,7 +490,7 @@ public class NetworkTest {
 	public void testUnexpectedRequestException() {
 		IExecutable test = () -> {
 			Network network = new Network();
-			IServer server = Communication.createDefaultCustomServer("TCP server test", 12345, network.getServer());
+			IServer server = Communication.createDefaultCustomServer("Dummy Server", 12345, network.getServer());
 			server.open();
 
 			SimpleSendMessageToClientOnceConnected sendToClient = new SimpleSendMessageToClientOnceConnected(server, "I'm spamming you", 10);
@@ -519,7 +519,7 @@ public class NetworkTest {
 	public void testUnstableClient() {
 		IExecutable test = () -> {
 			Network network = new Network();
-			IServer server = Communication.createDefaultCustomServer("TCP server test", 12345, network.getServer());
+			IServer server = Communication.createDefaultCustomServer("Dummy Server", 12345, network.getServer());
 			server.open();
 
 			SimpleSendMessageToClientOnceConnected sendToClient = new SimpleSendMessageToClientOnceConnected(server, "I'm spamming you !", 10);
@@ -602,7 +602,7 @@ public class NetworkTest {
 
 			Network network = new Network(simulator);
 
-			ServerConfig serverConfig = Communication.createServerConfig("Dummy serverConfig", 12345);
+			ServerConfig serverConfig = Communication.createServerConfig("Dummy Server", 12345);
 			serverConfig.setOnUnexpectedRequestReceived(new SimpleServerListener());
 
 			IServer server = Communication.createCustomServer(serverConfig, network.getServer());

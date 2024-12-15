@@ -29,8 +29,6 @@ public abstract class Connection implements IConnection {
 	private BlockingQueueTask<IHeaderMessage> sendingQueue;
 	private BlockingQueueTask<Object> receivingQueue;
 	private BlockingQueueTask<byte[]> extractingQueue;
-	private BlockingQueueTask<CallbackManagement> callbackQueue;
-	private BlockingQueueTask<RequestReceivedEvent> requestReceivedQueue;
 	private CallbackManager callbackManager;
 	private IDisposable disposable;
 	private ILayerInitializer layerInitializer;
@@ -39,8 +37,6 @@ public abstract class Connection implements IConnection {
 	private int sendingExceptionCounter;
 	private int receivingExceptionCounter;
 	private int extractingExceptionCounter;
-	private int callbackExceptionCounter;
-	private int requestExceptionCounter;
 
 	// When the synchronous send has been called
 	private Semaphore semaphore;
@@ -66,21 +62,13 @@ public abstract class Connection implements IConnection {
 		queueName = String.format("[%s extract]", name);
 		extractingQueue = new BlockingQueueTask<byte[]>(queueName, raw -> extractMessage(raw));
 
-		queueName = String.format("[%s callback]", name);
-		callbackQueue = new BlockingQueueTask<CallbackManagement>(queueName, management -> callbackMessage(management));
-
-		queueName = String.format("[%s unexpected]", name);
-		requestReceivedQueue = new BlockingQueueTask<RequestReceivedEvent>(queueName, event -> dispatchRequestReceivedEvent(event));
-
-		callbackManager = new CallbackManager(callbackQueue);
+		callbackManager = new CallbackManager();
 		disposable = new Disposable();
 		layerInitializer = config.getLayerInitializer().copy();
 
 		sendingExceptionCounter = 0;
 		receivingExceptionCounter = 0;
 		extractingExceptionCounter = 0;
-		callbackExceptionCounter = 0;
-		requestExceptionCounter = 0;
 		isEnabled = true;
 
 		semaphore = new Semaphore(0);
@@ -97,12 +85,6 @@ public abstract class Connection implements IConnection {
 
 		// Waiting for data to extract
 		extractingQueue.start();
-
-		// Waiting for callback to be called
-		callbackQueue.start();
-
-		// Waiting for an unexpected request
-		requestReceivedQueue.start();
 
 		// Initializing layer
 		Token token = new Token(this);
@@ -156,8 +138,6 @@ public abstract class Connection implements IConnection {
 			sendingQueue.dispose();
 			receivingQueue.dispose();
 			extractingQueue.dispose();
-			callbackQueue.dispose();
-			requestReceivedQueue.dispose();
 
 			EventManager.callEvent(new ConnectionDisposedEvent(this));
 		}
@@ -176,15 +156,6 @@ public abstract class Connection implements IConnection {
 	@Override
 	public String toString() {
 		return String.format("[%s]", name);
-	}
-
-	/**
-	 * Execute the callback of the given callback management asynchronously.
-	 * 
-	 * @param management The management that hold the callback to execute.
-	 */
-	public void timeout(CallbackManagement management) {
-		callbackQueue.add(management);
 	}
 
 	/**
@@ -236,8 +207,8 @@ public abstract class Connection implements IConnection {
 
 				sendingExceptionCounter = 0;
 			} catch (Exception exception) {
-				sendingExceptionCounter++;
 				checkUnstable(sendingExceptionCounter, "send");
+				sendingExceptionCounter++;
 			}
 		}
 	}
@@ -261,8 +232,8 @@ public abstract class Connection implements IConnection {
 
 				receivingExceptionCounter = 0;
 			} catch (Exception exception) {
-				receivingExceptionCounter++;
 				checkUnstable(receivingExceptionCounter, "receive");
+				receivingExceptionCounter++;
 
 				if (!isDisposed())
 					// Waiting again for the reception
@@ -295,58 +266,19 @@ public abstract class Connection implements IConnection {
 					// A 0 identifier means it does not correspond to a response to a request
 					if (request.getRequestID() != 0) {
 
-						// Checking if there is a pending request
-						CallbackManagement management = callbackManager.unregister(request);
-
-						// Receiving expected response from the remote
-						if (management != null)
-							callbackQueue.add(management);
+						// Execute the callback of the original request
+						callbackManager.unregisterAndExecute(request);
 					}
 
 					else
 						// Dispatching asynchronously a request received event.
-						requestReceivedQueue.add(new RequestReceivedEvent(this, request.getBytes(), request.getIdentifier()));
+						handler.onUnexpectedRequestReceived(new RequestReceivedEvent(this, request.getBytes(), request.getIdentifier()));
 				}
 
 				extractingExceptionCounter = 0;
 			} catch (Exception e) {
-				extractingExceptionCounter++;
 				checkUnstable(extractingExceptionCounter, "extract");
-			}
-		}
-	}
-
-	/**
-	 * Execute the callback of the given management and check if a request (ie a response) should be sent back to the remote.
-	 * 
-	 * @param management The management whose the callback must be executed.
-	 */
-	private void callbackMessage(CallbackManagement management) {
-		if (isEnabled()) {
-			try {
-				management.apply();
-
-				callbackExceptionCounter = 0;
-			} catch (Exception e) {
-				callbackExceptionCounter++;
-				checkUnstable(callbackExceptionCounter, "callback");
-			}
-		}
-	}
-
-	/**
-	 * Creates internally a request received event and dispatch it to the request received handler.
-	 * 
-	 * @param event The event to dispatch.
-	 */
-	private void dispatchRequestReceivedEvent(RequestReceivedEvent event) {
-		if (isEnabled()) {
-			try {
-				handler.onUnexpectedRequestReceived(event);
-				requestExceptionCounter = 0;
-			} catch (Exception e) {
-				requestExceptionCounter++;
-				checkUnstable(requestExceptionCounter, "dispatcher");
+				extractingExceptionCounter++;
 			}
 		}
 	}

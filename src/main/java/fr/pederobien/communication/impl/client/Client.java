@@ -237,6 +237,7 @@ public abstract class Client implements IClient {
 		}
 		else {
 			this.connection = connection;
+			unstableCounter = 0;
 
 			// Starting the monitoring of the connection
 			listener = new ConnectionListener(getConnection());
