@@ -116,6 +116,9 @@ public class CommunicationTestApp
         tests.testCallbackException();
         tests.testUnexpectedRequestException();
         tests.testUnstableClient();
+    	tests.testRsaLayer();
+    	tests.testAesLayer();
+    	tests.testAesSafeLayer();
     }
     
     private static void runTest(String testName, Runnable runnable) {

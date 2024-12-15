@@ -4,7 +4,10 @@ import fr.pederobien.communication.impl.ClientConfig;
 import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.ServerConfig;
 import fr.pederobien.communication.impl.connection.Message;
+import fr.pederobien.communication.impl.layer.AesLayerInitializer;
+import fr.pederobien.communication.impl.layer.AesSafeLayerInitializer;
 import fr.pederobien.communication.impl.layer.LayerInitializer;
+import fr.pederobien.communication.impl.layer.RsaLayerInitializer;
 import fr.pederobien.communication.interfaces.client.IClient;
 import fr.pederobien.communication.interfaces.server.IServer;
 import fr.pederobien.communication.testing.tools.CallbackSendMessageToClientOnceConnected;
@@ -13,6 +16,7 @@ import fr.pederobien.communication.testing.tools.ClientExceptionImpl.ClientExcep
 import fr.pederobien.communication.testing.tools.ExceptionLayer;
 import fr.pederobien.communication.testing.tools.ExceptionLayer.LayerExceptionMode;
 import fr.pederobien.communication.testing.tools.SimpleAnswerToRequestListener;
+import fr.pederobien.communication.testing.tools.SimpleCertificate;
 import fr.pederobien.communication.testing.tools.SimpleClientListener;
 import fr.pederobien.communication.testing.tools.SimpleSendMessageToClientOnceConnected;
 import fr.pederobien.communication.testing.tools.SimpleServerListener;
@@ -46,7 +50,7 @@ public class TcpCommunicationTest {
 			IServer server = Communication.createDefaultTcpServer("TCP server test", 12345);
 			server.open();
 			
-			sleep(1000);
+			sleep(2000);
 			
 			client.disconnect();
 			client.dispose();
@@ -104,11 +108,11 @@ public class TcpCommunicationTest {
 			client.connect();
 			
 			// Waiting for the client to be connected to the remote
-			sleep(1000);
+			sleep(2000);
 			
 			client.getConnection().send(new Message("Hello World !".getBytes()));
 			
-			sleep(1000);
+			sleep(2000);
 			
 			client.disconnect();
 			client.dispose();
@@ -126,7 +130,7 @@ public class TcpCommunicationTest {
 		Runnable test = () -> {
 			IServer server = Communication.createDefaultTcpServer("TCP server test", 12345);
 			server.open();
-			
+
 			SimpleSendMessageToClientOnceConnected sendToClient = new SimpleSendMessageToClientOnceConnected(server, "You are connected !", 1);
 			sendToClient.start();
 			
@@ -135,16 +139,16 @@ public class TcpCommunicationTest {
 
 			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
-			
-			sleep(1000);
-			
+
+			sleep(2000);
+
 			sendToClient.stop();
-			
+
 			client.disconnect();
 			client.dispose();
-			
+
 			sleep(500);
-			
+
 			server.close();
 			server.dispose();
 		};
@@ -163,18 +167,18 @@ public class TcpCommunicationTest {
 			IClient client = Communication.createDefaultTcpClient("127.0.0.1", 12345);
 			client.connect();
 			
-			sleep(1000);
+			sleep(2000);
 			
 			client.getConnection().send(new Message("Hello world !".getBytes(), args -> {
 				if (!args.isTimeout()) {
 					String received = new String(args.getResponse().getBytes());
-					EventManager.callEvent(new LogEvent(ELogLevel.WARNING, "Response received: %s", received));
+					EventManager.callEvent(new LogEvent("Response received: %s", received));
 				}
 				else
-					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Unexpected timeout occurred"));
+					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
 			}));
 			
-			sleep(1000);
+			sleep(2000);
 			
 			client.disconnect();
 			client.dispose();
@@ -228,10 +232,10 @@ public class TcpCommunicationTest {
 			CallbackSendMessageToClientOnceConnected sendToClient = new CallbackSendMessageToClientOnceConnected(server, args -> {
 				if (!args.isTimeout()) {
 					String received = new String(args.getResponse().getBytes());
-					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Server received: %s", received));
+					EventManager.callEvent(new LogEvent(ELogLevel.INFO, "Server received: %s", received));
 				}
 				else
-					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Unexpected timeout occurred"));
+					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
 			});
 			
 			sendToClient.start();
@@ -266,10 +270,10 @@ public class TcpCommunicationTest {
 			CallbackSendMessageToClientOnceConnected sendToClient = new CallbackSendMessageToClientOnceConnected(server, args -> {
 				if (!args.isTimeout()) {
 					String received = new String(args.getResponse().getBytes());
-					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Server received: %s", received));
+					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Server received: %s", received));
 				}
 				else
-					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Expected timeout occurred"));
+					EventManager.callEvent(new LogEvent(ELogLevel.INFO, "Expected timeout occurred"));
 			});
 			
 			sendToClient.start();
@@ -357,7 +361,7 @@ public class TcpCommunicationTest {
 			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 			
-			sleep(3000);
+			sleep(4000);
 			
 			sendToClient.stop();
 			
@@ -466,7 +470,154 @@ public class TcpCommunicationTest {
 		
 		runTest("testUnstableClient", test);
 	}
-	
+
+	public void testRsaLayer() {
+		Runnable test = () -> {
+			ServerConfig serverConfig = Communication.createServerConfig("TCP server test", 12345);
+			serverConfig.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I received your request !"));
+			serverConfig.setLayerInitializer(new RsaLayerInitializer(new SimpleCertificate()));
+
+			IServer server = Communication.createTcpServer(serverConfig);
+			server.open();
+
+			CallbackSendMessageToClientOnceConnected listener = new CallbackSendMessageToClientOnceConnected(server, args -> {
+				if (!args.isTimeout()) {
+					EventManager.callEvent(new LogEvent("Server received: %s", new String(args.getResponse().getBytes())));
+				}
+				else
+					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
+			});
+			listener.start();
+
+			ClientConfig clientConfig = Communication.createClientConfig("127.0.0.1", 12345);
+			clientConfig.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I guess I am"));
+			clientConfig.setLayerInitializer(new RsaLayerInitializer(new SimpleCertificate()));
+
+			IClient client = Communication.createTcpClient(clientConfig);
+			client.connect();
+
+			sleep(2000);
+
+			client.getConnection().send(new Message("Hello World !".getBytes(), args -> {
+				if (!args.isTimeout()) {
+					EventManager.callEvent(new LogEvent("Client received: %s", new String(args.getResponse().getBytes())));
+				}
+				else
+					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
+			}));
+
+			sleep(2000);
+
+			client.disconnect();
+			client.dispose();
+
+			sleep(500);
+
+			server.close();
+			server.dispose();
+		};
+
+		runTest("testRsaLayer", test);
+	}
+
+	public void testAesLayer() {
+		Runnable test = () -> {
+			ServerConfig serverConfig = Communication.createServerConfig("TCP server test", 12345);
+			serverConfig.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I received your request !"));
+			serverConfig.setLayerInitializer(new AesLayerInitializer(new SimpleCertificate()));
+
+			IServer server = Communication.createTcpServer(serverConfig);
+			server.open();
+
+			CallbackSendMessageToClientOnceConnected listener = new CallbackSendMessageToClientOnceConnected(server, args -> {
+				if (!args.isTimeout()) {
+					EventManager.callEvent(new LogEvent("Server received: %s", new String(args.getResponse().getBytes())));
+				}
+				else
+					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
+			}, 100);
+			listener.start();
+
+			ClientConfig clientConfig = Communication.createClientConfig("127.0.0.1", 12345);
+			clientConfig.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I guess I am"));
+			clientConfig.setLayerInitializer(new AesLayerInitializer(new SimpleCertificate()));
+
+			IClient client = Communication.createTcpClient(clientConfig);
+			client.connect();
+
+			sleep(2000);
+
+			client.getConnection().send(new Message("Hello World !".getBytes(), args -> {
+				if (!args.isTimeout()) {
+					EventManager.callEvent(new LogEvent("Client received: %s", new String(args.getResponse().getBytes())));
+				}
+				else
+					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
+			}));
+
+			sleep(2000);
+
+			client.disconnect();
+			client.dispose();
+
+			sleep(500);
+
+			server.close();
+			server.dispose();
+		};
+
+		runTest("testAesLayer", test);
+	}
+
+	public void testAesSafeLayer() {
+		Runnable test = () -> {
+			ServerConfig serverConfig = Communication.createServerConfig("TCP server test", 12345);
+			serverConfig.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I received your request !"));
+			serverConfig.setLayerInitializer(new AesSafeLayerInitializer(new SimpleCertificate()));
+
+			IServer server = Communication.createTcpServer(serverConfig);
+			server.open();
+
+			CallbackSendMessageToClientOnceConnected listener = new CallbackSendMessageToClientOnceConnected(server, args -> {
+				if (!args.isTimeout()) {
+					EventManager.callEvent(new LogEvent("Server received: %s", new String(args.getResponse().getBytes())));
+				}
+				else
+					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
+			}, 100);
+			listener.start();
+
+			ClientConfig clientConfig = Communication.createClientConfig("127.0.0.1", 12345);
+			clientConfig.setOnUnexpectedRequestReceived(new SimpleAnswerToRequestListener("I guess I am"));
+			clientConfig.setLayerInitializer(new AesSafeLayerInitializer(new SimpleCertificate()));
+
+			IClient client = Communication.createTcpClient(clientConfig);
+			client.connect();
+
+			sleep(2000);
+
+			client.getConnection().send(new Message("Hello World !".getBytes(), args -> {
+				if (!args.isTimeout()) {
+					EventManager.callEvent(new LogEvent("Client received: %s", new String(args.getResponse().getBytes())));
+				}
+				else
+					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
+			}));
+
+			sleep(2000);
+
+			client.disconnect();
+			client.dispose();
+
+			sleep(500);
+
+			server.close();
+			server.dispose();
+		};
+
+		runTest("testAesSafeLayer", test);
+	}
+
 	private void runTest(String testName, Runnable runnable) {
 		EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Begin %s", testName));
 		try {
@@ -476,7 +627,7 @@ public class TcpCommunicationTest {
 		}
 		EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "End %s", testName));
 	}
-	
+
 	private void sleep(int millis) {
 		try {
 			Thread.sleep(millis);
