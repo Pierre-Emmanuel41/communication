@@ -40,11 +40,6 @@ public class ConnectionConfig implements IConnectionConfig {
 	}
 
 	@Override
-	public int getReceivingBufferSize() {
-		return configuration.getReceivingBufferSize();
-	}
-
-	@Override
 	public ILayerInitializer getLayerInitializer() {
 		return configuration.getLayerInitializer();
 	}

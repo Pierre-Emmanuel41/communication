@@ -9,11 +9,6 @@ public interface IConfiguration {
 	 * @return The direction of the communication.
 	 */
 	Mode getMode();
-
-	/**
-	 * @return The size, in bytes, of the buffer used to receive data from the remote. The default value is 1024.
-	 */
-	int getReceivingBufferSize();
 	
 	/**
 	 * @return An object that specify how a layer must be initialized.

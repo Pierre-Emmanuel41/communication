@@ -22,11 +22,6 @@ public interface IConnectionConfig {
 	Mode getMode();
 
 	/**
-	 * @return The size of the bytes array used to receive data from the remote.
-	 */
-	int getReceivingBufferSize();
-
-	/**
 	 * @return The layer responsible to encode/decode data.
 	 */
 	ILayerInitializer getLayerInitializer();

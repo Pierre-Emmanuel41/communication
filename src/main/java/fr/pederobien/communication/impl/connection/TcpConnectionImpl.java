@@ -25,8 +25,8 @@ public class TcpConnectionImpl implements IConnectionImpl {
 	}
 
 	@Override
-	public byte[] receiveImpl(int receivingBufferSize) throws Exception {
-		byte[] buffer = new byte[receivingBufferSize];
+	public byte[] receiveImpl() throws Exception {
+		byte[] buffer = new byte[2048];
 		int read = socket.getInputStream().read(buffer);
 		
 		return read == -1 ? null : ByteWrapper.wrap(buffer).extract(0, read);

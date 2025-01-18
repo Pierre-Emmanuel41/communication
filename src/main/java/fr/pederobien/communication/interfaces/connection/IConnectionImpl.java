@@ -13,10 +13,8 @@ public interface IConnectionImpl {
 
 	/**
 	 * Connection specific implementation to receive bytes from the remote.
-	 * 
-	 * @param receivingBufferSize The size of the bytes array used to receive data from the remote.
 	 */
-	byte[] receiveImpl(int receivingBufferSize) throws Exception;
+	byte[] receiveImpl() throws Exception;
 	
 	/**
 	 * Close definitively the connection with the remote.

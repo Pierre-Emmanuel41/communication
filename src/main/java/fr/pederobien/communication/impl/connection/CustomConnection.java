@@ -24,8 +24,8 @@ public class CustomConnection extends Connection {
 	}
 
 	@Override
-	protected byte[] receiveImpl(int receivingBufferSize) throws Exception {
-		return implementation.receiveImpl(receivingBufferSize);
+	protected byte[] receiveImpl() throws Exception {
+		return implementation.receiveImpl();
 	}
 	
 	@Override

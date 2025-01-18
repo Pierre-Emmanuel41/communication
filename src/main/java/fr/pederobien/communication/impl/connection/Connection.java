@@ -169,10 +169,8 @@ public abstract class Connection implements IConnection {
 
 	/**
 	 * Connection specific implementation to receive bytes from the remote.
-	 * 
-	 * @param receivingBufferSize The size of the bytes array used to receive data from the remote.
 	 */
-	protected abstract byte[] receiveImpl(int receivingBufferSize) throws Exception;
+	protected abstract byte[] receiveImpl() throws Exception;
 
 	/**
 	 * Connection specific implementation to close definitively the connection with the remote.
@@ -221,7 +219,7 @@ public abstract class Connection implements IConnection {
 			byte[] raw = null;
 
 			try {
-				raw = receiveImpl(getConfig().getReceivingBufferSize());
+				raw = receiveImpl();
 
 				// When raw is null, a problem happened while waiting for receiving data from the remote
 				if (raw == null)

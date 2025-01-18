@@ -60,7 +60,7 @@ public class ClientExceptionImpl implements IClientImpl {
 		}
 
 		@Override
-		public byte[] receiveImpl(int receivingBufferSize) throws Exception {
+		public byte[] receiveImpl() throws Exception {
 			if (mode == ClientExceptionMode.RECEIVING) {
 				Thread.sleep(200);
 				throw new RuntimeException("Exception to test unstable counter");

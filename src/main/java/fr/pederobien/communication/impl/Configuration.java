@@ -8,7 +8,6 @@ import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
 
 public class Configuration implements IConfiguration {
 	private Mode mode;
-	private int receivingBufferSize;
 	private ILayerInitializer layerInitializer;
 	private IUnexpectedRequestHandler onUnexpectedRequestReceived;
 
@@ -20,7 +19,6 @@ public class Configuration implements IConfiguration {
 	public Configuration(Mode mode) {
 		this.mode = mode;
 
-		receivingBufferSize = 1024;
 		layerInitializer = new LayerInitializer();
 		onUnexpectedRequestReceived = event -> {};
 	}
@@ -28,20 +26,6 @@ public class Configuration implements IConfiguration {
 	@Override
 	public Mode getMode() {
 		return mode;
-	}
-
-	@Override
-	public int getReceivingBufferSize() {
-		return receivingBufferSize;
-	}
-
-	/**
-	 * Set the size, in bytes, of the buffer to handle raw data from the network. The default value is 1024.
-	 * 
-	 * @param receivingBufferSize The size of the buffer to receive data from the network.
-	 */
-	public void setReceivingBufferSize(int receivingBufferSize) {
-		this.receivingBufferSize = receivingBufferSize;
 	}
 
 	@Override

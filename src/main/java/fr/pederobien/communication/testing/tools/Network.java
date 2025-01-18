@@ -432,7 +432,7 @@ public class Network {
 		}
 
 		@Override
-		public byte[] receiveImpl(int receivingBufferSize) throws Exception {
+		public byte[] receiveImpl() throws Exception {
 			if (mode == ExceptionMode.RECEIVE) {
 				Thread.sleep(200);
 				throw new RuntimeException("Exception to test unstable counter");
