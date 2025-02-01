@@ -15,7 +15,6 @@ import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
 import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
 import fr.pederobien.communication.interfaces.connection.IMessage;
 import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
-import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
 import fr.pederobien.utils.event.EventManager;
@@ -26,9 +25,7 @@ public abstract class Connection implements IConnection {
 	private static final int MAX_EXCEPTION_NUMBER = 10;
 	private IConnectionConfig config;
 	private String name;
-	private BlockingQueueTask<IHeaderMessage> sendingQueue;
-	private BlockingQueueTask<Object> receivingQueue;
-	private BlockingQueueTask<byte[]> extractingQueue;
+	private QueueManager queueManager;
 	private CallbackManager callbackManager;
 	private IDisposable disposable;
 	private ILayerInitializer layerInitializer;
@@ -43,7 +40,8 @@ public abstract class Connection implements IConnection {
 	private CallbackArgs argument;
 
 	/**
-	 * Create an abstract connection that send asynchronously messages to the remote.
+	 * Create an abstract connection that send asynchronously messages to the
+	 * remote.
 	 * 
 	 * @param config The object that holds the connection configuration.
 	 */
@@ -53,14 +51,10 @@ public abstract class Connection implements IConnection {
 		String remote = config.getMode() == Mode.CLIENT_TO_SERVER ? "Server" : "Client";
 		name = String.format("%s %s:%s", remote, config.getAddress(), config.getPort());
 
-		String queueName = String.format("[%s send]", name);
-		sendingQueue = new BlockingQueueTask<IHeaderMessage>(queueName, message -> sendMessage(message));
-
-		queueName = String.format("[%s receive]", name);
-		receivingQueue = new BlockingQueueTask<Object>(queueName, object -> receiveMessage(object));
-
-		queueName = String.format("[%s extract]", name);
-		extractingQueue = new BlockingQueueTask<byte[]>(queueName, raw -> extractMessage(raw));
+		queueManager = new QueueManager(name);
+		queueManager.setOnSend(message -> sendMessage(message));
+		queueManager.setOnReceive(ignored -> receiveMessage(ignored));
+		queueManager.setOnExtract(raw -> extractMessage(raw));
 
 		callbackManager = new CallbackManager();
 		disposable = new Disposable();
@@ -76,15 +70,7 @@ public abstract class Connection implements IConnection {
 
 	@Override
 	public boolean initialise() throws Exception {
-		// Waiting for a message to be sent
-		sendingQueue.start();
-
-		// Waiting for receiving message from network
-		receivingQueue.start();
-		receivingQueue.add(new Object());
-
-		// Waiting for data to extract
-		extractingQueue.start();
+		queueManager.initialize();
 
 		// Initializing layer
 		Token token = new Token(this);
@@ -101,16 +87,18 @@ public abstract class Connection implements IConnection {
 	public void send(IMessage message) {
 		disposable.checkDisposed();
 
-		if (isEnabled())
+		if (isEnabled()) {
 			send(0, message);
+		}
 	}
 
 	@Override
 	public void answer(int requestID, IMessage message) {
 		disposable.checkDisposed();
 
-		if (isEnabled())
+		if (isEnabled()) {
 			send(requestID, message);
+		}
 	}
 
 	@Override
@@ -120,8 +108,9 @@ public abstract class Connection implements IConnection {
 
 	@Override
 	public void setEnabled(boolean isEnabled) {
-		if (this.isEnabled == isEnabled)
+		if (this.isEnabled == isEnabled) {
 			return;
+		}
 
 		this.isEnabled = isEnabled;
 		EventManager.callEvent(new ConnectionEnableChangedEvent(this, isEnabled));
@@ -135,9 +124,8 @@ public abstract class Connection implements IConnection {
 			// Dispose callback manager
 			callbackManager.dispose();
 
-			sendingQueue.dispose();
-			receivingQueue.dispose();
-			extractingQueue.dispose();
+			// Disposing sending, receiving and extracting queue
+			queueManager.dispose();
 
 			EventManager.callEvent(new ConnectionDisposedEvent(this));
 		}
@@ -159,9 +147,9 @@ public abstract class Connection implements IConnection {
 	}
 
 	/**
-	 * Connection specific implementation to send a message to the remote.
-	 * The bytes array is the result of the layer that has encapsulated the payload
-	 * with other information in order to be received correctly.
+	 * Connection specific implementation to send a message to the remote. The bytes
+	 * array is the result of the layer that has encapsulated the payload with other
+	 * information in order to be received correctly.
 	 * 
 	 * @param data The byte array to send to the remote.
 	 */
@@ -173,7 +161,8 @@ public abstract class Connection implements IConnection {
 	protected abstract byte[] receiveImpl() throws Exception;
 
 	/**
-	 * Connection specific implementation to close definitively the connection with the remote.
+	 * Connection specific implementation to close definitively the connection with
+	 * the remote.
 	 */
 	protected abstract void disposeImpl();
 
@@ -221,26 +210,29 @@ public abstract class Connection implements IConnection {
 			try {
 				raw = receiveImpl();
 
-				// When raw is null, a problem happened while waiting for receiving data from the remote
-				if (raw == null)
+				// When raw is null, a problem happened while waiting
+				// for receiving data from the remote
+				if (raw == null) {
 					EventManager.callEvent(new ConnectionLostEvent(this));
-				else
+				} else {
 					// Adding raw data for asynchronous extraction
-					extractingQueue.add(raw);
+					queueManager.getExtractingQueue().add(raw);
+				}
 
 				receivingExceptionCounter = 0;
 			} catch (Exception exception) {
 				checkUnstable(receivingExceptionCounter, "receive");
 				receivingExceptionCounter++;
 
-				if (!isDisposed())
+				if (!isDisposed()) {
 					// Waiting again for the reception
-					receivingQueue.add(new Object());
+					queueManager.getReceivingQueue().add(new Object());
+				}
 			} finally {
 				// If connection is not lost
 				if (raw != null) {
 					// Waiting again for the reception
-					receivingQueue.add(new Object());
+					queueManager.getReceivingQueue().add(new Object());
 				}
 			}
 		}
@@ -266,11 +258,11 @@ public abstract class Connection implements IConnection {
 
 						// Execute the callback of the original request
 						callbackManager.unregisterAndExecute(request);
-					}
-
-					else
+					} else {
 						// Dispatching asynchronously a request received event.
-						handler.onUnexpectedRequestReceived(new RequestReceivedEvent(this, request.getBytes(), request.getIdentifier()));
+						handler.onUnexpectedRequestReceived(
+								new RequestReceivedEvent(this, request.getBytes(), request.getIdentifier()));
+					}
 				}
 
 				extractingExceptionCounter = 0;
@@ -285,7 +277,7 @@ public abstract class Connection implements IConnection {
 	 * Creates a header message to be sent to the remote.
 	 * 
 	 * @param requestID The Identifier of the request to respond to.
-	 * @param message The message to send to the remote.
+	 * @param message   The message to send to the remote.
 	 */
 	private void send(int requestID, IMessage message) {
 		IMessage toSend = message;
@@ -300,7 +292,7 @@ public abstract class Connection implements IConnection {
 
 		IHeaderMessage header = new HeaderMessage(requestID, toSend);
 		callbackManager.register(header.getIdentifier(), toSend);
-		sendingQueue.add(header);
+		queueManager.getSendingQueue().add(header);
 
 		if (message.isSync()) {
 			try {
@@ -314,20 +306,22 @@ public abstract class Connection implements IConnection {
 			}
 
 			// Executing callback
-			if (message.getCallback().getTimeout() != -1)
+			if (message.getCallback().getTimeout() != -1) {
 				message.getCallback().apply(argument);
+			}
 		}
 	}
 
 	/**
-	 * Check if the value of the counter equals the maximum exception counter. If so, an unstable connection event
-	 * is thrown.
+	 * Check if the value of the counter equals the maximum exception counter. If
+	 * so, an unstable connection event is thrown.
 	 * 
 	 * @param counter The counter to check.
-	 * @param algo The unstable algorithm.
+	 * @param algo    The unstable algorithm.
 	 */
 	private void checkUnstable(int counter, String algo) {
-		if (counter == MAX_EXCEPTION_NUMBER - 1)
+		if (counter == MAX_EXCEPTION_NUMBER - 1) {
 			onUnstableConnection(algo);
+		}
 	}
 }
