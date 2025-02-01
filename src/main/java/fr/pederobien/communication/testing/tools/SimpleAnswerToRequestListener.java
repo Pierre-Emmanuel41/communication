@@ -8,9 +8,10 @@ import fr.pederobien.utils.event.LogEvent;
 
 public class SimpleAnswerToRequestListener implements IUnexpectedRequestHandler {
 	private String message;
-	
+
 	/**
-	 * Creates a listener that response to a request received event with the given message.
+	 * Creates a listener that response to a request received event with the given
+	 * message.
 	 * 
 	 * @param message The message to send back to the remote.
 	 */
@@ -19,7 +20,7 @@ public class SimpleAnswerToRequestListener implements IUnexpectedRequestHandler 
 	}
 
 	@Override
-	public void onUnexpectedRequestReceived(RequestReceivedEvent event) {
+	public void handle(RequestReceivedEvent event) {
 		String received = new String(event.getData());
 		EventManager.callEvent(new LogEvent("Message received: %s", received));
 		event.getConnection().answer(event.getIdentifier(), new Message(message.getBytes()));

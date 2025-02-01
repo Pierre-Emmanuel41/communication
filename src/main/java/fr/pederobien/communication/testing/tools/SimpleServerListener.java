@@ -8,7 +8,7 @@ import fr.pederobien.utils.event.LogEvent;
 public class SimpleServerListener implements IUnexpectedRequestHandler {
 
 	@Override
-	public void onUnexpectedRequestReceived(RequestReceivedEvent event) {
+	public void handle(RequestReceivedEvent event) {
 		String received = new String(event.getData());
 		EventManager.callEvent(new LogEvent("Server received: %s", received));
 	}

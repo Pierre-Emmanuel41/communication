@@ -9,5 +9,5 @@ public interface IUnexpectedRequestHandler {
 	 * 
 	 * @param event The event that contains the unexpected request.
 	 */
-	void onUnexpectedRequestReceived(RequestReceivedEvent event);
+	void handle(RequestReceivedEvent event);
 }

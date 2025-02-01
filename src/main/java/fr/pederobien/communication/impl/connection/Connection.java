@@ -260,8 +260,7 @@ public abstract class Connection implements IConnection {
 						callbackManager.unregisterAndExecute(request);
 					} else {
 						// Dispatching asynchronously a request received event.
-						handler.onUnexpectedRequestReceived(
-								new RequestReceivedEvent(this, request.getBytes(), request.getIdentifier()));
+						handler.handle(new RequestReceivedEvent(this, request.getBytes(), request.getIdentifier()));
 					}
 				}
 

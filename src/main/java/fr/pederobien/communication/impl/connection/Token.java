@@ -7,8 +7,8 @@ import fr.pederobien.communication.event.RequestReceivedEvent;
 import fr.pederobien.communication.interfaces.IToken;
 import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 import fr.pederobien.communication.interfaces.connection.IConnection;
-import fr.pederobien.communication.interfaces.connection.IMessage;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
+import fr.pederobien.communication.interfaces.connection.IMessage;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
 import fr.pederobien.utils.event.EventHandler;
@@ -22,7 +22,8 @@ public class Token implements IToken, IEventListener, IUnexpectedRequestHandler 
 	private Semaphore semaphore;
 
 	/**
-	 * Creates a token to perform information exchange before calling ClientConnectedEvent.
+	 * Creates a token to perform information exchange before calling
+	 * ClientConnectedEvent.
 	 * 
 	 * @param connection The live connection to the remote.
 	 */
@@ -79,23 +80,26 @@ public class Token implements IToken, IEventListener, IUnexpectedRequestHandler 
 	}
 
 	@Override
-	public void onUnexpectedRequestReceived(RequestReceivedEvent event) {
-		if (event.getConnection() != connection)
+	public void handle(RequestReceivedEvent event) {
+		if (event.getConnection() != connection) {
 			return;
+		}
 
 		notify(event);
 	}
-	
+
 	@EventHandler
 	private void onConnectionLostEvent(ConnectionLostEvent event) {
-		if (event.getConnection() != connection)
+		if (event.getConnection() != connection) {
 			return;
+		}
 
 		notify(new RequestReceivedEvent(connection, null, -1));
 	}
 
 	/**
-	 * Notify listeners, if any, that an unexpected request has been received from the remote.
+	 * Notify listeners, if any, that an unexpected request has been received from
+	 * the remote.
 	 * 
 	 * @param event The event that holds the unexpected request.
 	 */
