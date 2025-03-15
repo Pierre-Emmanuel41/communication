@@ -17,6 +17,7 @@ public class CommunicationTestApp {
 		runTest("Layer tests", () -> runLayerTests());
 		runTest("Layer initialisation tests", () -> runLayerInitialisationTest());
 		runTest("TCP tests", () -> runTcpCommunicationTest());
+		runTest("UDP tests", () -> runUdpCommunicationTest());
 
 		// Asynchronous tests, wait a little bit before closing tests session
 		try {
@@ -99,6 +100,24 @@ public class CommunicationTestApp {
 		tests.testClientAutomaticReconnection();
 		tests.testClientAutomaticReconnectionButWithServerOpenedLater();
 		tests.testClientAutomaticReconnectionButServerClosedLater();
+		tests.testClientToServerCommunication();
+		tests.testServerToClientCommunication();
+		tests.testClientToServerWithCallback();
+		tests.testClientToServerWithCallbackButTimeout();
+		tests.testServerToClientWithCallback();
+		tests.testServerToClientWithCallbackButTimeout();
+		tests.testExtractionException();
+		tests.testCallbackException();
+		tests.testUnexpectedRequestException();
+		tests.testUnstableClient();
+		tests.testRsaLayer();
+		tests.testAesLayer();
+		tests.testAesSafeLayer();
+	}
+
+	private static void runUdpCommunicationTest() {
+		UdpCommunicationTest tests = new UdpCommunicationTest();
+
 		tests.testClientToServerCommunication();
 		tests.testServerToClientCommunication();
 		tests.testClientToServerWithCallback();

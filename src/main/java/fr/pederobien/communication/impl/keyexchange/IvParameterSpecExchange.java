@@ -8,7 +8,6 @@ import javax.crypto.spec.IvParameterSpec;
 
 import fr.pederobien.communication.event.RequestReceivedEvent;
 import fr.pederobien.communication.interfaces.IToken;
-import fr.pederobien.utils.AsyncConsole;
 import fr.pederobien.utils.Watchdog;
 import fr.pederobien.utils.Watchdog.WatchdogStakeholder;
 
@@ -42,14 +41,11 @@ public class IvParameterSpecExchange extends Exchange {
 		SecureRandom random = new SecureRandom();
 		random.nextBytes(iv);
 
-		AsyncConsole.printlnWithTimeStamp("[Server] Sending IV");
 		send(iv, 2000, args -> {
 			if (!args.isTimeout()) {
 
 				// Step 2: Receiving remote parameter specification
 				if (Arrays.equals(args.getResponse().getBytes(), iv)) {
-
-					AsyncConsole.printlnWithTimeStamp("[Server] Client IV is valid");
 
 					// Sending positive acknowledgement to the client
 					serverToClient_sendPositiveAcknowledgement(args.getIdentifier(), iv);
@@ -65,8 +61,6 @@ public class IvParameterSpecExchange extends Exchange {
 		watchdog = Watchdog.create(() -> {
 			while (!success) {
 
-				AsyncConsole.printlnWithTimeStamp("[Client] Waiting for server IV");
-
 				// Waiting for initialisation to happen successfully
 				RequestReceivedEvent event = receive();
 
@@ -74,8 +68,6 @@ public class IvParameterSpecExchange extends Exchange {
 				if (event.getData() == null) {
 					watchdog.cancel();
 				} else {
-
-					AsyncConsole.printlnWithTimeStamp("[Client] Server IV received");
 
 					// Sending back the remote secret key
 					clientToServer_sendBackSecretKey(event.getIdentifier(), event.getData());
@@ -86,13 +78,10 @@ public class IvParameterSpecExchange extends Exchange {
 	}
 
 	private void serverToClient_sendPositiveAcknowledgement(int identifier, byte[] iv) {
-		AsyncConsole.printlnWithTimeStamp("[Server] Sending Positive ackowlegement to client");
 		answer(identifier, SUCCESS_PATTERN, 2000, args -> {
 			if (!args.isTimeout()) {
 
 				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
-					AsyncConsole.printlnWithTimeStamp("[Server] Positive ackowlegement from client received");
-
 					ivParameterSpec = new IvParameterSpec(iv);
 					success = true;
 				}
@@ -101,12 +90,9 @@ public class IvParameterSpecExchange extends Exchange {
 	}
 
 	private void clientToServer_sendBackSecretKey(int identifier, byte[] iv) {
-		AsyncConsole.printlnWithTimeStamp("[Client] Sending server IV back");
 		answer(identifier, iv, 2000, args -> {
 			if (!args.isTimeout()) {
-
 				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
-					AsyncConsole.printlnWithTimeStamp("[Client] Sending positive acknowledgement to server");
 					answer(args.getIdentifier(), SUCCESS_PATTERN);
 					ivParameterSpec = new IvParameterSpec(iv);
 					success = true;

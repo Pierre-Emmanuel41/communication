@@ -2,10 +2,12 @@ package fr.pederobien.communication.impl;
 
 import fr.pederobien.communication.impl.client.CustomClient;
 import fr.pederobien.communication.impl.client.TcpClientImpl;
+import fr.pederobien.communication.impl.client.UdpClientImpl;
 import fr.pederobien.communication.impl.connection.ConnectionConfig;
 import fr.pederobien.communication.impl.connection.CustomConnection;
 import fr.pederobien.communication.impl.server.CustomServer;
 import fr.pederobien.communication.impl.server.TcpServerImpl;
+import fr.pederobien.communication.impl.server.UdpServerImpl;
 import fr.pederobien.communication.interfaces.IConfiguration;
 import fr.pederobien.communication.interfaces.client.IClient;
 import fr.pederobien.communication.interfaces.client.IClientConfig;
@@ -22,25 +24,23 @@ public class Communication {
 	/**
 	 * Creates a configuration for a connection.
 	 * 
-	 * @param address       The IP address of the remote.
-	 * @param port          The port number of the remote.
-	 * @param configuration The configuration that holds the parameters for a
-	 *                      connection.
+	 * @param address The IP address of the remote.
+	 * @param port    The port number of the remote.
+	 * @param config  The configuration that holds the parameters for a connection.
 	 */
-	public static final IConnectionConfig createConnectionConfig(String address, int port,
-			IConfiguration configuration) {
-		return new ConnectionConfig(address, port, configuration);
+	public static final IConnectionConfig createConnectionConfig(String address, int port, IConfiguration config) {
+		return new ConnectionConfig(address, port, config);
 	}
 
 	/**
 	 * Create custom connection that send asynchronously messages to the remote.
 	 * 
-	 * @param config         The object that holds the client configuration.
-	 * @param implementation The connection specific implementation for
-	 *                       sending/receiving data from the remote.
+	 * @param config The object that holds the client configuration.
+	 * @param impl   The connection specific implementation for sending/receiving
+	 *               data from the remote.
 	 */
-	public static final IConnection createCustomConnection(IConnectionConfig config, IConnectionImpl implementation) {
-		return new CustomConnection(config, implementation);
+	public static final IConnection createCustomConnection(IConnectionConfig config, IConnectionImpl impl) {
+		return new CustomConnection(config, impl);
 	}
 
 	/**
@@ -57,12 +57,12 @@ public class Communication {
 	/**
 	 * Create a client ready to be connected to a remote.
 	 * 
-	 * @param config         The object that holds the client configuration.
-	 * @param implementation The client specific implementation to
-	 *                       connect/disconnect from the server.
+	 * @param config The object that holds the client configuration.
+	 * @param impl   The client specific implementation to connect/disconnect from
+	 *               the server.
 	 */
-	public static final IClient createCustomClient(IClientConfig config, IClientImpl implementation) {
-		return new CustomClient(config, implementation);
+	public static final IClient createCustomClient(IClientConfig config, IClientImpl impl) {
+		return new CustomClient(config, impl);
 	}
 
 	/**
@@ -88,6 +88,15 @@ public class Communication {
 	}
 
 	/**
+	 * Create a client with a UDP connection ready to be connected to a remote.
+	 * 
+	 * @param config The object that holds the client configuration.
+	 */
+	public static final IClient createUdpClient(IClientConfig config) {
+		return createCustomClient(config, new UdpClientImpl());
+	}
+
+	/**
 	 * Creates a client with a TCP connection ready to be connected to a remote.
 	 * 
 	 * @param name    The client's name. Essentially used for logging.
@@ -96,6 +105,17 @@ public class Communication {
 	 */
 	public static final IClient createDefaultTcpClient(String name, String address, int port) {
 		return createTcpClient(createClientConfig(name, address, port));
+	}
+
+	/**
+	 * Creates a client with a UDP connection ready to be connected to a remote.
+	 * 
+	 * @param name    The client's name. Essentially used for logging.
+	 * @param address The IP address of the server.
+	 * @param port    The port number of the server.
+	 */
+	public static final IClient createDefaultUdpClient(String name, String address, int port) {
+		return createUdpClient(createClientConfig(name, address, port));
 	}
 
 	/**
@@ -141,6 +161,15 @@ public class Communication {
 	}
 
 	/**
+	 * Creates a UDP server ready to be opened.
+	 * 
+	 * @param config The object that holds the server configuration.
+	 */
+	public static final IServer createUdpServer(IServerConfig config) {
+		return createCustomServer(config, new UdpServerImpl(config.getName()));
+	}
+
+	/**
 	 * Creates a TCP server ready to be opened.
 	 * 
 	 * @param name The name of the server.
@@ -148,5 +177,15 @@ public class Communication {
 	 */
 	public static final IServer createDefaultTcpServer(String name, int port) {
 		return createTcpServer(createServerConfig(name, port));
+	}
+
+	/**
+	 * Creates a UDP server ready to be opened.
+	 * 
+	 * @param name The name of the server.
+	 * @param port The port number of the server.
+	 */
+	public static final IServer createDefaultUdpServer(String name, int port) {
+		return createUdpServer(createServerConfig(name, port));
 	}
 }

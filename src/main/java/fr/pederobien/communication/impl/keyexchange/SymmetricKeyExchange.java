@@ -6,7 +6,6 @@ import javax.crypto.SecretKey;
 
 import fr.pederobien.communication.event.RequestReceivedEvent;
 import fr.pederobien.communication.interfaces.IToken;
-import fr.pederobien.utils.AsyncConsole;
 import fr.pederobien.utils.Watchdog;
 import fr.pederobien.utils.Watchdog.WatchdogStakeholder;
 
@@ -38,13 +37,11 @@ public class SymmetricKeyExchange extends Exchange {
 
 	@Override
 	protected boolean doServerToClientExchange() throws Exception {
-		AsyncConsole.printlnWithTimeStamp("[Server] Sending secret key");
 		send(keyManager.generateKey().getEncoded(), 2000, args -> {
 			if (!args.isTimeout()) {
 
 				// Extracting client secret key
 				if (keyManager.parse(args.getResponse().getBytes())) {
-					AsyncConsole.printlnWithTimeStamp("[Server] Client secret key valid");
 
 					// Sending positive acknowledgement to the client
 					serverToClient_sendPositiveAcknowledgement(args.getIdentifier());
@@ -58,7 +55,6 @@ public class SymmetricKeyExchange extends Exchange {
 	@Override
 	protected boolean doClientToServerExchange() throws Exception {
 		watchdog = Watchdog.create(() -> {
-			AsyncConsole.printlnWithTimeStamp("[Client] Waiting for server secret key");
 
 			// Waiting for initialisation to happen successfully
 			RequestReceivedEvent event = receive();
@@ -66,27 +62,22 @@ public class SymmetricKeyExchange extends Exchange {
 			// Connection with the remote has been lost
 			if (event.getData() == null) {
 				watchdog.cancel();
-			} else {
+			}
 
-				if (keyManager.parse(event.getData())) {
+			// Parsing remote secret key
+			else if (keyManager.parse(event.getData())) {
 
-					AsyncConsole.printlnWithTimeStamp("[Client] Server secret key received");
-
-					// Sending back the remote secret key
-					clientToServer_sendBackSecretKey(event.getIdentifier(), event.getData());
-				}
+				// Sending back the remote secret key
+				clientToServer_sendBackSecretKey(event.getIdentifier(), event.getData());
 			}
 		}, 10000);
 		return watchdog.start();
 	}
 
 	private void serverToClient_sendPositiveAcknowledgement(int identifier) {
-		AsyncConsole.printlnWithTimeStamp("[Server] Sending Positive ackowlegement to client");
 		answer(identifier, SUCCESS_PATTERN, 2000, args -> {
 			if (!args.isTimeout()) {
-
 				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
-					AsyncConsole.printlnWithTimeStamp("[Server] Positive ackowlegement from client received");
 					success = true;
 				}
 			}
@@ -94,12 +85,9 @@ public class SymmetricKeyExchange extends Exchange {
 	}
 
 	private void clientToServer_sendBackSecretKey(int identifier, byte[] remoteKey) {
-		AsyncConsole.printlnWithTimeStamp("[Client] Sending server secret key back");
 		answer(identifier, remoteKey, 2000, args -> {
 			if (!args.isTimeout()) {
-
 				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
-					AsyncConsole.printlnWithTimeStamp("[Client] Sending positive acknowledgement to server");
 					answer(args.getIdentifier(), SUCCESS_PATTERN);
 					success = true;
 				}
