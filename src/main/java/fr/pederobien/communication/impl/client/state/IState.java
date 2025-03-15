@@ -1,8 +1,13 @@
-package fr.pederobien.communication.interfaces.client;
+package fr.pederobien.communication.impl.client.state;
 
-import fr.pederobien.communication.interfaces.connection.IConnection;
+public interface IState {
 
-public interface IClient {
+	/**
+	 * Set if this state is enabled or disabled.
+	 * 
+	 * @param isEnabled True if enabled, false otherwise.
+	 */
+	void setEnabled(boolean isEnabled);
 
 	/**
 	 * The implementation shall try establishing the connection only when this
@@ -30,19 +35,4 @@ public interface IClient {
 	 * @return true if the client has been disposed, false otherwise.
 	 */
 	void dispose();
-
-	/**
-	 * @return True if the connection is disposed and cannot be used any more.
-	 */
-	boolean isDisposed();
-
-	/**
-	 * @return The connection to send messages to the remote.
-	 */
-	IConnection getConnection();
-
-	/**
-	 * @return The client configuration.
-	 */
-	IClientConfig getConfig();
 }

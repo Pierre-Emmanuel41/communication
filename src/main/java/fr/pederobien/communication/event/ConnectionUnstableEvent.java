@@ -18,7 +18,7 @@ public class ConnectionUnstableEvent extends ConnectionEvent {
 	@Override
 	public String toString() {
 		StringJoiner joiner = new StringJoiner(",", "{", "}");
-		joiner.add("connection=" + getConnection());
+		joiner.add("remote=" + getConnection());
 		return String.format("%s_%s", getName(), joiner);
 	}
 }

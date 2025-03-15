@@ -17,11 +17,11 @@ public abstract class Server implements IServer {
 	private static final int MAX_EXCEPTION_NUMBER = 10;
 
 	private IServerConfig config;
-	private EState state; 
+	private EState state;
 	private BlockingQueueTask<Object> clientQueue;
 	private IDisposable disposable;
 	private int newClientExceptionCounter;
-	
+
 	/**
 	 * Creates a server.
 	 * 
@@ -29,10 +29,11 @@ public abstract class Server implements IServer {
 	 */
 	protected Server(IServerConfig config) {
 		this.config = config;
-		
-		clientQueue = new BlockingQueueTask<Object>(String.format("%s[WaitForClient]", toString()), object -> waitForClient(object));
+
+		clientQueue = new BlockingQueueTask<Object>(String.format("%s[WaitForClient]", toString()),
+				object -> waitForClient(object));
 		disposable = new Disposable();
-		
+
 		newClientExceptionCounter = 0;
 		state = EState.CLOSED;
 	}
@@ -41,8 +42,9 @@ public abstract class Server implements IServer {
 	public boolean open() {
 		disposable.checkDisposed();
 
-		if (state != EState.CLOSED)
+		if (state != EState.CLOSED) {
 			return false;
+		}
 
 		try {
 			state = EState.OPENING;
@@ -67,8 +69,9 @@ public abstract class Server implements IServer {
 	public boolean close() {
 		disposable.checkDisposed();
 
-		if (state != EState.OPENED)
+		if (state != EState.OPENED) {
 			return false;
+		}
 
 		try {
 			state = EState.CLOSING;
@@ -87,11 +90,12 @@ public abstract class Server implements IServer {
 
 		return true;
 	}
-	
+
 	@Override
 	public boolean dispose() {
-		if (state != EState.CLOSED || !disposable.dispose())
+		if (state != EState.CLOSED || !disposable.dispose()) {
 			return false;
+		}
 
 		clientQueue.dispose();
 		onLogEvent("Server disposed");
@@ -102,36 +106,43 @@ public abstract class Server implements IServer {
 	public EState getState() {
 		return state;
 	}
-	
+
+	@Override
+	public IServerConfig getConfig() {
+		return config;
+	}
+
 	@Override
 	public String toString() {
 		return String.format("[%s *:%s]", config.getName(), config.getPort());
 	}
-	
+
 	/**
 	 * Server specific implementation for opening.
 	 * 
-	 * @param port The port number on which this server should listen for new clients.
+	 * @param port The port number on which this server should listen for new
+	 *             clients.
 	 */
 	protected abstract void openImpl(int port) throws Exception;
-	
+
 	/**
 	 * Server specific implementation for closing.
 	 */
 	protected abstract void closeImpl() throws Exception;
-	
+
 	/**
 	 * Called in its own thread in order to create a connection with a client.
 	 * 
-	 * @param config The server configuration that holds connection configuration parameters.
+	 * @param config The server configuration that holds connection configuration
+	 *               parameters.
 	 */
 	protected abstract IConnection waitForClientImpl(IServerConfig config) throws Exception;
-	
+
 	/**
 	 * Throw a LogEvent.
 	 * 
 	 * @param message The message of the event.
-	 * @param args The arguments of the message to display.
+	 * @param args    The arguments of the message to display.
 	 */
 	protected void onLogEvent(ELogLevel level, String message, Object... args) {
 		EventManager.callEvent(new LogEvent(level, "%s - %s", toString(), String.format(message, args)));
@@ -141,16 +152,17 @@ public abstract class Server implements IServer {
 	 * Throw a LogEvent.
 	 * 
 	 * @param message The message of the event.
-	 * @param args The arguments of the message to display.
+	 * @param args    The arguments of the message to display.
 	 */
 	protected void onLogEvent(String message, Object... args) {
 		onLogEvent(ELogLevel.INFO, message, args);
 	}
-	
+
 	private void waitForClient(Object object) {
 		IConnection connection = establishConnection(object);
-		if (connection != null)
+		if (connection != null) {
 			initialiseConnection(connection);
+		}
 	}
 
 	/**
@@ -179,8 +191,9 @@ public abstract class Server implements IServer {
 			}
 		} finally {
 			// Wait for another client if the server is opened.
-			if (state == EState.OPENED)
+			if (state == EState.OPENED) {
 				clientQueue.add(object);
+			}
 		}
 
 		return connection;
@@ -201,10 +214,10 @@ public abstract class Server implements IServer {
 		}
 
 		if (!initialised) {
+			onLogEvent(ELogLevel.WARNING, "Initialisation failure");
+			connection.setEnabled(false);
 			connection.dispose();
-			onLogEvent(ELogLevel.ERROR, "Initialisation failure");
-		}
-		else {
+		} else {
 
 			// Notifying observers that a client is connected
 			EventManager.callEvent(new NewClientEvent(new Client(this, connection)));

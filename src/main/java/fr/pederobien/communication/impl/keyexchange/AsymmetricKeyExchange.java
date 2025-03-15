@@ -1,141 +1,118 @@
 package fr.pederobien.communication.impl.keyexchange;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
-import java.util.function.Function;
 
 import fr.pederobien.communication.event.RequestReceivedEvent;
 import fr.pederobien.communication.interfaces.IToken;
+import fr.pederobien.utils.AsyncConsole;
 import fr.pederobien.utils.Watchdog;
 import fr.pederobien.utils.Watchdog.WatchdogStakeholder;
 
 public class AsymmetricKeyExchange extends Exchange {
-	private KeyPairGenerator generator;
-	private Function<byte[], PublicKey> keyParser;
+	private AsymetricKeyManager keyManager;
 	private boolean success;
-	private int counter;
 	private WatchdogStakeholder watchdog;
-	private PrivateKey privateKey;
-	private PublicKey remoteKey;
 
 	/**
 	 * Creates a key exchange for asymmetric encoding/decoding.
 	 * 
-	 * @param token The token used to send/receive data from the remote.
-	 * @param keyword A keyword to be used while sending the asymmetric key.
-	 *        This keyword shall be the same for the client and the server.
-	 * @param generator An initialised key pair generator.
-	 * @param keyParser A function to parse the bytes corresponding to the remote public key.
+	 * @param token      The token used to send/receive data from the remote.
+	 * @param keyManager The manager that generates a key-pair and parse remote
+	 *                   public key.
 	 */
-	public AsymmetricKeyExchange(IToken token, String keyword, KeyPairGenerator generator, Function<byte[], PublicKey> keyParser) {
-		super(token, keyword);
-		this.generator = generator;
-		this.keyParser = keyParser;
+	public AsymmetricKeyExchange(IToken token, AsymetricKeyManager keyManager) {
+		super(token);
+		this.keyManager = keyManager;
 
 		success = false;
-		counter = 0;
+	}
+
+	@Override
+	protected boolean doServerToClientExchange() throws Exception {
+		AsyncConsole.printlnWithTimeStamp("[Server] Sending public key");
+		send(keyManager.generatePair().getEncoded(), 2000, args -> {
+			if (!args.isTimeout()) {
+
+				// Extracting client public key
+				if (keyManager.parse(args.getResponse().getBytes()) != null) {
+					AsyncConsole.printlnWithTimeStamp("[Server] Client public key valid");
+
+					// Sending positive acknowledgement to the client
+					serverToClient_sendPositiveAcknowledgement(args.getIdentifier());
+				}
+			}
+		});
+
+		return success;
+	}
+
+	@Override
+	protected boolean doClientToServerExchange() throws Exception {
+		watchdog = Watchdog.create(() -> {
+			AsyncConsole.printlnWithTimeStamp("[Client] Waiting for server public key");
+
+			// Waiting for server public key
+			RequestReceivedEvent event = receive();
+
+			// Connection with the remote has been lost
+			if (event.getData() == null) {
+				watchdog.cancel();
+			} else {
+				// Parsing remote public key
+				if (keyManager.parse(event.getData()) != null) {
+
+					AsyncConsole.printlnWithTimeStamp("[Client] Server public key is valid");
+
+					// Generating a new key to send
+					clientToServer_sendPublicKey(event.getIdentifier(), keyManager.generatePair().getEncoded());
+				}
+			}
+		}, 10000);
+
+		return watchdog.start();
 	}
 
 	/**
 	 * @return The private key associated to the public key sent to the remote.
 	 */
 	public PrivateKey getPrivateKey() {
-		return privateKey;
+		return keyManager.getPrivateKey();
 	}
 
 	/**
 	 * @return The public key received from the remote.
 	 */
 	public PublicKey getRemoteKey() {
-		return remoteKey;
+		return keyManager.getRemoteKey();
 	}
 
-	/**
-	 * Generates a public/private key pair.
-	 * 
-	 * @return The public key.
-	 */
-	private PublicKey generatePair() {
-		KeyPair pair = generator.generateKeyPair();
+	private void serverToClient_sendPositiveAcknowledgement(int identifier) {
+		AsyncConsole.printlnWithTimeStamp("[Server] Sending Positive ackowlegement to client");
+		answer(identifier, SUCCESS_PATTERN, 2000, args -> {
+			if (!args.isTimeout()) {
 
-		privateKey = pair.getPrivate();
-		return pair.getPublic();
-	}
-
-	protected boolean doServerToClientExchange() throws Exception {
-		// Max three tries to exchange keys
-		while (!success && (counter++ < 3)) {
-
-			// Generating a new key to send
-			byte[] keyToSend = generatePair().getEncoded();
-
-			// Step 1: Sending key
-			send(keyToSend, 2000, args -> {
-				if (!args.isTimeout()) {
-
-					// Step 2: Receiving remote key
-					unpackAndDo(args.getResponse().getBytes(), data -> {
-
-						// Parsing remote public key
-						remoteKey = keyParser.apply(data);
-
-						if (getRemoteKey() != null) {
-
-							// Step 3: Sending positive acknowledgement
-							answer(args.getIdentifier(), SUCCESS_PATTERN);
-							success = true;
-						}
-					});
-				}
-				else if (args.isConnectionLost())
-					counter = 3;
-			});
-		}
-
-		return success;
-	}
-
-	protected boolean doClientToServerExchange() throws Exception {
-		watchdog = Watchdog.create(() -> {
-			while (!success) {
-
-				// Waiting for initialisation to happen successfully
-				RequestReceivedEvent event = receive();
-
-				// Connection with the remote has been lost
-				if (event.getData() == null)
-					watchdog.cancel();
-				else {
-
-					// Extracting key
-					remoteKey = keyParser.apply(event.getData());
-
-					if (getRemoteKey() != null) {
-
-						// Generating a new key to send
-						PublicKey keyToSend = generatePair();
-
-						// Sending public key to remote
-						answer(event.getIdentifier(), keyToSend.getEncoded(), 2000, args -> {
-							if (!args.isTimeout()) {
-
-								// Extracting acknowledgement
-								unpackAndDo(args.getResponse().getBytes(), ack -> {
-									if (Arrays.equals(SUCCESS_PATTERN, ack))
-										success = true;
-								});
-							}
-							else if (args.isConnectionLost())
-								watchdog.cancel();
-						});
-					}
+				AsyncConsole.printlnWithTimeStamp("[Server] Positive ackowlegement from client received");
+				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
+					success = true;
 				}
 			}
-		}, 10000);
+		});
+	}
 
-		return watchdog.start();
+	private void clientToServer_sendPublicKey(int identifier, byte[] keyToSend) {
+		AsyncConsole.printlnWithTimeStamp("[Client] Sending public key");
+		answer(identifier, keyToSend, 2000, args -> {
+			if (!args.isTimeout()) {
+				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
+					AsyncConsole.printlnWithTimeStamp("[Client] Sending positive acknowledgement to server");
+					answer(args.getIdentifier(), SUCCESS_PATTERN);
+					success = true;
+				}
+			} else {
+				watchdog.cancel();
+			}
+		});
 	}
 }

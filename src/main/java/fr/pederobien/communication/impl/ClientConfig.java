@@ -4,29 +4,39 @@ import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 
 public class ClientConfig extends Configuration implements IClientConfig {
+	private String name;
 	private String address;
 	private int port;
 	private int connectionTimeout;
 	private boolean automaticReconnection;
 	private int reconnectionDelay;
-	private int maxUnstableCounter;
+	private int clientMaxUnstableCounter;
+	private int clientHealTime;
 
 	/**
 	 * Creates a configuration that holds parameters for a client.
 	 * 
+	 * @param name    The client's name. Essentially used for logging.
 	 * @param address The address of the remote.
-	 * @param port The port number of the remote.
+	 * @param port    The port number of the remote.
 	 */
-	protected ClientConfig(String address, int port) {
+	protected ClientConfig(String name, String address, int port) {
 		super(Mode.CLIENT_TO_SERVER);
 
+		this.name = name;
 		this.address = address;
 		this.port = port;
 
 		connectionTimeout = 500;
 		automaticReconnection = true;
 		reconnectionDelay = 500;
-		maxUnstableCounter = 5;
+		clientMaxUnstableCounter = 5;
+		clientHealTime = 1000;
+	}
+
+	@Override
+	public String getName() {
+		return name;
 	}
 
 	@Override
@@ -45,7 +55,8 @@ public class ClientConfig extends Configuration implements IClientConfig {
 	}
 
 	/**
-	 * Set the timeout value, in ms, when client attempt to connect to the remote. The default value 500ms
+	 * Set the timeout value, in ms, when client attempt to connect to the remote.
+	 * The default value 500ms
 	 * 
 	 * @param connectionTimeout The timeout in ms.
 	 */
@@ -59,9 +70,11 @@ public class ClientConfig extends Configuration implements IClientConfig {
 	}
 
 	/**
-	 * Set if the client should automatically reconnect if a network error occurs. The default value is true.
+	 * Set if the client should automatically reconnect if a network error occurs.
+	 * The default value is true.
 	 * 
-	 * @param automaticReconnection True to automatically reconnect, false otherwise.
+	 * @param automaticReconnection True to automatically reconnect, false
+	 *                              otherwise.
 	 */
 	public void setAutomaticReconnection(boolean automaticReconnection) {
 		this.automaticReconnection = automaticReconnection;
@@ -73,7 +86,8 @@ public class ClientConfig extends Configuration implements IClientConfig {
 	}
 
 	/**
-	 * Set the time, in ms, to wait before the client should try to reconnect with the server. The default value is 500ms
+	 * Set the time, in ms, to wait before the client should try to reconnect with
+	 * the server. The default value is 500ms
 	 * 
 	 * @param reconnectionDelay The time in ms.
 	 */
@@ -82,21 +96,41 @@ public class ClientConfig extends Configuration implements IClientConfig {
 	}
 
 	@Override
-	public int getMaxUnstableCounterValue() {
-		return maxUnstableCounter;
+	public int getClientMaxUnstableCounterValue() {
+		return clientMaxUnstableCounter;
 	}
 
 	/**
-	 * An unstable connection event is thrown if an exception is thrown 10 times in a row.
-	 * It can be from the send, receive, extract, callback or unexpected algorithm. The maximum counter value
-	 * corresponds to the maximum number of time a connection unstable event is thrown before stopping
-	 * the automatic reconnection if is is enabled. The default value is 5, which allowing up to 50 exceptions
-	 * in a row to be thrown before stopping automatic reconnection.
+	 * The connection to the remote is monitored so that if an error is happening, a
+	 * counter is incremented automatically. The client max counter value is the
+	 * maximum value the unstable counter can reach before throwing an client
+	 * unstable event. This counter is incremented each time a connection unstable
+	 * event is thrown.
 	 * 
-	 * @param maxUnstableCounter The maximum number of time a connection unstable before stopping
-	 *       the automatic reconnection.
+	 * @param clientMaxUnstableCounter The maximum value the client's unstable
+	 *                                 counter can reach.
 	 */
-	public void setMaxUnstableCounter(int maxUnstableCounter) {
-		this.maxUnstableCounter = maxUnstableCounter;
+	public void setClientMaxUnstableCounter(int clientMaxUnstableCounter) {
+		this.clientMaxUnstableCounter = clientMaxUnstableCounter;
+	}
+
+	@Override
+	public int getClientHealTime() {
+		return clientHealTime;
+	}
+
+	/**
+	 * The connection to the remote is monitored so that if an error is happening, a
+	 * counter is incremented automatically. During the connection life time, it is
+	 * likely possible that the connection become unstable. However, if the
+	 * connection is stable the counter value should be 0 as no error happened for a
+	 * long time. The heal time, in milliseconds, is the time after which the
+	 * client's error counter is decremented.
+	 * 
+	 * @return The time, in ms, after which the client's error counter is
+	 *         decremented.
+	 */
+	public void setClientHealTime(int clientHealTime) {
+		this.clientHealTime = clientHealTime;
 	}
 }

@@ -9,28 +9,28 @@ import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.client.IClientImpl;
 import fr.pederobien.communication.interfaces.connection.IConnection;
+import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
 import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
-import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 import fr.pederobien.communication.interfaces.server.IServerConfig;
 import fr.pederobien.communication.interfaces.server.IServerImpl;
-import fr.pederobien.communication.testing.tools.NetworkSimulator.IModifier;
+import fr.pederobien.utils.AsyncConsole;
 import fr.pederobien.utils.Watchdog;
 
 public class Network {
 
-	public static interface INetworkSimulator {
+	public static interface INetworkerCorruptor {
 
 		/**
 		 * Modify or not the data sent from one point to another point.
 		 * 
-		 * @param mode The direction the communication.
+		 * @param mode   The direction the communication.
 		 * @param remote The address of the receiver.
-		 * @param data The data to send to the receiver.
+		 * @param data   The data to send to the receiver.
 		 * 
 		 * @return The data the receiver will receive.
 		 */
-		byte[] simulate(Mode mode, Address remote, byte[] data);
+		byte[] corrupt(Mode mode, Address remote, byte[] data);
 	}
 
 	public static enum ExceptionMode {
@@ -56,46 +56,19 @@ public class Network {
 	/**
 	 * Create a network to simulate data transmission.
 	 * 
-	 * @param simulator To simulate an issue while sending data.
+	 * @param corruptor To corrupt data while being transfered to the remote.
 	 */
-	public Network(INetworkSimulator simulator) {
-		network = new Networkstakeholder(simulator);
+	public Network(INetworkerCorruptor corruptor) {
+		network = new Networkstakeholder(corruptor);
 		server = new ServerImpl(network);
 	}
 
 	/**
-	 * Create a network to simulate data transmission.
-	 * 
-	 * @param clientToServerModifier The modification to apply when the direction of communication
-	 *                               is CLIENT_TO_SERVER.
-	 * @param serverToClientModifier The modification to apply when the direction of communication
-	 *                               is SERVER_TO_CLIENT.
-	 */
-	public Network(IModifier clientToServer, IModifier serverToClient) {
-		this(new NetworkSimulator(clientToServer, serverToClient));
-	}
-
-	/**
-	 * Create a network to simulate data transmission.
-	 * 
-	 * @param clientToServerModifier The modification to apply when the direction of communication
-	 *                               is CLIENT_TO_SERVER.
-	 * @param serverToClientModifier The modification to apply when the direction of communication
-	 *                               is SERVER_TO_CLIENT.
-	 */
-	public Network(Mode mode, IModifier modifier) {
-		IModifier clientToServer = mode == Mode.CLIENT_TO_SERVER ? modifier : (counter, data) -> data;
-		IModifier serverToClient = mode == Mode.SERVER_TO_CLIENT ? modifier : (counter, data) -> data;
-
-		network = new Networkstakeholder(new NetworkSimulator(clientToServer, serverToClient));
-		server = new ServerImpl(network);
-	}
-
-	/**
-	 * Creates a network that does not modify data when sent from one point to another point.
+	 * Create a network that does not modify data while being transfered to the
+	 * remote.
 	 */
 	public Network() {
-		this((local, remote, data) -> data);
+		this((mode, remote, data) -> data);
 	}
 
 	/**
@@ -113,7 +86,8 @@ public class Network {
 	}
 
 	/**
-	 * @param mode the exception mode to simulate an error while sending/receiving data from the remote.
+	 * @param mode the exception mode to simulate an error while sending/receiving
+	 *             data from the remote.
 	 * 
 	 * @return A new client ready to be connected to the server.
 	 */
@@ -143,14 +117,16 @@ public class Network {
 		public int getPort() {
 			return port;
 		}
-		
+
 		@Override
 		public boolean equals(Object obj) {
-			if (obj == null || !(obj instanceof Address))
+			if (obj == null || !(obj instanceof Address)) {
 				return false;
+			}
 
-			if (this == obj)
+			if (this == obj) {
 				return true;
+			}
 
 			Address other = (Address) obj;
 			return address.equals(other.getAddress()) && port == other.getPort();
@@ -158,18 +134,18 @@ public class Network {
 	}
 
 	private class Networkstakeholder {
-		private INetworkSimulator simulator;
+		private INetworkerCorruptor corruptor;
 		private NetworkServerSocket serverSocket;
 		private List<NetworkSocket> sockets;
 
 		/**
 		 * Create a network to transmit data from a point to another point.
 		 * 
-		 * @param simulator To simulate an issue while sending data.
+		 * @param corruptor To corrupt data while being transfered to the remote.
 		 */
-		public Networkstakeholder(INetworkSimulator simulator) {
-			this.simulator = simulator;
-			
+		public Networkstakeholder(INetworkerCorruptor corruptor) {
+			this.corruptor = corruptor;
+
 			sockets = new ArrayList<NetworkSocket>();
 		}
 
@@ -193,8 +169,8 @@ public class Network {
 		/**
 		 * Attempt a connection with the server.
 		 * 
-		 * @param local the address of the client
-		 * @param remote The address of the server.
+		 * @param local   the address of the client
+		 * @param remote  The address of the server.
 		 * @param timeout The time, in ms, after which a timeout occurs
 		 * 
 		 * @return The local address of the remote.
@@ -203,10 +179,11 @@ public class Network {
 			boolean success = Watchdog.start(() -> {
 				boolean connected = false;
 				while (!connected) {
-					if (serverSocket == null || !serverSocket.isOpen() || remote.getPort() != serverSocket.getPort())
+					if (serverSocket == null || !serverSocket.isOpen() || remote.getPort() != serverSocket.getPort()) {
 						Thread.sleep(10);
-					else
+					} else {
 						connected = true;
+					}
 				}
 			}, timeout);
 
@@ -216,26 +193,29 @@ public class Network {
 		/**
 		 * Send data to the remote.
 		 * 
-		 * @param mode The direction of the communication.
+		 * @param mode   The direction of the communication.
 		 * @param remote The address of the remote.
-		 * @param data The data to send.
+		 * @param data   The data to send.
 		 */
 		protected void send(Mode mode, Address remote, byte[] data) {
 			for (NetworkSocket socket : sockets) {
-				if (socket.getLocal() == remote)
-					socket.notifyDataReceived(simulator.simulate(mode, remote, data));
+				if (socket.getLocal() == remote) {
+					socket.notifyDataReceived(corruptor.corrupt(mode, remote, data));
+				}
 			}
 		}
 
 		/**
-		 * Send a notification to notify the remote that the connection has been closed by the remote.
+		 * Send a notification to notify the remote that the connection has been closed
+		 * by the remote.
 		 * 
 		 * @param remote The address of the remote to notify.
 		 */
 		protected void close(Address remote) {
 			for (NetworkSocket socket : sockets) {
-				if (socket.getLocal() == remote)
+				if (socket.getLocal() == remote) {
 					socket.notifyConnectionClosed();
+				}
 			}
 		}
 	}
@@ -251,7 +231,7 @@ public class Network {
 		 * Create a network socket waiting for a new client.
 		 * 
 		 * @param network The network used to send/receive data from the remote.
-		 * @param port The port number of the server.
+		 * @param port    The port number of the server.
 		 */
 		public NetworkServerSocket(Networkstakeholder network, int port) {
 			this.network = network;
@@ -278,8 +258,9 @@ public class Network {
 
 			semaphore.acquire();
 
-			if (!isOpen)
+			if (!isOpen) {
 				throw new RuntimeException("Socket closed");
+			}
 
 			return socket;
 		}
@@ -325,8 +306,8 @@ public class Network {
 		 * Create a socket used to send data to the remote.
 		 * 
 		 * @param network The network used to send/receive data from the remote.
-		 * @param remote The remote address of the socket.
-		 * @param mode The direction of the communication.
+		 * @param remote  The remote address of the socket.
+		 * @param mode    The direction of the communication.
 		 */
 		public NetworkSocket(Networkstakeholder network, Address remote, Mode mode) {
 			this.network = network;
@@ -417,16 +398,19 @@ public class Network {
 	private class Connection implements IConnectionImpl {
 		private NetworkSocket socket;
 		private ExceptionMode mode;
+		private int counter;
 
 		public Connection(NetworkSocket socket, ExceptionMode mode) {
 			this.socket = socket;
 			this.mode = mode;
+			counter = 0;
 		}
 
 		@Override
 		public void sendImpl(byte[] data) throws Exception {
-			if (mode == ExceptionMode.SEND)
+			if (mode == ExceptionMode.SEND) {
 				throw new RuntimeException("Exception to test unstable counter");
+			}
 
 			socket.send(data);
 		}
@@ -434,7 +418,9 @@ public class Network {
 		@Override
 		public byte[] receiveImpl() throws Exception {
 			if (mode == ExceptionMode.RECEIVE) {
-				Thread.sleep(200);
+				Thread.sleep(500);
+				AsyncConsole.printlnWithTimeStamp("Receiving message %s", counter);
+				counter++;
 				throw new RuntimeException("Exception to test unstable counter");
 			}
 

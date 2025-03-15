@@ -16,7 +16,7 @@ public class ConnectionEnableChangedEvent extends ConnectionEvent {
 		super(connection);
 		this.isEnabled = isEnabled;
 	}
-	
+
 	/**
 	 * @return True if the connection is enabled, false otherwise.
 	 */
@@ -27,8 +27,8 @@ public class ConnectionEnableChangedEvent extends ConnectionEvent {
 	@Override
 	public String toString() {
 		StringJoiner joiner = new StringJoiner(",", "{", "}");
-		joiner.add("connection=" + getConnection());
-		joiner.add("IsEnabled=" + isEnabled());
+		joiner.add("remote=" + getConnection());
+		joiner.add("isEnabled=" + isEnabled());
 		return String.format("%s_%s", getName(), joiner);
 	}
 }

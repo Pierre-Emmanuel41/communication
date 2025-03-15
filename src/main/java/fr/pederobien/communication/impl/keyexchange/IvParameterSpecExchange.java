@@ -8,27 +8,24 @@ import javax.crypto.spec.IvParameterSpec;
 
 import fr.pederobien.communication.event.RequestReceivedEvent;
 import fr.pederobien.communication.interfaces.IToken;
+import fr.pederobien.utils.AsyncConsole;
 import fr.pederobien.utils.Watchdog;
 import fr.pederobien.utils.Watchdog.WatchdogStakeholder;
 
 public class IvParameterSpecExchange extends Exchange {
 	private AlgorithmParameterSpec ivParameterSpec;
 	private boolean success;
-	private int counter;
 	private WatchdogStakeholder watchdog;
 
 	/**
 	 * Creates a IV exchange for symmetric encoding/decoding.
 	 * 
 	 * @param token The token used to send/receive data from the remote.
-	 * @param keyword A keyword to be used while sending the asymmetric key.
-	 *        This keyword shall be the same for the client and the server.
 	 */
-	public IvParameterSpecExchange(IToken token, String keyword) {
-		super(token, keyword);
+	public IvParameterSpecExchange(IToken token) {
+		super(token);
 
 		success = false;
-		counter = 0;
 	}
 
 	/**
@@ -40,34 +37,25 @@ public class IvParameterSpecExchange extends Exchange {
 
 	@Override
 	protected boolean doServerToClientExchange() throws Exception {
-		// Max three tries to exchange keys
-		while (!success && (counter++ < 3)) {
+		// Generating a new parameter specification to send
+		byte[] iv = new byte[16];
+		SecureRandom random = new SecureRandom();
+		random.nextBytes(iv);
 
-			// Generating a new parameter specification to send
-			byte[] iv = new byte[16];
-			SecureRandom random = new SecureRandom();
-			random.nextBytes(iv);
+		AsyncConsole.printlnWithTimeStamp("[Server] Sending IV");
+		send(iv, 2000, args -> {
+			if (!args.isTimeout()) {
 
-			// Step 1: Sending parameter specification
-			send(iv, 2000, args -> {
-				if (!args.isTimeout()) {
+				// Step 2: Receiving remote parameter specification
+				if (Arrays.equals(args.getResponse().getBytes(), iv)) {
 
-					// Step 2: Receiving remote parameter specification
-					unpackAndDo(args.getResponse().getBytes(), data -> {
-						if (Arrays.equals(data, iv)) {
+					AsyncConsole.printlnWithTimeStamp("[Server] Client IV is valid");
 
-							ivParameterSpec = new IvParameterSpec(iv);
-
-							// Step 3: Sending positive acknowledgement
-							answer(args.getIdentifier(), SUCCESS_PATTERN);
-							success = true;
-						}
-					});
+					// Sending positive acknowledgement to the client
+					serverToClient_sendPositiveAcknowledgement(args.getIdentifier(), iv);
 				}
-				else if (args.isConnectionLost())
-					counter = 3;
-			});
-		}
+			}
+		});
 
 		return success;
 	}
@@ -77,35 +65,55 @@ public class IvParameterSpecExchange extends Exchange {
 		watchdog = Watchdog.create(() -> {
 			while (!success) {
 
+				AsyncConsole.printlnWithTimeStamp("[Client] Waiting for server IV");
+
 				// Waiting for initialisation to happen successfully
 				RequestReceivedEvent event = receive();
 
 				// Connection with the remote has been lost
-				if (event.getData() == null)
+				if (event.getData() == null) {
 					watchdog.cancel();
-				else {
+				} else {
 
-					// Extracting IV
-					byte[] iv = event.getData();
+					AsyncConsole.printlnWithTimeStamp("[Client] Server IV received");
 
-					// Sending back the received key to remote
-					answer(event.getIdentifier(), iv, 2000, args -> {
-						if (!args.isTimeout()) {
-
-							// Extracting acknowledgement
-							unpackAndDo(args.getResponse().getBytes(), ack -> {
-								if (Arrays.equals(SUCCESS_PATTERN, ack)) {
-									ivParameterSpec = new IvParameterSpec(iv);
-									success = true;
-								}
-							});
-						}
-						else if (args.isConnectionLost())
-							watchdog.cancel();
-					});
+					// Sending back the remote secret key
+					clientToServer_sendBackSecretKey(event.getIdentifier(), event.getData());
 				}
 			}
 		}, 10000);
 		return watchdog.start();
+	}
+
+	private void serverToClient_sendPositiveAcknowledgement(int identifier, byte[] iv) {
+		AsyncConsole.printlnWithTimeStamp("[Server] Sending Positive ackowlegement to client");
+		answer(identifier, SUCCESS_PATTERN, 2000, args -> {
+			if (!args.isTimeout()) {
+
+				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
+					AsyncConsole.printlnWithTimeStamp("[Server] Positive ackowlegement from client received");
+
+					ivParameterSpec = new IvParameterSpec(iv);
+					success = true;
+				}
+			}
+		});
+	}
+
+	private void clientToServer_sendBackSecretKey(int identifier, byte[] iv) {
+		AsyncConsole.printlnWithTimeStamp("[Client] Sending server IV back");
+		answer(identifier, iv, 2000, args -> {
+			if (!args.isTimeout()) {
+
+				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
+					AsyncConsole.printlnWithTimeStamp("[Client] Sending positive acknowledgement to server");
+					answer(args.getIdentifier(), SUCCESS_PATTERN);
+					ivParameterSpec = new IvParameterSpec(iv);
+					success = true;
+				}
+			} else if (args.isConnectionLost()) {
+				watchdog.cancel();
+			}
+		});
 	}
 }

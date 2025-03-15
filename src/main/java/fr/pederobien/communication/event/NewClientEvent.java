@@ -28,7 +28,7 @@ public class NewClientEvent extends ServerEvent {
 	public String toString() {
 		StringJoiner joiner = new StringJoiner(", ", "{", "}");
 		joiner.add("server=" + getServer());
-		joiner.add("client=" + getClient());
+		joiner.add("remote=" + getClient());
 		return String.format("%s_%s", getName(), joiner);
 	}
 }

@@ -16,13 +16,13 @@ import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
 import fr.pederobien.communication.interfaces.connection.IMessage;
 import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
 import fr.pederobien.utils.Disposable;
+import fr.pederobien.utils.HealedCounter;
 import fr.pederobien.utils.IDisposable;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.LogEvent;
 import fr.pederobien.utils.event.LogEvent.ELogLevel;
 
 public abstract class Connection implements IConnection {
-	private static final int MAX_EXCEPTION_NUMBER = 10;
 	private IConnectionConfig config;
 	private String name;
 	private QueueManager queueManager;
@@ -31,9 +31,7 @@ public abstract class Connection implements IConnection {
 	private ILayerInitializer layerInitializer;
 	private IUnexpectedRequestHandler handler;
 	private boolean isEnabled;
-	private int sendingExceptionCounter;
-	private int receivingExceptionCounter;
-	private int extractingExceptionCounter;
+	private HealedCounter counter;
 
 	// When the synchronous send has been called
 	private Semaphore semaphore;
@@ -60,9 +58,10 @@ public abstract class Connection implements IConnection {
 		disposable = new Disposable();
 		layerInitializer = config.getLayerInitializer().copy();
 
-		sendingExceptionCounter = 0;
-		receivingExceptionCounter = 0;
-		extractingExceptionCounter = 0;
+		int unstableCounter = config.getMaxUnstableCounterValue();
+		int healTime = config.getHealTime();
+		String counterName = String.format("%s HealedCounter", name);
+		counter = new HealedCounter(unstableCounter, healTime, () -> onUnstableConnection(), counterName);
 		isEnabled = true;
 
 		semaphore = new Semaphore(0);
@@ -127,6 +126,9 @@ public abstract class Connection implements IConnection {
 			// Disposing sending, receiving and extracting queue
 			queueManager.dispose();
 
+			// Disposing unstable counter
+			counter.dispose();
+
 			EventManager.callEvent(new ConnectionDisposedEvent(this));
 		}
 	}
@@ -168,14 +170,10 @@ public abstract class Connection implements IConnection {
 
 	/**
 	 * Throw an unstable connection event.
-	 * 
-	 * @param algo The unstable algorithm.
 	 */
-	protected void onUnstableConnection(String algo) {
-		String message = String.format("[%s (%s)] - Too much exceptions in a row, closing connection", name, algo);
-		EventManager.callEvent(new LogEvent(ELogLevel.ERROR, message));
-
-		setEnabled(false);
+	private void onUnstableConnection() {
+		String formatter = "[%s] - Unstable connection detected";
+		EventManager.callEvent(new LogEvent(ELogLevel.ERROR, formatter, name));
 		EventManager.callEvent(new ConnectionUnstableEvent(this));
 	}
 
@@ -192,10 +190,8 @@ public abstract class Connection implements IConnection {
 				callbackManager.start(message.getIdentifier());
 				sendImpl(data);
 
-				sendingExceptionCounter = 0;
 			} catch (Exception exception) {
-				checkUnstable(sendingExceptionCounter, "send");
-				sendingExceptionCounter++;
+				counter.increment();
 			}
 		}
 	}
@@ -213,18 +209,18 @@ public abstract class Connection implements IConnection {
 				// When raw is null, a problem happened while waiting
 				// for receiving data from the remote
 				if (raw == null) {
-					EventManager.callEvent(new ConnectionLostEvent(this));
+
+					// If connection is disabled, client is being disconnected
+					if (isEnabled()) {
+						EventManager.callEvent(new ConnectionLostEvent(this));
+					}
 				} else {
 					// Adding raw data for asynchronous extraction
 					queueManager.getExtractingQueue().add(raw);
 				}
 
-				receivingExceptionCounter = 0;
 			} catch (Exception exception) {
-				checkUnstable(receivingExceptionCounter, "receive");
-				receivingExceptionCounter++;
-
-				if (!isDisposed()) {
+				if (!counter.increment() && !isDisposed()) {
 					// Waiting again for the reception
 					queueManager.getReceivingQueue().add(new Object());
 				}
@@ -264,10 +260,8 @@ public abstract class Connection implements IConnection {
 					}
 				}
 
-				extractingExceptionCounter = 0;
 			} catch (Exception e) {
-				checkUnstable(extractingExceptionCounter, "extract");
-				extractingExceptionCounter++;
+				counter.increment();
 			}
 		}
 	}
@@ -308,19 +302,6 @@ public abstract class Connection implements IConnection {
 			if (message.getCallback().getTimeout() != -1) {
 				message.getCallback().apply(argument);
 			}
-		}
-	}
-
-	/**
-	 * Check if the value of the counter equals the maximum exception counter. If
-	 * so, an unstable connection event is thrown.
-	 * 
-	 * @param counter The counter to check.
-	 * @param algo    The unstable algorithm.
-	 */
-	private void checkUnstable(int counter, String algo) {
-		if (counter == MAX_EXCEPTION_NUMBER - 1) {
-			onUnstableConnection(algo);
 		}
 	}
 }

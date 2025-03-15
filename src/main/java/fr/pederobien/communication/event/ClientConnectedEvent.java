@@ -18,7 +18,7 @@ public class ClientConnectedEvent extends ClientEvent {
 	@Override
 	public String toString() {
 		StringJoiner joiner = new StringJoiner(",", "{", "}");
-		joiner.add("client=" + getClient());
+		joiner.add("remote=" + getClient().getConnection());
 		return String.format("%s_%s", getName(), joiner);
 	}
 }
