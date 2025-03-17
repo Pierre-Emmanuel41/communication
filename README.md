@@ -140,7 +140,7 @@ IConnection connection = Communication.createCustomConnection(connectionConfig, 
 
 ### 3.1) TCP/IP protocol
 
-Two methods exists to create a TCP client, depending if you want to use default parameters values for the client configuration or not.
+Two methods exists to create a TCP client, depending if you want to use default parameter values for the client configuration or not.
 
 ```java
 // Using default parameter values
@@ -154,7 +154,7 @@ ClientConfig clientConfig = Communication.createClientConfig("TCP client", "127.
 client = Communication.createTcpClient(clientConfig);
 ```
 
-Two methods exist to create a TCP server, depending if you want to use default parameters values for the client configuration or not.
+Two methods exist to create a TCP server, depending if you want to use default parameter values for the server configuration or not.
 
 ```java
 // Using default parameter values
