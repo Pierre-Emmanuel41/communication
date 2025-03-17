@@ -1,264 +1,191 @@
 # 1) Presentation
 
-When developers work on a client/server application, they always need to send and receive data from the remote. One simple way to do so is to use directly sockets provided by java.net package. However, if the request needs to be sent from another thread in order not to freeze the client graphical user interface, then the developer needs to develop its own asynchronous API.
-This project has been created in order to send bytes to a remote and to receive bytes from the remote in an asynchronous way.
+When developers work on a client/server application, they always need to send and receive data from the remote. One simple way to do so is to use directly sockets provided by java.net package. However the Java API does not provide pending queues to send/receive data from the remote. This project has been created in order to send bytes to a remote and to receive bytes from the remote in an asynchronous way.
 
 This API support TCP/IP and UDP protocol.
 
-# 2) Download
+# 2) Download and compilation
 
-First you need to download this project on your computer. To do so, you can use the following command line :
+First you need to download this project on your computer. To do so, you can use the following command line:
 
 ```git
-git clone https://github.com/Pierre-Emmanuel41/communication.git --recursive
+git clone https://github.com/Pierre-Emmanuel41/communication.git
 ```
 
-and then double click on the deploy.bat file. This will deploy this project and all its dependencies on your computer. Which means it generates the folder associated to this project and its dependencies in your .m2 folder. Once this has been done, you can add the project as maven dependency on your maven project :
+Then go inside the folder of the project and run the following maven command:
+
+```maven
+mvn clean package install
+```
+
+Finally, you can add the project as maven dependency to your maven project :
 
 ```xml
 <dependency>
 	<groupId>fr.pederobien</groupId>
 	<artifactId>communication</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>2.0-SNAPSHOT</version>
 </dependency>
 ```
 
 # 3) Tutorial
 
+The class <code>Communication</code> provides all the methods you may need.
+
+The network implementation is encapsulated using the following interfaces:<br>
+<code>IClientImpl</code> which specify how to connect/disconnect with the remote<br>
+<code>IServerImpl</code> which specify how to open/close a server but also how to wait for a new client<br>
+<code>IConnectionImpl</code> which specify how to send/receive data from the remote but also how to close the connection with the remote<br>
+
+A <code>ClientConfig</code> is mandatory to create a Client:
+
+```java
+String clientName = "Demo Client";
+String address = "127.0.0.1";
+int port = 12345;
+
+// Creating a client configuration with default parameter values
+ClientConfig clientConfig = Communication.createClientConfig(clientName, address, port);
+```
+
+A <code>ServerConfig</code> is mandatory to create a Server:
+
+```java
+String serverName = "Demo server"
+int port = 12345;
+
+// Creating a server configuration with default parameter values
+ServerConfig serverConfig = Communication.createServerConfig(serverName, port);
+```
+
+A <code>ConnectionConfig</code> is mandatory to create a Connection:
+
+```java
+String address = "127.0.0.1";
+int port = 12345;
+
+IConfiguration configuration = null;
+
+// Compilation error as configuration is null
+ConnectionConfig connectionConfig = Communication.createConnection(address, port, configuration);
+```
+
+A part of the connection configuration is directly defined in the client configuration or in the server configuration. That is why, depending on the direction of the communication a connection be defined like this:<br>
+
+From a client configuration:
+
+```java
+// Creating a client configuration used to create a connection configuration
+ClientConfig clientConfig = Communication.createClientConfig("Demo client", "127.0.0.1", 12345);
+
+String address = clientConfig.getAddress();
+int port = clientConfig.getPort();
+ConnectionConfig connectionConfig = Communication.createConnectionConfig(address, port, clientConfig);
+```
+
+The server configuration does not embed a specific IP address as well as a specific port, but those values are coming from the socket connected with the client:
+
+```java
+ServerConfig serverConfig = Communication.createServerConfig("Demo server", 12345);
+
+// Waiting for a new client
+Socket socket = serverSocket.received();
+
+// Socket contains the client IP address and port number
+// The getAddress() method does not exists but depends on the socket implementation
+String address = socket.getAddress();
+
+// The getPort() method does not exists but depends on the socket implementation
+int port = socket.getPort();
+
+ConnectionConfig connectionConfig = Communication.createConnectionConfig(address, port, serverConfig);
+```
+
+Finally once the configurations are created, the implementation needs to be defined. As mentioned at the beginning, the network implementation is completely encapsulated so that all the client, server, connection's related architecture can be used whatever the network is.
+
+To define you own client implementation, the interface <code>IClientImpl</code> has to be implemented and to create the associated client:
+
+```java
+ClientConfig clientConfig = Communication.createClientConfig("My custom client", "127.0.0.1", 12345);
+IClientImpl myCustomClientImpl = new MyCustomClientImplementation();
+
+IClient myCustomClient = Communication.createCustomClient(clientConfig, myCustomClientImpl);
+```
+
+To define your own server implementation, the interface <code>IServerImpl</code> has to be implement and to create the associated server:
+
+```java
+ServerConfig serverConfig = Communication.createServerConfig("My custom server", "127.0.0.1", 12345);
+IServerImpl myCustomServerImpl = new MyCustomServerImplementation();
+
+IServer server = Communication.createCustomServer(serverConfig, myCustomServerImpl);
+```
+
+To define your own connection implementation, the interface <code>IConnectionImpl</code> has to be implemented and to create the associated connection:
+
+```java
+// The configuration value should be replaced with the client or server configuration
+IConfiguration configuration = null;
+
+// Address defined by the client configuration or the socket connected to the client
+String address;
+
+// Port defined by the client configuration or the socket connected to the client
+int port;
+ConnectionConfig connectionConfig = Communication.createConnectionConfig(address, port, configuration);
+IConnectionImpl myCustomConnectionImpl = new MyCustomConnectionImplementation();
+
+IConnection connection = Communication.createCustomConnection(connectionConfig, myCustomConnectionImpl);
+```
+
 ### 3.1) TCP/IP protocol
 
-To use the TCP/IP protocol, the developer will need four classes : <code>RequestCallbackMessage</code>, <code>IAnswerExtractor</code>, <code>TcpClientConnection</code> and <code>TcpServerConnection</code>.
-
-#### 3.1.1) RequestCallbackMessage
-
-When the developer wants to send a request to the remote in an asynchronous way, he needs to specify a callback. The callback will be executed when an answer is received from the remote.  
-To create such a message :
+Two methods exists to create a TCP client, depending if you want to use default parameters values for the client configuration or not.
 
 ```java
-// The bytes array to send to the remote.
-byte[] bytes = new byte[0];
+// Using default parameter values
+IClient client = Communication.createDefaultTcpClient("TCP client", "127.0.0.1", 12345);
 
-// The request identifier. Useful for the pending request management.
-int uniqueIdentifier = 1;
+// Specifying client configuration
+ClientConfig clientConfig = Communication.createClientConfig("TCP client", "127.0.0.1", 12345");
 
-// Code to run when a response is received from the remote.
-Consumer<ResponseCallbackArgs> callback = args -> {
-	System.out.println("Timeout ? " + args.isTimeout());
-	System.out.println("Response identifier : " + args.getResponse().getRequestIdentifier());
-}
+// Change configuration parameter values here
 
-// The time in ms within the remote has to answer.
-int timeout = 1000;
-RequestCallbackMessage callback = new RequestCallbackMessage(bytes, uniqueIdentifier, callback, timeout);
+client = Communication.createTcpClient(clientConfig);
 ```
 
-#### 3.1.2) IAnswerExtractor
-
-This extractor contains only one method : <code>Map<Integer, byte[]> extract(byte[] received);</code>. Indeed, this extractor is completely dependent on how your TCP messages are constructed. When the socket receives data from the remote, it does not know if it contains 1, 2 or more answers. Worse still, it does not know if an answer is complete or not. That why the developer needs an extractor. Only this object knows how messages are constructed, how a message starts, how a message ends, how many bytes from the start of the message the message length is and so on.. It returns a map that contains the association of the identifier (coming from the request) and the bytes array received from the remote.
-
-#### 3.1.3) TcpClientConnection
-
-This object represent the connection with the remote but from the client side. It throws several events :   
-
-- [ConnectionCompleteEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionCompleteEvent.java)
-- [ConnectionDisposedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionDisposedEvent.java)
-- [DataReceivedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/DataReceivedEvent.java)
-- [LogEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/LogEvent.java)
-- [ConnectionLostEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionLostEvent.java)
-- [UnexpectedDataReceivedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/UnexpectedDataReceivedEvent.java)
-
-To create such a connection :
+Two methods exist to create a TCP server, depending if you want to use default parameters values for the client configuration or not.
 
 ```java
-// The IP address of the remote.
-String remoteAddress = "127.0.0.1";
+// Using default parameter values
+IServer server = Communication.createDefaultTcpClient("TCP server", 12345);
 
-// The port number of the remote.
-int remotePort = 42000;
+// Specifying server configuration
+ServerConfig serverConfig = Communication.createServerConfig("TCP server", 12345);
 
-// The extractor
-IAnswersExtractor answersExtractor = /*your class here*/;
+// Change configuration parameter values here
 
-// True in order to enable the connection to send data, false otherwise.
-boolean isEnabled = true;
-ITcpConnection connection = new TcpClientConnection(remoteAddress, remotePort, answersExtractor, isEnabled);
+server = Communication.createTcpServer(serverConfig);
 ```
 
-And finally, before trying to send a message to the remote, the developer needs to call method connect in order to operate the connection with the remote. Once the connection is successful, it will notify each connection observer through the method <code>onConnectionComplete</code>. While this event is not raised, it is useless to try and send messages.  
-
-To send a message to the remote:
+To create a TCP connection:
 
 ```java
-connection.send(callback);
+// The configuration value should be replaced with the client or server configuration
+IConfiguration configuration = null;
+
+// Address defined by the client configuration or the socket connected to the client
+String address;
+
+// Port defined by the client configuration or the socket connected to the client
+int port;
+ConnectionConfig connectionConfig = Communication.createConnectionConfig("127.0.0.1", 12345, configuration);
+IConnectionImpl myCustomConnectionImpl = new MyCustomConnectionImplementation();
+
+// The socket connected to the remote.
+socket;
+
+IConnection connection = Communication.createCustomConnection(connectionConfig, new ConnectionImpl(socket));
 ```
 
-#### 3.1.4) TcpServerConnection
-
-This object represent the connection with the remote but from the server side. It only needs a socket (that socket comes from the <code>ServerSocket.accept()</code>) and the answersExtractor used on the client side :
-
-```java
-// The port number of the server
-int port = 42000;
-
-// The IP address of the server
-INetAddress address = INetAddress.getByName("127.0.0.1");
-
-ServerSocket serverSocket = new ServerSocket(port, 20, address);
-
-// Thread paused until a client connection occurs.
-Socket clientSocket = serverSocket.accept();
-
-// The extractor
-IAnswersExtractor answersExtractor = /*your class here*/;
-
-ITcpConnection clientConnection = new TcpServerConnection(clientSocket, answersExtractor);
-```
-
-Just like the TcpClientConnection, it throws different events :  
-
-- [ConnectionCompleteEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionCompleteEvent.java)
-- [ConnectionDisposedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionDisposedEvent.java)
-- [DataReceivedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/DataReceivedEvent.java)
-- [LogEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/LogEvent.java)
-- [ConnectionLostEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionLostEvent.java)
-- [UnexpectedDataReceivedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/UnexpectedDataReceivedEvent.java)
-
-There is no need to call method connect (first because it will throw an <code>UnsupportedOperationException</code>, then because when creating a TcpServerConnection the socket given to the constructor is connected to the remote).
-
-### 3.2) UDP protocol
-
-To use the UDP protocol, the developer will need five classes : <code>RequestMessage</code>, <code>IAnswerExtractor</code>, <code>UdpClientConnection</code> <code>UdpServerConnection</code> and <code>AddressMessage</code>.
-
-#### 3.2.1) RequestMessage
-
-The request message class is the equivalent of <code>RequestCallbackMessage</code> but it is slightly different. Indeed, with UDP protocol the developer does not know if the data he sent has arrived at the destination. That's why there is neither callback mechanism nor timeout. A request message is only composed of a identifier and a bytes array to send.  
-To create such a message :
-
-```java
-// The bytes array to send to the remote.
-byte[] bytes = new byte[0];
-
-// The request identifier. Useful for the pending request management.
-int uniqueIdentifier = 1;
-
-RequestMessage message = new RequestMessage(bytes, uniqueIdentifier);
-```
-
-#### 3.2.2) IAnswerExtractor
-
-This extractor contains only one method : <code>Map<Integer, byte[]> extract(byte[] received);</code>. Indeed, this extractor is completely dependent on how your UDP messages are constructed. When the socket receives data from the remote, it does not know if it contains 1, 2 or more answers. Worse still, it does not know if an answer is complete or not. That why the developer needs an extractor. Only this object knows how messages are constructed, how a message starts, how a message ends, how many bytes from the start of the message the message length is and so on.. It returns a map that contains the association of the identifier (coming from the request) and the bytes array received from the remote.
-
-#### 3.2.3) UdpClientConnection
-
-The object represent the connection with the remote but from the client side. It throws different events :  
-
-- [ConnectionCompleteEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionCompleteEvent.java)
-- [ConnectionDisposedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionDisposedEvent.java)
-- [DataReceivedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/DataReceivedEvent.java)
-- [LogEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/LogEvent.java)
-
-To create such a connection:
-
-```java
-// The remote IP address
-String remoteAddress = "127.0.0.1";
-
-// The remote port number
-int remotePort = 42000;
-
-// The extractor
-IAnswersExtractor answersExtractor = /*your class here*/;
-
-// True in order to enable the connection to send data, false otherwise.
-boolean isEnabled = true;
-
-// The size of the buffer that receive data from the remote
-int receptionBufferSize = 2048;
-UdpClientConnection connection = new UdpClientConnection(remoteAddress, remotePort, answersExtractor, isEnabled, receptionBufferSize);
-```
-
-And finally, before trying to send a message to the remote, the developer needs to call the method <code>connect</code> in order to operate the connection with the remote. Once the connection is successful, it notify each connection observer through the method <code>onConnectionComplete</code>. While this event is not raised, it is useless to try to send messages.  
-
-To send a message to the remote:
-
-```java
-connection.send(message);
-```
-
-It is possible for the server to send request to the client without responding to a previous request. In order to handle those request, the developer should observe the connection. There is an implemented observer pattern with the interface <code>IObsConnection</code> and methods <code>addObserver(IObsConnection obs)</code> and <code>removeObserver(IObsConnection obs)</code>.
-
-#### 3.2.4) UdpServerConnection
-
-The object represent the connection with the remote but from the server side. It throws different events :  
-
-- [ConnectionCompleteEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionCompleteEvent.java)
-- [ConnectionDisposedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/ConnectionDisposedEvent.java)
-- [DataReceivedEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/DataReceivedEvent.java)
-- [LogEvent](https://github.com/Pierre-Emmanuel41/communication/blob/master/src/main/java/fr/pederobien/communication/event/LogEvent.java)
-
-To create such a connection:
-
-```java
-// The server IP address
-InetSocketAddress address = InetSocketAddress.getByName("127.0.0.1");
-
-// The size of the buffer that receive data from the remote
-int receptionBufferSize = 2048;
-
-// The supplier that provide an extractor for each connected remote
-Supplier<IAnswersExtractor> extractorSupplier = () -> /*your class here*/;
-
-IUdpServerConnection connection = new UdpServerConnection(address, receptionBufferSize, extractorSupplier)
-```
-
-#### 3.2.5) AddressMessage
-
-Because of the structure in java of a datagram packet, on the server side, the developer needs to provide an AddressMessage instead of a RequestMessage. This AddressMessage provides the address at which the data needs to be sent.  
-To create such a message :
-
-```java
-// The bytes array to send to the remote
-byte[] bytes = new byte[0];
-
-// The request identifier
-int uniqueIdentifier = 1;
-
-// The address to sent the data
-InetSocketAddress address = new InetSocketAddress("127.0.0.1", 42000);
-
-IAddressMessage message = new AddressMessage(bytes, uniqueIdentifier, address);
-```
-
-Finally, to send a message to the remote from the server side :
-
-```java
-connection.send(message);
-```
-
-### 3.3) Observing connections
-
-In order to catch event thrown by the different connections we have seen above, we need to create a class that implements [IEventListener](https://github.com/Pierre-Emmanuel41/utils/blob/master/src/main/java/fr/pederobien/utils/event/IEventListener.java) and then annotates each methods has event handler:
-
-``` java
-public class ConnectionEventListener implements IEventListener {
-
-	public ConnectionEventListener() {
-		EventManager.registerListener(this);
-	}
-
-	@EventHandler
-	private void onConnectionCompleteEvent(ConnectionCompleteEvent event) {
-
-	}
-
-	@EventHandler
-	private void onConnectionDisposedEvent(ConnectionDisposedEvent event) {
-
-	}
-
-	@EventHandler
-	private void onDataReceivedEvent(DataReceivedEvent event) {
-
-	}
-}
-```
+To have a better understanding on how the TCP connection is created, please have a look at <code>TcpClientImpl</code> and <code>TcpServerImpl</code>.
