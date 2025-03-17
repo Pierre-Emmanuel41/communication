@@ -70,7 +70,7 @@ IConfiguration configuration = null;
 ConnectionConfig connectionConfig = Communication.createConnection(address, port, configuration);
 ```
 
-A part of the connection configuration is directly defined in the client configuration or in the server configuration. That is why, depending on the direction of the communication a connection be defined like this:<br>
+A part of the connection configuration is directly defined in the client configuration or in the server configuration. That is why, depending on the direction of the communication a connection can be defined<br>
 
 From a client configuration:
 
