@@ -12,30 +12,20 @@ import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
 
 public class TcpClientImpl implements IClientImpl {
-	private Socket socket;
-	
-	/**
-	 * Create a client for the TCP protocol
-	 */
-	public TcpClientImpl() {
-		// Do nothing
-	}
 
 	@Override
-	public void connectImpl(String address, int port, int connectionTimeout) throws Exception {
+	public IConnection connectImpl(IClientConfig config) throws Exception {
+		String address = config.getAddress();
+		int port = config.getPort();
+		int connectionTimeout = config.getConnectionTimeout();
+
+		// Creating a TCP socket to connect with the remote
 		Socket socket = new Socket();
 		socket.connect(new InetSocketAddress(InetAddress.getByName(address), port), connectionTimeout);
-		this.socket = socket;
-	}
 
-	@Override
-	public IConnection onConnectionComplete(IClientConfig config) {
-		String address = socket.getInetAddress().getHostName();
-		int port = socket.getPort();
-		
 		// Creating a connection configuration.
 		IConnectionConfig configuration = Communication.createConnectionConfig(address, port, config);
-		
+
 		return Communication.createCustomConnection(configuration, new TcpConnectionImpl(socket));
 	}
 }

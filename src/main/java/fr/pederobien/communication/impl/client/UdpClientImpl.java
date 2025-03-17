@@ -11,24 +11,14 @@ import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
 import fr.pederobien.communication.interfaces.connection.IUdpSocket;
 
 public class UdpClientImpl implements IClientImpl {
-	IUdpSocket socket;
-
-	/**
-	 * Create a client for the UDP protocol.
-	 */
-	public UdpClientImpl() {
-		// Do nothing
-	}
 
 	@Override
-	public void connectImpl(String address, int port, int connectionTimeout) throws Exception {
-		socket = new UdpSocket(new InetSocketAddress(address, port));
-	}
+	public IConnection connectImpl(IClientConfig config) throws Exception {
+		String address = config.getAddress();
+		int port = config.getPort();
 
-	@Override
-	public IConnection onConnectionComplete(IClientConfig config) {
-		String address = socket.getInetAddress().getHostName();
-		int port = socket.getInetAddress().getPort();
+		// Creating a TCP socket to connect with the remote
+		IUdpSocket socket = new UdpSocket(new InetSocketAddress(address, port));
 
 		// Creating a connection configuration builder.
 		IConnectionConfig configuration = Communication.createConnectionConfig(address, port, config);

@@ -59,15 +59,11 @@ public class Disconnected extends State {
 
 	private void connect(Object ignored) {
 		try {
-			String address = getConfig().getAddress();
-			int port = getConfig().getPort();
-			int timeout = getConfig().getConnectionTimeout();
 
 			// Attempting connection with the remote
-			getContext().getImpl().connectImpl(address, port, timeout);
+			IConnection connection = getContext().getImpl().connectImpl(getConfig());
 
 			if (!disconnectionRequested) {
-				IConnection connection = getContext().getImpl().onConnectionComplete(getConfig());
 
 				// Attempting connection initialization
 				if (connection.initialise()) {

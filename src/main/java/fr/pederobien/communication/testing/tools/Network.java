@@ -435,7 +435,6 @@ public class Network {
 
 	private class ClientImpl implements IClientImpl {
 		private Networkstakeholder network;
-		private NetworkSocket socket;
 		private ExceptionMode mode;
 
 		public ClientImpl(Networkstakeholder network, ExceptionMode mode) {
@@ -444,15 +443,14 @@ public class Network {
 		}
 
 		@Override
-		public void connectImpl(String address, int port, int connectionTimeout) throws Exception {
-			socket = new NetworkSocket(network, new Address(address, port), Mode.CLIENT_TO_SERVER);
-			socket.connect(connectionTimeout);
-		}
+		public IConnection connectImpl(IClientConfig config) throws Exception {
+			String address = config.getAddress();
+			int port = config.getPort();
+			int connectionTimeout = config.getConnectionTimeout();
 
-		@Override
-		public IConnection onConnectionComplete(IClientConfig config) {
-			String address = socket.getRemote().getAddress();
-			int port = socket.getRemote().getPort();
+			// Creating a new socket to connect with the remote
+			NetworkSocket socket = new NetworkSocket(network, new Address(address, port), Mode.CLIENT_TO_SERVER);
+			socket.connect(connectionTimeout);
 
 			// Creating a connection configuration.
 			IConnectionConfig configuration = Communication.createConnectionConfig(address, port, config);
