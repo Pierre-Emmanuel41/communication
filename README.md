@@ -101,7 +101,7 @@ int port = socket.getPort();
 ConnectionConfig connectionConfig = Communication.createConnectionConfig(address, port, serverConfig);
 ```
 
-Finally once the configurations are created, the implementation needs to be defined. As mentioned at the beginning, the network implementation is completely encapsulated so that all the client, server, connection's related architecture can be used whatever the network is.
+Finally once the configurations are created, the implementation needs to be defined. As mentioned at the beginning, the network implementation is completely encapsulated so that all the client, server, connection's architecture related can be used whatever the network is.
 
 To define you own client implementation, the interface <code>IClientImpl</code> has to be implemented and to create the associated client:
 
