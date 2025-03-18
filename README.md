@@ -12,13 +12,7 @@ First you need to download this project on your computer. To do so, you can use 
 git clone https://github.com/Pierre-Emmanuel41/communication.git
 ```
 
-Then go inside the folder of the project and run the following maven command:
-
-```maven
-mvn clean package install
-```
-
-Finally, you can add the project as maven dependency to your maven project :
+Executing the batch file <code>deploy.bat</code> will download each dependency and build everything. Finally, you can add the project as maven dependency to your maven project :
 
 ```xml
 <dependency>
