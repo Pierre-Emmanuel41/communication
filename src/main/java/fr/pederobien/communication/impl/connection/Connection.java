@@ -12,6 +12,7 @@ import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 import fr.pederobien.communication.interfaces.connection.ICallback.CallbackArgs;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
+import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
 import fr.pederobien.communication.interfaces.connection.IMessage;
 import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
@@ -22,8 +23,9 @@ import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.LogEvent;
 import fr.pederobien.utils.event.LogEvent.ELogLevel;
 
-public abstract class Connection implements IConnection {
+public class Connection implements IConnection {
 	private IConnectionConfig config;
+	private IConnectionImpl impl;
 	private String name;
 	private QueueManager queueManager;
 	private CallbackManager callbackManager;
@@ -41,10 +43,13 @@ public abstract class Connection implements IConnection {
 	 * Create an abstract connection that send asynchronously messages to the
 	 * remote.
 	 * 
-	 * @param config The object that holds the connection configuration.
+	 * @param config         The object that holds the connection configuration.
+	 * @param implementation The connection specific implementation for
+	 *                       sending/receiving data from the remote.
 	 */
-	protected Connection(IConnectionConfig config) {
+	public Connection(IConnectionConfig config, IConnectionImpl impl) {
 		this.config = config;
+		this.impl = impl;
 
 		String remote = config.getMode() == Mode.CLIENT_TO_SERVER ? "Server" : "Client";
 		name = String.format("%s %s:%s", remote, config.getAddress(), config.getPort());
@@ -118,7 +123,7 @@ public abstract class Connection implements IConnection {
 	@Override
 	public void dispose() {
 		if (disposable.dispose()) {
-			disposeImpl();
+			impl.dispose();
 
 			// Dispose callback manager
 			callbackManager.dispose();
@@ -149,26 +154,6 @@ public abstract class Connection implements IConnection {
 	}
 
 	/**
-	 * Connection specific implementation to send a message to the remote. The bytes
-	 * array is the result of the layer that has encapsulated the payload with other
-	 * information in order to be received correctly.
-	 * 
-	 * @param data The byte array to send to the remote.
-	 */
-	protected abstract void sendImpl(byte[] data) throws Exception;
-
-	/**
-	 * Connection specific implementation to receive bytes from the remote.
-	 */
-	protected abstract byte[] receiveImpl() throws Exception;
-
-	/**
-	 * Connection specific implementation to close definitively the connection with
-	 * the remote.
-	 */
-	protected abstract void disposeImpl();
-
-	/**
 	 * Throw an unstable connection event.
 	 */
 	private void onUnstableConnection() {
@@ -188,7 +173,7 @@ public abstract class Connection implements IConnection {
 				byte[] data = layerInitializer.getLayer().pack(message);
 
 				callbackManager.start(message.getIdentifier());
-				sendImpl(data);
+				impl.send(data);
 
 			} catch (Exception exception) {
 				counter.increment();
@@ -204,7 +189,7 @@ public abstract class Connection implements IConnection {
 			byte[] raw = null;
 
 			try {
-				raw = receiveImpl();
+				raw = impl.receive();
 
 				// When raw is null, a problem happened while waiting
 				// for receiving data from the remote

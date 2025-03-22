@@ -407,7 +407,7 @@ public class Network {
 		}
 
 		@Override
-		public void sendImpl(byte[] data) throws Exception {
+		public void send(byte[] data) throws Exception {
 			if (mode == ExceptionMode.SEND) {
 				throw new RuntimeException("Exception to test unstable counter");
 			}
@@ -416,7 +416,7 @@ public class Network {
 		}
 
 		@Override
-		public byte[] receiveImpl() throws Exception {
+		public byte[] receive() throws Exception {
 			if (mode == ExceptionMode.RECEIVE) {
 				Thread.sleep(500);
 				AsyncConsole.printlnWithTimeStamp("Receiving message %s", counter);
@@ -428,7 +428,7 @@ public class Network {
 		}
 
 		@Override
-		public void disposeImpl() {
+		public void dispose() {
 			socket.close();
 		}
 	}

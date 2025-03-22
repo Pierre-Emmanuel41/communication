@@ -8,7 +8,7 @@ import fr.pederobien.utils.ByteWrapper;
 
 public class TcpConnectionImpl implements IConnectionImpl {
 	private Socket socket;
-	
+
 	/**
 	 * Creates a connection specific for TCP protocol.
 	 * 
@@ -19,23 +19,24 @@ public class TcpConnectionImpl implements IConnectionImpl {
 	}
 
 	@Override
-	public void sendImpl(byte[] data) throws Exception {
+	public void send(byte[] data) throws Exception {
 		socket.getOutputStream().write(data);
 		socket.getOutputStream().flush();
 	}
 
 	@Override
-	public byte[] receiveImpl() throws Exception {
+	public byte[] receive() throws Exception {
 		byte[] buffer = new byte[2048];
 		int read = socket.getInputStream().read(buffer);
-		
+
 		return read == -1 ? null : ByteWrapper.wrap(buffer).extract(0, read);
 	}
-	
+
 	@Override
-	public void disposeImpl() {
-		if (socket == null)
+	public void dispose() {
+		if (socket == null) {
 			return;
+		}
 
 		try {
 			socket.shutdownInput();

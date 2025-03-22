@@ -3,8 +3,8 @@ package fr.pederobien.communication.impl;
 import fr.pederobien.communication.impl.client.CustomClient;
 import fr.pederobien.communication.impl.client.TcpClientImpl;
 import fr.pederobien.communication.impl.client.UdpClientImpl;
+import fr.pederobien.communication.impl.connection.Connection;
 import fr.pederobien.communication.impl.connection.ConnectionConfig;
-import fr.pederobien.communication.impl.connection.CustomConnection;
 import fr.pederobien.communication.impl.server.CustomServer;
 import fr.pederobien.communication.impl.server.TcpServerImpl;
 import fr.pederobien.communication.impl.server.UdpServerImpl;
@@ -40,7 +40,7 @@ public class Communication {
 	 *               data from the remote.
 	 */
 	public static final IConnection createCustomConnection(IConnectionConfig config, IConnectionImpl impl) {
-		return new CustomConnection(config, impl);
+		return new Connection(config, impl);
 	}
 
 	/**

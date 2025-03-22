@@ -50,14 +50,14 @@ public class ClientExceptionImpl implements IClientImpl {
 		}
 
 		@Override
-		public void sendImpl(byte[] data) throws Exception {
+		public void send(byte[] data) throws Exception {
 			if (mode == ClientExceptionMode.SENDING) {
 				throw new RuntimeException("Exception to test unstable counter");
 			}
 		}
 
 		@Override
-		public byte[] receiveImpl() throws Exception {
+		public byte[] receive() throws Exception {
 			if (mode == ClientExceptionMode.RECEIVING) {
 				Thread.sleep(200);
 				throw new RuntimeException("Exception to test unstable counter");
@@ -68,7 +68,7 @@ public class ClientExceptionImpl implements IClientImpl {
 		}
 
 		@Override
-		public void disposeImpl() {
+		public void dispose() {
 
 		}
 	}
