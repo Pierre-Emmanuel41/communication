@@ -7,7 +7,7 @@ import fr.pederobien.communication.event.ConnectionDisposedEvent;
 import fr.pederobien.communication.event.ConnectionEnableChangedEvent;
 import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.ConnectionUnstableEvent;
-import fr.pederobien.communication.event.RequestReceivedEvent;
+import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.interfaces.IConfiguration;
 import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 import fr.pederobien.communication.interfaces.connection.ICallback.CallbackArgs;
@@ -238,7 +238,7 @@ public class Connection<T> implements IConnection {
 						callbackManager.unregisterAndExecute(request);
 					} else {
 						// Dispatching asynchronously a request received event.
-						handler.handle(new RequestReceivedEvent(this, request.getBytes(), request.getIdentifier()));
+						handler.handle(new MessageEvent(this, request.getIdentifier(), request.getBytes()));
 					}
 				}
 

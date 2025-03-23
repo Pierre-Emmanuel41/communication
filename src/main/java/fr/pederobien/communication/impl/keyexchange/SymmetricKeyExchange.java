@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import javax.crypto.SecretKey;
 
-import fr.pederobien.communication.event.RequestReceivedEvent;
+import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.interfaces.IToken;
 import fr.pederobien.utils.Watchdog;
 import fr.pederobien.utils.Watchdog.WatchdogStakeholder;
@@ -68,7 +68,7 @@ public class SymmetricKeyExchange extends Exchange {
 		watchdog = Watchdog.create(() -> {
 
 			// Waiting for initialisation to happen successfully
-			RequestReceivedEvent event = receive();
+			MessageEvent event = receive();
 
 			// Connection with the remote has been lost
 			if (event.getData() == null) {

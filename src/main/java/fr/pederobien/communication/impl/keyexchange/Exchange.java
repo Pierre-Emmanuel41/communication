@@ -2,7 +2,7 @@ package fr.pederobien.communication.impl.keyexchange;
 
 import java.util.function.Consumer;
 
-import fr.pederobien.communication.event.RequestReceivedEvent;
+import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.interfaces.IToken;
 import fr.pederobien.communication.interfaces.connection.ICallback.CallbackArgs;
@@ -102,7 +102,7 @@ public abstract class Exchange {
 	/**
 	 * @return Block until unexpected data has been received from the remote.
 	 */
-	protected RequestReceivedEvent receive() throws Exception {
+	protected MessageEvent receive() throws Exception {
 		return token.receive();
 	}
 }

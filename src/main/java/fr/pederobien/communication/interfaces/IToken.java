@@ -1,6 +1,6 @@
 package fr.pederobien.communication.interfaces;
 
-import fr.pederobien.communication.event.RequestReceivedEvent;
+import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.interfaces.connection.IMessage;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 
@@ -29,7 +29,7 @@ public interface IToken {
 	/**
 	 * @return Block until unexpected data has been received from the remote.
 	 */
-	RequestReceivedEvent receive() throws InterruptedException;
+	MessageEvent receive() throws InterruptedException;
 	
 	/**
 	 * Close this token, it cannot be used anymore.

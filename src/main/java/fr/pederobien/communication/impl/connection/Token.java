@@ -3,7 +3,7 @@ package fr.pederobien.communication.impl.connection;
 import java.util.concurrent.Semaphore;
 
 import fr.pederobien.communication.event.ConnectionLostEvent;
-import fr.pederobien.communication.event.RequestReceivedEvent;
+import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.interfaces.IToken;
 import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 import fr.pederobien.communication.interfaces.connection.IConnection;
@@ -19,7 +19,7 @@ public class Token implements IToken, IEventListener, IUnexpectedRequestHandler 
 	private IConnection connection;
 	private Mode mode;
 	private IDisposable disposable;
-	private RequestReceivedEvent event;
+	private MessageEvent event;
 	private Semaphore semaphore;
 
 	/**
@@ -58,7 +58,7 @@ public class Token implements IToken, IEventListener, IUnexpectedRequestHandler 
 	}
 
 	@Override
-	public RequestReceivedEvent receive() throws InterruptedException {
+	public MessageEvent receive() throws InterruptedException {
 		disposable.checkDisposed();
 
 		// Block until an unexpected data has been received.
@@ -75,14 +75,14 @@ public class Token implements IToken, IEventListener, IUnexpectedRequestHandler 
 		if (disposable.dispose()) {
 
 			// Notifying listener
-			notify(new RequestReceivedEvent(connection, null, -1));
+			notify(new MessageEvent(connection, -1, null));
 
 			EventManager.unregisterListener(this);
 		}
 	}
 
 	@Override
-	public void handle(RequestReceivedEvent event) {
+	public void handle(MessageEvent event) {
 		if (event.getConnection() != connection) {
 			return;
 		}
@@ -96,7 +96,7 @@ public class Token implements IToken, IEventListener, IUnexpectedRequestHandler 
 			return;
 		}
 
-		notify(new RequestReceivedEvent(connection, null, -1));
+		notify(new MessageEvent(connection, -1, null));
 	}
 
 	/**
@@ -105,7 +105,7 @@ public class Token implements IToken, IEventListener, IUnexpectedRequestHandler 
 	 * 
 	 * @param event The event that holds the unexpected request.
 	 */
-	private void notify(RequestReceivedEvent event) {
+	private void notify(MessageEvent event) {
 		this.event = event;
 		semaphore.release();
 	}

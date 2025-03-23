@@ -1,6 +1,6 @@
 package fr.pederobien.communication.interfaces;
 
-import fr.pederobien.communication.event.RequestReceivedEvent;
+import fr.pederobien.communication.event.MessageEvent;
 
 public interface IUnexpectedRequestHandler {
 
@@ -9,5 +9,5 @@ public interface IUnexpectedRequestHandler {
 	 * 
 	 * @param event The event that contains the unexpected request.
 	 */
-	void handle(RequestReceivedEvent event);
+	void handle(MessageEvent event);
 }
