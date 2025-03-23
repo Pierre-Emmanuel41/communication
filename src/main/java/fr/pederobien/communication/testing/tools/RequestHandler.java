@@ -3,9 +3,9 @@ package fr.pederobien.communication.testing.tools;
 import java.util.function.Consumer;
 
 import fr.pederobien.communication.event.MessageEvent;
-import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
+import fr.pederobien.communication.interfaces.IMessageHandler;
 
-public class RequestHandler implements IUnexpectedRequestHandler {
+public class RequestHandler implements IMessageHandler {
 	private Consumer<MessageEvent> action;
 
 	/**

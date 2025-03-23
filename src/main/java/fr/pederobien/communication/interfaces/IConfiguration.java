@@ -20,7 +20,7 @@ public interface IConfiguration {
 	 *         from the remote. The default handler do nothing, it is highly
 	 *         recommended to override it.
 	 */
-	IUnexpectedRequestHandler getOnUnexpectedRequestReceived();
+	IMessageHandler getMessageHandler();
 
 	/**
 	 * The connection to the remote is monitored so that if an error is happening, a

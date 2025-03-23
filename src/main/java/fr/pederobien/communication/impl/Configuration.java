@@ -4,14 +4,14 @@ import java.util.function.Supplier;
 
 import fr.pederobien.communication.impl.layer.LayerInitializer;
 import fr.pederobien.communication.interfaces.IConfiguration;
-import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
+import fr.pederobien.communication.interfaces.IMessageHandler;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
 
 public abstract class Configuration implements IConfiguration {
 	private Mode mode;
 	private Supplier<ILayerInitializer> layerInitializer;
-	private IUnexpectedRequestHandler onUnexpectedRequestReceived;
+	private IMessageHandler messageHandler;
 	private int connectionMaxUnstableCounter;
 	private int connectionHealTime;
 
@@ -24,7 +24,7 @@ public abstract class Configuration implements IConfiguration {
 		this.mode = mode;
 
 		layerInitializer = () -> new LayerInitializer();
-		onUnexpectedRequestReceived = event -> {
+		messageHandler = event -> {
 		};
 
 		connectionMaxUnstableCounter = 10;
@@ -51,18 +51,18 @@ public abstract class Configuration implements IConfiguration {
 	}
 
 	@Override
-	public IUnexpectedRequestHandler getOnUnexpectedRequestReceived() {
-		return onUnexpectedRequestReceived;
+	public IMessageHandler getMessageHandler() {
+		return messageHandler;
 	}
 
 	/**
 	 * Set the handler to execute when an unexpected request has been received from
 	 * the remote. The default handler to nothing.
 	 * 
-	 * @param onUnexpectedRequestReceived The handler to call.
+	 * @param messageHandler The handler to call.
 	 */
-	public void setOnUnexpectedRequestReceived(IUnexpectedRequestHandler onUnexpectedRequestReceived) {
-		this.onUnexpectedRequestReceived = onUnexpectedRequestReceived;
+	public void setMessageHandler(IMessageHandler messageHandler) {
+		this.messageHandler = messageHandler;
 	}
 
 	@Override

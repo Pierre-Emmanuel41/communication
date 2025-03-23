@@ -9,7 +9,7 @@ import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.ConnectionUnstableEvent;
 import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.interfaces.IConfiguration;
-import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
+import fr.pederobien.communication.interfaces.IMessageHandler;
 import fr.pederobien.communication.interfaces.connection.ICallback.CallbackArgs;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
@@ -30,7 +30,7 @@ public class Connection<T> implements IConnection {
 	private CallbackManager callbackManager;
 	private IDisposable disposable;
 	private ILayerInitializer layerInitializer;
-	private IUnexpectedRequestHandler handler;
+	private IMessageHandler handler;
 	private boolean isEnabled;
 	private HealedCounter counter;
 
@@ -83,7 +83,7 @@ public class Connection<T> implements IConnection {
 		boolean success = layerInitializer.initialize(token);
 		token.dispose();
 
-		handler = config.getOnUnexpectedRequestReceived();
+		handler = config.getMessageHandler();
 		return success;
 	}
 

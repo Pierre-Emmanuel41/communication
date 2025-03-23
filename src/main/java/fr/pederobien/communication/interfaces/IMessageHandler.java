@@ -2,7 +2,7 @@ package fr.pederobien.communication.interfaces;
 
 import fr.pederobien.communication.event.MessageEvent;
 
-public interface IUnexpectedRequestHandler {
+public interface IMessageHandler {
 
 	/**
 	 * Method called when an unexpected request is received from the remote.

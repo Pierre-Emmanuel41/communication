@@ -133,7 +133,7 @@ public class LayerInitialisationTest {
 
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
-			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			serverConfig.setMessageHandler(new RequestHandler(event -> {
 				Logger.debug("Server received %s", new String(event.getData()));
 
 				Message message = new Message("a message from the server".getBytes());
@@ -321,7 +321,7 @@ public class LayerInitialisationTest {
 
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
-			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			serverConfig.setMessageHandler(new RequestHandler(event -> {
 				Logger.debug("Server received %s", new String(event.getData()));
 
 				Message message = new Message("a message from the server".getBytes());
@@ -398,7 +398,7 @@ public class LayerInitialisationTest {
 
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
-			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			serverConfig.setMessageHandler(new RequestHandler(event -> {
 				Logger.debug("Server received %s", new String(event.getData()));
 
 				Message message = new Message("a message from the server".getBytes());

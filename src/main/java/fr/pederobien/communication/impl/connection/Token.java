@@ -5,7 +5,7 @@ import java.util.concurrent.Semaphore;
 import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.interfaces.IToken;
-import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
+import fr.pederobien.communication.interfaces.IMessageHandler;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 import fr.pederobien.communication.interfaces.connection.IMessage;
@@ -15,7 +15,7 @@ import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;
 
-public class Token implements IToken, IEventListener, IUnexpectedRequestHandler {
+public class Token implements IToken, IEventListener, IMessageHandler {
 	private IConnection connection;
 	private Mode mode;
 	private IDisposable disposable;

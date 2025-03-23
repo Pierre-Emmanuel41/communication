@@ -29,7 +29,7 @@ public class UdpCommunicationTest {
 	public void testClientToServerCommunication() {
 		IExecutable test = () -> {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			serverConfig.setMessageHandler(new RequestHandler(event -> {
 				Logger.debug("Server received %s", new String(event.getData()));
 			}));
 
@@ -75,7 +75,7 @@ public class UdpCommunicationTest {
 			sendToClient.start();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			clientConfig.setMessageHandler(new RequestHandler(event -> {
 				Logger.debug("Client received %s", new String(event.getData()));
 
 				Message message = new Message("a message from a client".getBytes());
@@ -104,7 +104,7 @@ public class UdpCommunicationTest {
 	public void testClientToServerWithCallback() {
 		IExecutable test = () -> {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			serverConfig.setMessageHandler(new RequestHandler(event -> {
 				Logger.debug("Server received %s", new String(event.getData()));
 
 				Message message = new Message("a message from the server".getBytes());
@@ -145,7 +145,7 @@ public class UdpCommunicationTest {
 	public void testClientToServerWithCallbackButTimeout() {
 		IExecutable test = () -> {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			serverConfig.setMessageHandler(new RequestHandler(event -> {
 				String formatter = "Server received %s, but will not respond to it";
 				Logger.debug(formatter, new String(event.getData()));
 			}));
@@ -201,7 +201,7 @@ public class UdpCommunicationTest {
 			sendToClient.start();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			clientConfig.setMessageHandler(new RequestHandler(event -> {
 				Logger.debug("Client received %s", new String(event.getData()));
 
 				Message message = new Message("a message from a client".getBytes());
@@ -247,7 +247,7 @@ public class UdpCommunicationTest {
 			sendToClient.start();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			clientConfig.setMessageHandler(new RequestHandler(event -> {
 				String formatter = "Client received %s, but will not respond to it";
 				Logger.debug(formatter, new String(event.getData()));
 			}));
@@ -319,7 +319,7 @@ public class UdpCommunicationTest {
 	public void testCallbackException() {
 		IExecutable test = () -> {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			serverConfig.setMessageHandler(new RequestHandler(event -> {
 				byte[] bytes = "a message from the server".getBytes();
 				event.getConnection().answer(event.getIdentifier(), new Message(bytes));
 			}));
@@ -385,7 +385,7 @@ public class UdpCommunicationTest {
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
-			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			clientConfig.setMessageHandler(new RequestHandler(event -> {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
@@ -431,7 +431,7 @@ public class UdpCommunicationTest {
 			clientConfig.setClientMaxUnstableCounter(5);
 			clientConfig.setClientHealTime(9000);
 			clientConfig.setConnectionHealTime(500);
-			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			clientConfig.setMessageHandler(new RequestHandler(event -> {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
@@ -483,7 +483,7 @@ public class UdpCommunicationTest {
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
-			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			clientConfig.setMessageHandler(new RequestHandler(event -> {
 				Logger.debug("Client received %s", new String(event.getData()));
 
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
@@ -531,7 +531,7 @@ public class UdpCommunicationTest {
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
-			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			clientConfig.setMessageHandler(new RequestHandler(event -> {
 				Logger.debug("Client received %s", new String(event.getData()));
 
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
@@ -579,7 +579,7 @@ public class UdpCommunicationTest {
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
-			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			clientConfig.setMessageHandler(new RequestHandler(event -> {
 				Logger.debug("Client received %s", new String(event.getData()));
 
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
@@ -606,7 +606,7 @@ public class UdpCommunicationTest {
 		IExecutable tests = () -> {
 
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+			serverConfig.setMessageHandler(new RequestHandler(event -> {
 				Logger.debug("Server received %s", new String(event.getData()));
 			}));
 
