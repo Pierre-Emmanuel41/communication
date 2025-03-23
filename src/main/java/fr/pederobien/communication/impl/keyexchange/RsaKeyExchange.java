@@ -13,9 +13,11 @@ public class RsaKeyExchange {
 	 * @param token   The token to perform key exchange.
 	 * @param keySize This is analgorithm-specific metric, such as modulus length,
 	 *                specified in number of bits.
+	 * @param timeout The maximum time, in ms, to wait for remote response duringthe
+	 *                key exchange.
 	 */
-	public RsaKeyExchange(IToken token, int keySize) {
-		keyExchange = new AsymmetricKeyExchange(token, new RsaKeyManager(keySize));
+	public RsaKeyExchange(IToken token, int keySize, int timeout) {
+		keyExchange = new AsymmetricKeyExchange(token, new RsaKeyManager(keySize), timeout);
 	}
 
 	/**

@@ -11,6 +11,7 @@ import fr.pederobien.utils.Watchdog.WatchdogStakeholder;
 
 public class SymmetricKeyExchange extends Exchange {
 	private SymmetricKeyManager keyManager;
+	private int timeout;
 	private boolean success;
 	private WatchdogStakeholder watchdog;
 
@@ -20,10 +21,13 @@ public class SymmetricKeyExchange extends Exchange {
 	 * @param token      The token used to send/receive data from the remote.
 	 * @param keyManager The manager that generates a secret key and parse remote
 	 *                   secret key.
+	 * @param timeout    The maximum time, in ms, to wait for remote response during
+	 *                   the key exchange.
 	 */
-	public SymmetricKeyExchange(IToken token, SymmetricKeyManager keyManager) {
+	public SymmetricKeyExchange(IToken token, SymmetricKeyManager keyManager, int timeout) {
 		super(token);
 		this.keyManager = keyManager;
+		this.timeout = timeout;
 
 		success = false;
 	}
@@ -37,7 +41,7 @@ public class SymmetricKeyExchange extends Exchange {
 
 	@Override
 	protected boolean doServerToClientExchange() throws Exception {
-		send(keyManager.generateKey().getEncoded(), 2000, args -> {
+		send(keyManager.generateKey().getEncoded(), timeout, args -> {
 			if (!args.isTimeout()) {
 
 				// Extracting client secret key
@@ -48,6 +52,13 @@ public class SymmetricKeyExchange extends Exchange {
 				}
 			}
 		});
+
+		// Adding delay to let the client be ready for next initialisation step
+		try {
+			Thread.sleep(500);
+		} catch (Exception e) {
+			// Do nothing
+		}
 
 		return success;
 	}
@@ -75,7 +86,7 @@ public class SymmetricKeyExchange extends Exchange {
 	}
 
 	private void serverToClient_sendPositiveAcknowledgement(int identifier) {
-		answer(identifier, SUCCESS_PATTERN, 2000, args -> {
+		answer(identifier, SUCCESS_PATTERN, timeout, args -> {
 			if (!args.isTimeout()) {
 				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
 					success = true;
@@ -85,7 +96,7 @@ public class SymmetricKeyExchange extends Exchange {
 	}
 
 	private void clientToServer_sendBackSecretKey(int identifier, byte[] remoteKey) {
-		answer(identifier, remoteKey, 2000, args -> {
+		answer(identifier, remoteKey, timeout, args -> {
 			if (!args.isTimeout()) {
 				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
 					answer(args.getIdentifier(), SUCCESS_PATTERN);

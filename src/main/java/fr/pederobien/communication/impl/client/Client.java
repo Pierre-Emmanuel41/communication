@@ -7,8 +7,8 @@ import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.client.IClientImpl;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 
-public class CustomClient implements IClient {
-	private IClientConfig config;
+public class Client<T> implements IClient<T> {
+	private IClientConfig<T> config;
 	private String name;
 	private IContext context;
 
@@ -19,11 +19,11 @@ public class CustomClient implements IClient {
 	 * @param impl   The client specific implementation to connect/disconnect from
 	 *               the server.
 	 */
-	public CustomClient(IClientConfig config, IClientImpl impl) {
+	public Client(IClientConfig<T> config, IClientImpl<T> impl) {
 		this.config = config;
 
-		name = String.format("[%s %s:%s]", config.getName(), config.getAddress(), config.getPort());
-		context = new Context(this, impl);
+		name = String.format("[%s %s]", config.getName(), config.getEndPoint());
+		context = new Context<T>(this, impl);
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class CustomClient implements IClient {
 	}
 
 	@Override
-	public IClientConfig getConfig() {
+	public IClientConfig<T> getConfig() {
 		return config;
 	}
 

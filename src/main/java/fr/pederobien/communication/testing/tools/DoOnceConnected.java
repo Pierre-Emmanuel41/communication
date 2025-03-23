@@ -3,13 +3,14 @@ package fr.pederobien.communication.testing.tools;
 import java.util.function.Consumer;
 
 import fr.pederobien.communication.event.NewClientEvent;
+import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.server.IServer;
 import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;
 
 public class DoOnceConnected implements IEventListener {
-	private IServer server;
+	private IServer<IEthernetEndPoint> server;
 	private Consumer<NewClientEvent> action;
 
 	/**
@@ -19,7 +20,7 @@ public class DoOnceConnected implements IEventListener {
 	 * @param message The message to send back to the client.
 	 * @param times   The number of time the message should be sent to the client.
 	 */
-	public DoOnceConnected(IServer server, Consumer<NewClientEvent> action) {
+	public DoOnceConnected(IServer<IEthernetEndPoint> server, Consumer<NewClientEvent> action) {
 		this.server = server;
 		this.action = action;
 	}

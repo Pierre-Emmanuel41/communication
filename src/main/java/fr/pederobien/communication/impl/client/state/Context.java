@@ -5,13 +5,12 @@ import fr.pederobien.communication.interfaces.client.IClient;
 import fr.pederobien.communication.interfaces.client.IClientImpl;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.utils.HealedCounter;
+import fr.pederobien.utils.event.Logger;
 import fr.pederobien.utils.event.EventManager;
-import fr.pederobien.utils.event.LogEvent;
-import fr.pederobien.utils.event.LogEvent.ELogLevel;
 
-public class Context implements IContext {
-	private IClient client;
-	private IClientImpl impl;
+public class Context<T> implements IContext {
+	private IClient<T> client;
+	private IClientImpl<T> impl;
 	private IState disconnected;
 	private IState connected;
 	private IState disposed;
@@ -23,13 +22,13 @@ public class Context implements IContext {
 	/**
 	 * Create a state context.
 	 */
-	public Context(IClient client, IClientImpl impl) {
+	public Context(IClient<T> client, IClientImpl<T> impl) {
 		this.client = client;
 		this.impl = impl;
 
-		disconnected = new Disconnected(this);
-		connected = new Connected(this);
-		disposed = new Disposed(this);
+		disconnected = new Disconnected<T>(this);
+		connected = new Connected<T>(this);
+		disposed = new Disposed<T>(this);
 
 		state = disconnected;
 
@@ -77,14 +76,14 @@ public class Context implements IContext {
 	/**
 	 * @return The client associated to this context.
 	 */
-	public IClient getClient() {
+	public IClient<T> getClient() {
 		return client;
 	}
 
 	/**
 	 * @return The implementation specific to the network.
 	 */
-	public IClientImpl getImpl() {
+	public IClientImpl<T> getImpl() {
 		return impl;
 	}
 
@@ -131,8 +130,7 @@ public class Context implements IContext {
 	 * Function called when the healed counter reached its maximum value.
 	 */
 	private void onClientUnstable() {
-		String log = String.format("%s - %s", client.toString(), "stopping automatic reconnection");
-		EventManager.callEvent(new LogEvent(ELogLevel.ERROR, log));
+		Logger.error(String.format("%s - %s", client.toString(), "stopping automatic reconnection"));
 		EventManager.callEvent(new ClientUnstableEvent(client));
 	}
 }

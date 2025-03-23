@@ -11,7 +11,7 @@ public class ClientConnectedEvent extends ClientEvent {
 	 * 
 	 * @param client The client connected to the remote.
 	 */
-	public ClientConnectedEvent(IClient client) {
+	public ClientConnectedEvent(IClient<?> client) {
 		super(client);
 	}
 

@@ -2,7 +2,7 @@ package fr.pederobien.communication.interfaces.client;
 
 import fr.pederobien.communication.interfaces.connection.IConnection;
 
-public interface IClient {
+public interface IClient<T> {
 
 	/**
 	 * The implementation shall try establishing the connection only when this
@@ -44,5 +44,5 @@ public interface IClient {
 	/**
 	 * @return The client configuration.
 	 */
-	IClientConfig getConfig();
+	IClientConfig<T> getConfig();
 }

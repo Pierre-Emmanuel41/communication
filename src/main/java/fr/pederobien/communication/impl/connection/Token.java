@@ -17,6 +17,7 @@ import fr.pederobien.utils.event.IEventListener;
 
 public class Token implements IToken, IEventListener, IUnexpectedRequestHandler {
 	private IConnection connection;
+	private Mode mode;
 	private IDisposable disposable;
 	private RequestReceivedEvent event;
 	private Semaphore semaphore;
@@ -27,8 +28,9 @@ public class Token implements IToken, IEventListener, IUnexpectedRequestHandler 
 	 * 
 	 * @param connection The live connection to the remote.
 	 */
-	public Token(IConnection connection) {
+	public Token(IConnection connection, Mode mode) {
 		this.connection = connection;
+		this.mode = mode;
 
 		disposable = new Disposable();
 		semaphore = new Semaphore(0);
@@ -38,7 +40,7 @@ public class Token implements IToken, IEventListener, IUnexpectedRequestHandler 
 
 	@Override
 	public Mode getMode() {
-		return connection.getConfig().getMode();
+		return mode;
 	}
 
 	@Override

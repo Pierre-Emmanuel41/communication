@@ -25,7 +25,7 @@ public class RsaLayer implements ILayer {
 	 * Creates an RSA layer for asymmetric encryption.
 	 * 
 	 * @param privateKey The private key to decode.
-	 * @param remoteKey The remote public key to encode.
+	 * @param remoteKey  The remote public key to encode.
 	 */
 	public RsaLayer(PrivateKey privateKey, PublicKey remoteKey) {
 		this.privateKey = privateKey;
@@ -43,8 +43,9 @@ public class RsaLayer implements ILayer {
 
 		// Step 2: Encoding packets
 		List<byte[]> encrypted = new ArrayList<byte[]>();
-		for (byte[] packet : packets)
+		for (byte[] packet : packets) {
 			encrypted.add(encode(packet));
+		}
 
 		// Step 3: Encapsulating each packet
 		ByteWrapper wrapper = ByteWrapper.create();
@@ -63,8 +64,9 @@ public class RsaLayer implements ILayer {
 		List<byte[]> decrypted = new ArrayList<byte[]>();
 		for (byte[] packet : unpacked) {
 			byte[] decoded = decode(packet);
-			if (decoded != null)
+			if (decoded != null) {
 				decrypted.add(decode(packet));
+			}
 		}
 
 		// Step 3: Concatenating decrypted packet in one message

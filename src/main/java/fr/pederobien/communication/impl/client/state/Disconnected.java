@@ -2,9 +2,9 @@ package fr.pederobien.communication.impl.client.state;
 
 import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.utils.BlockingQueueTask;
-import fr.pederobien.utils.event.LogEvent.ELogLevel;
+import fr.pederobien.utils.event.Logger;
 
-public class Disconnected extends State {
+public class Disconnected<T> extends State<T> {
 	private BlockingQueueTask<Object> connectionQueue;
 	private boolean attemptingConnection;
 	private boolean disconnectionRequested;
@@ -14,23 +14,23 @@ public class Disconnected extends State {
 	 * 
 	 * @param context The context of this state.
 	 */
-	public Disconnected(Context context) {
+	public Disconnected(Context<T> context) {
 		super(context);
 
-		String name = String.format("%s[reconnect]", getContext().getClient().toString(), getConfig().getPort());
+		String name = String.format("%s[reconnect]", getContext().getClient());
 		connectionQueue = new BlockingQueueTask<Object>(name, ignored -> connect(ignored));
 	}
 
 	@Override
 	public void setEnabled(boolean isEnabled) {
 		if (isEnabled) {
-			onLogEvent("Client disconnected");
+			info("Client disconnected");
 		}
 	}
 
 	@Override
 	public void connect() {
-		onLogEvent("Connecting client");
+		info("Connecting client");
 
 		attemptingConnection = true;
 		disconnectionRequested = false;
@@ -41,15 +41,15 @@ public class Disconnected extends State {
 	@Override
 	public void disconnect() {
 		if (attemptingConnection) {
-			onLogEvent("Disconnecting client");
+			info("Disconnecting client");
 			disconnectionRequested = true;
-			onLogEvent("Client disconnected");
+			info("Client disconnected");
 		}
 	}
 
 	@Override
 	public void dispose() {
-		onLogEvent("Disposing client");
+		info("Disposing client");
 
 		disconnectionRequested = true;
 		connectionQueue.dispose();
@@ -58,34 +58,42 @@ public class Disconnected extends State {
 	}
 
 	private void connect(Object ignored) {
+		IConnection connection = null;
+
 		try {
 
 			// Attempting connection with the remote
-			IConnection connection = getContext().getImpl().connectImpl(getConfig());
-
-			if (!disconnectionRequested) {
-
-				// Attempting connection initialization
-				if (connection.initialise()) {
-					if (disconnectionRequested) {
-						connection.dispose();
-					} else {
-						getContext().setConnection(connection);
-						getContext().setState(getContext().getConnected());
-						attemptingConnection = false;
-					}
-				} else {
-					onLogEvent(ELogLevel.WARNING, "Initialisation failure");
-					connection.setEnabled(false);
-					connection.dispose();
-
-					if (!getContext().getCounter().increment()) {
-						retry();
-					}
-				}
-			}
+			connection = getContext().getImpl().connectImpl(getConfig());
 		} catch (Exception e) {
 			retry();
+		}
+
+		if (connection != null && !disconnectionRequested) {
+			boolean initialised = false;
+
+			try {
+				initialised = connection.initialise();
+			} catch (Exception e) {
+				// Do nothing
+			}
+
+			if (!initialised) {
+				Logger.warning(String.format("%s - %s", getContext().getClient(), "Initialisation failure"));
+				connection.setEnabled(false);
+				connection.dispose();
+
+				if (!getContext().getCounter().increment()) {
+					retry();
+				}
+			} else {
+				if (disconnectionRequested) {
+					connection.dispose();
+				} else {
+					getContext().setConnection(connection);
+					getContext().setState(getContext().getConnected());
+					attemptingConnection = false;
+				}
+			}
 		}
 	}
 
@@ -95,7 +103,7 @@ public class Disconnected extends State {
 			Thread.sleep(getConfig().getReconnectionDelay());
 
 			if (!disconnectionRequested && getConfig().isAutomaticReconnection()) {
-				onLogEvent("Attempted connection aborted, retrying");
+				info("Attempted connection aborted, retrying");
 				connectionQueue.add(new Object());
 			}
 		} catch (InterruptedException e) {

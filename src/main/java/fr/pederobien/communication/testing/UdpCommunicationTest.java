@@ -2,12 +2,14 @@ package fr.pederobien.communication.testing;
 
 import fr.pederobien.communication.impl.ClientConfig;
 import fr.pederobien.communication.impl.Communication;
+import fr.pederobien.communication.impl.EthernetEndPoint;
 import fr.pederobien.communication.impl.ServerConfig;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.layer.AesLayerInitializer;
 import fr.pederobien.communication.impl.layer.AesSafeLayerInitializer;
 import fr.pederobien.communication.impl.layer.LayerInitializer;
 import fr.pederobien.communication.impl.layer.RsaLayerInitializer;
+import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.client.IClient;
 import fr.pederobien.communication.interfaces.server.IServer;
 import fr.pederobien.communication.testing.tools.DoOnceConnected;
@@ -15,11 +17,8 @@ import fr.pederobien.communication.testing.tools.ExceptionLayer;
 import fr.pederobien.communication.testing.tools.ExceptionLayer.LayerExceptionMode;
 import fr.pederobien.communication.testing.tools.RequestHandler;
 import fr.pederobien.communication.testing.tools.SimpleCertificate;
-import fr.pederobien.utils.AsyncConsole;
 import fr.pederobien.utils.IExecutable;
-import fr.pederobien.utils.event.EventManager;
-import fr.pederobien.utils.event.LogEvent;
-import fr.pederobien.utils.event.LogEvent.ELogLevel;
+import fr.pederobien.utils.event.Logger;
 
 public class UdpCommunicationTest {
 	private static final String SERVER_NAME = "UDP Server";
@@ -29,16 +28,15 @@ public class UdpCommunicationTest {
 
 	public void testClientToServerCommunication() {
 		IExecutable test = () -> {
-			ServerConfig serverConfig = createServerConfig();
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
-				String received = new String(event.getData());
-				EventManager.callEvent(new LogEvent("Server received %s", received));
+				Logger.debug("Server received %s", new String(event.getData()));
 			}));
 
-			IServer server = Communication.createUdpServer(serverConfig);
+			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
 			server.open();
 
-			IClient client = createDefaultUdpClient();
+			IClient<IEthernetEndPoint> client = createDefaultUdpClient();
 			client.connect();
 
 			sleep(100);
@@ -65,7 +63,7 @@ public class UdpCommunicationTest {
 
 	public void testServerToClientCommunication() {
 		IExecutable test = () -> {
-			IServer server = createDefaultUdpServer();
+			IServer<IEthernetEndPoint> server = createDefaultUdpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -76,16 +74,15 @@ public class UdpCommunicationTest {
 
 			sendToClient.start();
 
-			ClientConfig clientConfig = createClientConfig();
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
-				String received = new String(event.getData());
-				EventManager.callEvent(new LogEvent("Client received %s", received));
+				Logger.debug("Client received %s", new String(event.getData()));
 
 				Message message = new Message("a message from a client".getBytes());
 				event.getConnection().send(message);
 			}));
 
-			IClient client = Communication.createUdpClient(clientConfig);
+			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(2000);
@@ -106,19 +103,18 @@ public class UdpCommunicationTest {
 
 	public void testClientToServerWithCallback() {
 		IExecutable test = () -> {
-			ServerConfig serverConfig = createServerConfig();
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
-				String received = new String(event.getData());
-				EventManager.callEvent(new LogEvent("Server received %s", received));
+				Logger.debug("Server received %s", new String(event.getData()));
 
 				Message message = new Message("a message from the server".getBytes());
 				event.getConnection().answer(event.getIdentifier(), message);
 			}));
 
-			IServer server = Communication.createUdpServer(serverConfig);
+			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
 			server.open();
 
-			IClient client = createDefaultUdpClient();
+			IClient<IEthernetEndPoint> client = createDefaultUdpClient();
 			client.connect();
 
 			sleep(500);
@@ -126,10 +122,9 @@ public class UdpCommunicationTest {
 			String message = "a message from a client";
 			client.getConnection().send(new Message(message.getBytes(), args -> {
 				if (!args.isTimeout()) {
-					String received = new String(args.getResponse().getBytes());
-					EventManager.callEvent(new LogEvent("Client received %s", received));
+					Logger.debug("Client received %s", new String(args.getResponse().getBytes()));
 				} else {
-					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
+					Logger.error("Unexpected timeout occurred");
 				}
 			}));
 
@@ -149,16 +144,16 @@ public class UdpCommunicationTest {
 
 	public void testClientToServerWithCallbackButTimeout() {
 		IExecutable test = () -> {
-			ServerConfig serverConfig = createServerConfig();
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
 				String formatter = "Server received %s, but will not respond to it";
-				EventManager.callEvent(new LogEvent(formatter, new String(event.getData())));
+				Logger.debug(formatter, new String(event.getData()));
 			}));
 
-			IServer server = Communication.createUdpServer(serverConfig);
+			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
 			server.open();
 
-			IClient client = createDefaultUdpClient();
+			IClient<IEthernetEndPoint> client = createDefaultUdpClient();
 			client.connect();
 
 			sleep(500);
@@ -166,10 +161,9 @@ public class UdpCommunicationTest {
 			String message = "a message from a client";
 			client.getConnection().send(new Message(message.getBytes(), args -> {
 				if (!args.isTimeout()) {
-					String received = new String(args.getResponse().getBytes());
-					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected response received: %s", received));
+					Logger.error("Unexpected response received: %s", new String(args.getResponse().getBytes()));
 				} else {
-					EventManager.callEvent(new LogEvent("Expected timeout occured"));
+					Logger.debug("Expected timeout occured");
 				}
 			}));
 
@@ -189,16 +183,15 @@ public class UdpCommunicationTest {
 
 	public void testServerToClientWithCallback() {
 		IExecutable test = () -> {
-			IServer server = createDefaultUdpServer();
+			IServer<IEthernetEndPoint> server = createDefaultUdpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				Message message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
-						String received = new String(args.getResponse().getBytes());
-						EventManager.callEvent(new LogEvent("Server received %s", received));
+						Logger.debug("Server received %s", new String(args.getResponse().getBytes()));
 					} else {
-						EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
+						Logger.error("Unexpected timeout occurred");
 					}
 				});
 
@@ -207,16 +200,15 @@ public class UdpCommunicationTest {
 
 			sendToClient.start();
 
-			ClientConfig clientConfig = createClientConfig();
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
-				String received = new String(event.getData());
-				EventManager.callEvent(new LogEvent("Client received %s", received));
+				Logger.debug("Client received %s", new String(event.getData()));
 
 				Message message = new Message("a message from a client".getBytes());
 				event.getConnection().answer(event.getIdentifier(), message);
 			}));
 
-			IClient client = Communication.createUdpClient(clientConfig);
+			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(2000);
@@ -237,16 +229,15 @@ public class UdpCommunicationTest {
 
 	public void testServerToClientWithCallbackButTimeout() {
 		IExecutable test = () -> {
-			IServer server = createDefaultUdpServer();
+			IServer<IEthernetEndPoint> server = createDefaultUdpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				Message message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
-						String received = new String(args.getResponse().getBytes());
-						EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Server received %s", received));
+						Logger.error("Server received %s", new String(args.getResponse().getBytes()));
 					} else {
-						EventManager.callEvent(new LogEvent("Server: Expected timeout occurred"));
+						Logger.debug("Server: Expected timeout occurred");
 					}
 				});
 
@@ -255,13 +246,13 @@ public class UdpCommunicationTest {
 
 			sendToClient.start();
 
-			ClientConfig clientConfig = createClientConfig();
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
 				String formatter = "Client received %s, but will not respond to it";
-				EventManager.callEvent(new LogEvent(formatter, new String(event.getData())));
+				Logger.debug(formatter, new String(event.getData()));
 			}));
 
-			IClient client = Communication.createUdpClient(clientConfig);
+			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(2000);
@@ -282,13 +273,13 @@ public class UdpCommunicationTest {
 
 	public void testExtractionException() {
 		IExecutable test = () -> {
-			IServer server = createDefaultUdpServer();
+			IServer<IEthernetEndPoint> server = createDefaultUdpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				sleep(500);
 				for (int i = 0; i < 18 && !event.getClient().getConnection().isDisposed(); i++) {
-					AsyncConsole.printlnWithTimeStamp("Extracting message %s", i);
+					Logger.print("Extracting message %s", i);
 					byte[] bytes = "a message from the server".getBytes();
 					event.getClient().getConnection().send(new Message(bytes));
 
@@ -298,16 +289,16 @@ public class UdpCommunicationTest {
 
 			sendToClient.start();
 
-			ClientConfig clientConfig = createClientConfig();
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
-			clientConfig.setLayerInitializer(new LayerInitializer(new ExceptionLayer(LayerExceptionMode.UNPACK)));
+			clientConfig.setLayerInitializer(() -> new LayerInitializer(new ExceptionLayer(LayerExceptionMode.UNPACK)));
 
-			IClient client = Communication.createUdpClient(clientConfig);
+			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(250);
 
-			AsyncConsole.printlnWithTimeStamp("Expecting unstable connection after extracting 17 messages");
+			Logger.print("Expecting unstable connection after extracting 18 messages");
 
 			sleep(11000);
 
@@ -327,33 +318,33 @@ public class UdpCommunicationTest {
 
 	public void testCallbackException() {
 		IExecutable test = () -> {
-			ServerConfig serverConfig = createServerConfig();
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
 				byte[] bytes = "a message from the server".getBytes();
 				event.getConnection().answer(event.getIdentifier(), new Message(bytes));
 			}));
 
-			IServer server = Communication.createUdpServer(serverConfig);
+			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
 			server.open();
 
-			ClientConfig clientConfig = createClientConfig();
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
 
-			IClient client = Communication.createUdpClient(clientConfig);
+			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(250);
 
-			AsyncConsole.printlnWithTimeStamp("Expecting unstable connection after sending 17 messages");
+			Logger.print("Expecting unstable connection after sending 18 messages");
 
 			for (int i = 0; i < 18; i++) {
-				AsyncConsole.printlnWithTimeStamp("Sending message %s", i);
+				Logger.print("Sending message %s", i);
 				String message = "a message from a client";
 				client.getConnection().send(new Message(message.getBytes(), args -> {
 					if (!args.isTimeout()) {
 						throw new RuntimeException("Exception to test unstable counter");
 					} else {
-						EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Unexpected timeout occured"));
+						Logger.debug("Unexpected timeout occured");
 					}
 				}));
 
@@ -376,13 +367,13 @@ public class UdpCommunicationTest {
 
 	public void testUnexpectedRequestException() {
 		IExecutable test = () -> {
-			IServer server = createDefaultUdpServer();
+			IServer<IEthernetEndPoint> server = createDefaultUdpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				sleep(500);
 				for (int i = 0; i < 18 && !event.getClient().getConnection().isDisposed(); i++) {
-					AsyncConsole.printlnWithTimeStamp("Server Sending message %s", i);
+					Logger.print("Server Sending message %s", i);
 					byte[] bytes = "a message from the server".getBytes();
 					event.getClient().getConnection().send(new Message(bytes));
 
@@ -392,13 +383,13 @@ public class UdpCommunicationTest {
 
 			sendToClient.start();
 
-			ClientConfig clientConfig = createClientConfig();
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
 			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
-			IClient client = Communication.createUdpClient(clientConfig);
+			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(12000);
@@ -417,7 +408,7 @@ public class UdpCommunicationTest {
 
 	public void testUnstableClient() {
 		IExecutable test = () -> {
-			IServer server = createDefaultUdpServer();
+			IServer<IEthernetEndPoint> server = createDefaultUdpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -426,7 +417,7 @@ public class UdpCommunicationTest {
 						break;
 					}
 
-					AsyncConsole.printlnWithTimeStamp("Server Sending message %s", i);
+					Logger.print("Server Sending message %s", i);
 					byte[] bytes = "a message from the server".getBytes();
 					event.getClient().getConnection().send(new Message(bytes));
 
@@ -436,7 +427,7 @@ public class UdpCommunicationTest {
 
 			sendToClient.start();
 
-			ClientConfig clientConfig = createClientConfig();
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setClientMaxUnstableCounter(5);
 			clientConfig.setClientHealTime(9000);
 			clientConfig.setConnectionHealTime(500);
@@ -444,13 +435,13 @@ public class UdpCommunicationTest {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
-			IClient client = Communication.createUdpClient(clientConfig);
+			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(250);
 
-			AsyncConsole.printlnWithTimeStamp("Expecting unstable client after receiving %s unexpected messages",
-					17 * clientConfig.getClientMaxUnstableCounterValue());
+			Logger.print("Expecting unstable client after receiving %s unexpected messages",
+					18 * clientConfig.getClientMaxUnstableCounterValue());
 
 			sleep(40000);
 
@@ -468,10 +459,10 @@ public class UdpCommunicationTest {
 
 	public void testRsaLayer() {
 		IExecutable test = () -> {
-			ServerConfig serverConfig = createServerConfig();
-			serverConfig.setLayerInitializer(new RsaLayerInitializer(new SimpleCertificate()));
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-			IServer server = Communication.createUdpServer(serverConfig);
+			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -479,10 +470,9 @@ public class UdpCommunicationTest {
 
 				Message message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
-						String received = new String(args.getResponse().getBytes());
-						EventManager.callEvent(new LogEvent("Server received %s", received));
+						Logger.debug("Server received %s", new String(args.getResponse().getBytes()));
 					} else {
-						EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
+						Logger.error("Unexpected timeout occurred");
 					}
 				});
 
@@ -491,16 +481,15 @@ public class UdpCommunicationTest {
 
 			sendToClient.start();
 
-			ClientConfig clientConfig = createClientConfig();
-			clientConfig.setLayerInitializer(new RsaLayerInitializer(new SimpleCertificate()));
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
-				String received = new String(event.getData());
-				EventManager.callEvent(new LogEvent("Client received %s", received));
+				Logger.debug("Client received %s", new String(event.getData()));
 
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
 			}));
 
-			IClient client = Communication.createUdpClient(clientConfig);
+			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(3000);
@@ -519,20 +508,19 @@ public class UdpCommunicationTest {
 
 	public void testAesLayer() {
 		IExecutable test = () -> {
-			ServerConfig serverConfig = createServerConfig();
-			serverConfig.setLayerInitializer(new AesLayerInitializer(new SimpleCertificate()));
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-			IServer server = Communication.createUdpServer(serverConfig);
+			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				sleep(500);
 				Message message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
-						String received = new String(args.getResponse().getBytes());
-						EventManager.callEvent(new LogEvent("Server received %s", received));
+						Logger.debug("Server received %s", new String(args.getResponse().getBytes()));
 					} else {
-						EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
+						Logger.error("Unexpected timeout occurred");
 					}
 				});
 
@@ -541,16 +529,15 @@ public class UdpCommunicationTest {
 
 			sendToClient.start();
 
-			ClientConfig clientConfig = createClientConfig();
-			clientConfig.setLayerInitializer(new AesLayerInitializer(new SimpleCertificate()));
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
-				String received = new String(event.getData());
-				EventManager.callEvent(new LogEvent("Client received %s", received));
+				Logger.debug("Client received %s", new String(event.getData()));
 
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
 			}));
 
-			IClient client = Communication.createUdpClient(clientConfig);
+			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(3000);
@@ -569,20 +556,19 @@ public class UdpCommunicationTest {
 
 	public void testAesSafeLayer() {
 		IExecutable test = () -> {
-			ServerConfig serverConfig = createServerConfig();
-			serverConfig.setLayerInitializer(new AesSafeLayerInitializer(new SimpleCertificate()));
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 
-			IServer server = Communication.createUdpServer(serverConfig);
+			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				sleep(500);
 				Message message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
-						String received = new String(args.getResponse().getBytes());
-						EventManager.callEvent(new LogEvent("Server received %s", received));
+						Logger.debug("Server received %s", new String(args.getResponse().getBytes()));
 					} else {
-						EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occurred"));
+						Logger.error("Unexpected timeout occurred");
 					}
 				});
 
@@ -591,16 +577,15 @@ public class UdpCommunicationTest {
 
 			sendToClient.start();
 
-			ClientConfig clientConfig = createClientConfig();
-			clientConfig.setLayerInitializer(new AesSafeLayerInitializer(new SimpleCertificate()));
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
-				String received = new String(event.getData());
-				EventManager.callEvent(new LogEvent("Client received %s", received));
+				Logger.debug("Client received %s", new String(event.getData()));
 
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
 			}));
 
-			IClient client = Communication.createUdpClient(clientConfig);
+			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(3000);
@@ -617,14 +602,60 @@ public class UdpCommunicationTest {
 		runTest("testAesSafeLayer", test);
 	}
 
-	private void runTest(String testName, IExecutable runnable) {
-		EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Begin %s", testName));
+	public void testTwoClientsOneServer() {
+		IExecutable tests = () -> {
+
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
+				Logger.debug("Server received %s", new String(event.getData()));
+			}));
+
+			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
+			server.open();
+
+			sleep(1000);
+
+			IClient<IEthernetEndPoint> client1 = createDefaultUdpClient();
+			client1.connect();
+
+			IClient<IEthernetEndPoint> client2 = createDefaultUdpClient();
+			client2.connect();
+
+			sleep(2000);
+
+			for (int i = 0; i < 5; i++) {
+				client1.getConnection().send(new Message("a message from client1".getBytes()));
+				client2.getConnection().send(new Message("a message from client2".getBytes()));
+			}
+
+			sleep(2000);
+
+			server.close();
+			server.dispose();
+
+			sleep(500);
+
+			client1.disconnect();
+			client1.dispose();
+
+			client2.disconnect();
+			client2.dispose();
+		};
+
+		runTest("testTwoClientsOneServer", tests);
+	}
+
+	private void runTest(String testName, IExecutable test) {
+		Logger.debug("Begin %s", testName);
 		try {
-			runnable.exec();
+			test.exec();
 		} catch (Exception e) {
-			e.printStackTrace();
+			Logger.error("Unexpected error: %s", e.getMessage());
+			for (StackTraceElement trace : e.getStackTrace()) {
+				Logger.error(trace.toString());
+			}
 		}
-		EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "End %s", testName));
+		Logger.debug("End %s", testName);
 	}
 
 	private void sleep(int millis) {
@@ -638,8 +669,8 @@ public class UdpCommunicationTest {
 	/**
 	 * @return Creates a server configuration with default name and port number.
 	 */
-	private static ServerConfig createServerConfig() {
-		return Communication.createServerConfig(SERVER_NAME, PORT);
+	private static ServerConfig<IEthernetEndPoint> createServerConfig() {
+		return Communication.createServerConfig(SERVER_NAME, new EthernetEndPoint(PORT));
 	}
 
 	/**
@@ -647,7 +678,7 @@ public class UdpCommunicationTest {
 	 * 
 	 * @return The created server.
 	 */
-	private static IServer createDefaultUdpServer() {
+	private static IServer<IEthernetEndPoint> createDefaultUdpServer() {
 		return Communication.createDefaultUdpServer(SERVER_NAME, PORT);
 	}
 
@@ -655,8 +686,8 @@ public class UdpCommunicationTest {
 	 * @return Creates a client configuration with default name, address and port
 	 *         number.
 	 */
-	private static ClientConfig createClientConfig() {
-		return Communication.createClientConfig(CLIENT_NAME, ADDRESS, PORT);
+	private static ClientConfig<IEthernetEndPoint> createClientConfig() {
+		return Communication.createClientConfig(CLIENT_NAME, new EthernetEndPoint(ADDRESS, PORT));
 	}
 
 	/**
@@ -664,7 +695,7 @@ public class UdpCommunicationTest {
 	 * 
 	 * @return The created client.
 	 */
-	private static IClient createDefaultUdpClient() {
+	private static IClient<IEthernetEndPoint> createDefaultUdpClient() {
 		return Communication.createDefaultUdpClient(CLIENT_NAME, ADDRESS, PORT);
 	}
 }

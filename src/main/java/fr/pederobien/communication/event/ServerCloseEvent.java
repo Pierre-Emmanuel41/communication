@@ -11,7 +11,7 @@ public class ServerCloseEvent extends ServerEvent {
 	 * 
 	 * @param server The closed server.
 	 */
-	public ServerCloseEvent(IServer server) {
+	public ServerCloseEvent(IServer<?> server) {
 		super(server);
 	}
 

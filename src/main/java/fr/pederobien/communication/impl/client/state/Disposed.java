@@ -1,20 +1,20 @@
 package fr.pederobien.communication.impl.client.state;
 
-public class Disposed extends State {
+public class Disposed<T> extends State<T> {
 
 	/**
 	 * Create a state where the client is disposed.
 	 * 
 	 * @param context The context of this state.
 	 */
-	public Disposed(Context context) {
+	public Disposed(Context<T> context) {
 		super(context);
 	}
 
 	@Override
 	public void setEnabled(boolean isEnabled) {
 		if (isEnabled) {
-			onLogEvent("Client disposed");
+			info("Client disposed");
 		}
 	}
 

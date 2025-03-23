@@ -2,22 +2,17 @@ package fr.pederobien.communication.interfaces.client;
 
 import fr.pederobien.communication.interfaces.IConfiguration;
 
-public interface IClientConfig extends IConfiguration {
+public interface IClientConfig<T> extends IConfiguration {
+
+	/**
+	 * @return The object that gather remote information.
+	 */
+	T getEndPoint();
 
 	/**
 	 * @return The client's name. Essentially used for logging.
 	 */
 	String getName();
-
-	/**
-	 * @return The IP address of the server.
-	 */
-	String getAddress();
-
-	/**
-	 * @return The port number of the server.
-	 */
-	int getPort();
 
 	/**
 	 * @return The value considered as a timeout in ms the client tries to connect

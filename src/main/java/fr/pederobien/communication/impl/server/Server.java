@@ -6,17 +6,18 @@ import fr.pederobien.communication.event.ServerUnstableEvent;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.server.IServer;
 import fr.pederobien.communication.interfaces.server.IServerConfig;
+import fr.pederobien.communication.interfaces.server.IServerImpl;
 import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
+import fr.pederobien.utils.event.Logger;
 import fr.pederobien.utils.event.EventManager;
-import fr.pederobien.utils.event.LogEvent;
-import fr.pederobien.utils.event.LogEvent.ELogLevel;
 
-public abstract class Server implements IServer {
+public class Server<T> implements IServer<T> {
 	private static final int MAX_EXCEPTION_NUMBER = 10;
 
-	private IServerConfig config;
+	private IServerConfig<T> config;
+	private IServerImpl<T> impl;
 	private EState state;
 	private BlockingQueueTask<Object> clientQueue;
 	private IDisposable disposable;
@@ -25,10 +26,13 @@ public abstract class Server implements IServer {
 	/**
 	 * Creates a server.
 	 * 
-	 * @param config The object that holds the server configuration.
+	 * @param config         The object that holds the server configuration.
+	 * @param implementation The server specific implementation to open/close the
+	 *                       server.
 	 */
-	protected Server(IServerConfig config) {
+	public Server(IServerConfig<T> config, IServerImpl<T> impl) {
 		this.config = config;
+		this.impl = impl;
 
 		clientQueue = new BlockingQueueTask<Object>(String.format("%s[WaitForClient]", toString()),
 				object -> waitForClient(object));
@@ -48,12 +52,12 @@ public abstract class Server implements IServer {
 
 		try {
 			state = EState.OPENING;
-			onLogEvent("Opening server");
+			info("Opening server");
 
-			openImpl(config.getPort());
+			impl.open(config);
 
 			state = EState.OPENED;
-			onLogEvent("Server opened");
+			info("Server opened");
 
 			clientQueue.add(new Object());
 			clientQueue.start();
@@ -75,14 +79,14 @@ public abstract class Server implements IServer {
 
 		try {
 			state = EState.CLOSING;
-			onLogEvent("Closing server");
+			info("Closing server");
 
 			// First close the server and then close all connections with clients.
-			closeImpl();
+			impl.close();
 			EventManager.callEvent(new ServerCloseEvent(this));
 
 			state = EState.CLOSED;
-			onLogEvent("Server closed");
+			info("Server closed");
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -98,7 +102,7 @@ public abstract class Server implements IServer {
 		}
 
 		clientQueue.dispose();
-		onLogEvent("Server disposed");
+		info("Server disposed");
 		return true;
 	}
 
@@ -108,44 +112,13 @@ public abstract class Server implements IServer {
 	}
 
 	@Override
-	public IServerConfig getConfig() {
+	public IServerConfig<T> getConfig() {
 		return config;
 	}
 
 	@Override
 	public String toString() {
-		return String.format("[%s *:%s]", config.getName(), config.getPort());
-	}
-
-	/**
-	 * Server specific implementation for opening.
-	 * 
-	 * @param port The port number on which this server should listen for new
-	 *             clients.
-	 */
-	protected abstract void openImpl(int port) throws Exception;
-
-	/**
-	 * Server specific implementation for closing.
-	 */
-	protected abstract void closeImpl() throws Exception;
-
-	/**
-	 * Called in its own thread in order to create a connection with a client.
-	 * 
-	 * @param config The server configuration that holds connection configuration
-	 *               parameters.
-	 */
-	protected abstract IConnection waitForClientImpl(IServerConfig config) throws Exception;
-
-	/**
-	 * Throw a LogEvent.
-	 * 
-	 * @param message The message of the event.
-	 * @param args    The arguments of the message to display.
-	 */
-	protected void onLogEvent(ELogLevel level, String message, Object... args) {
-		EventManager.callEvent(new LogEvent(level, "%s - %s", toString(), String.format(message, args)));
+		return String.format("[%s %s]", config.getName(), config.getPoint());
 	}
 
 	/**
@@ -154,8 +127,8 @@ public abstract class Server implements IServer {
 	 * @param message The message of the event.
 	 * @param args    The arguments of the message to display.
 	 */
-	protected void onLogEvent(String message, Object... args) {
-		onLogEvent(ELogLevel.INFO, message, args);
+	protected void info(String message, Object... args) {
+		Logger.info("%s - %s", this, String.format(message, args));
 	}
 
 	private void waitForClient(Object object) {
@@ -176,7 +149,7 @@ public abstract class Server implements IServer {
 		IConnection connection = null;
 
 		try {
-			connection = waitForClientImpl(config);
+			connection = impl.waitForClient(config);
 			if (state != EState.OPENED) {
 				connection.dispose();
 				connection = null;
@@ -186,7 +159,7 @@ public abstract class Server implements IServer {
 		} catch (Exception e) {
 			newClientExceptionCounter++;
 			if (newClientExceptionCounter == MAX_EXCEPTION_NUMBER) {
-				onLogEvent("Too much exceptions in a row, closing server");
+				info("Too much exceptions in a row, closing server");
 				EventManager.callEvent(new ServerUnstableEvent(this));
 			}
 		} finally {
@@ -214,13 +187,13 @@ public abstract class Server implements IServer {
 		}
 
 		if (!initialised) {
-			onLogEvent(ELogLevel.WARNING, "Initialisation failure");
+			Logger.warning("%s - Initialisation failure", this);
 			connection.setEnabled(false);
 			connection.dispose();
 		} else {
 
 			// Notifying observers that a client is connected
-			EventManager.callEvent(new NewClientEvent(new Client(this, connection)));
+			EventManager.callEvent(new NewClientEvent(new Client<T>(this, connection)));
 		}
 	}
 }

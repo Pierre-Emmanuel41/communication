@@ -8,10 +8,10 @@ import fr.pederobien.communication.event.ConnectionEnableChangedEvent;
 import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.ConnectionUnstableEvent;
 import fr.pederobien.communication.event.RequestReceivedEvent;
+import fr.pederobien.communication.interfaces.IConfiguration;
 import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 import fr.pederobien.communication.interfaces.connection.ICallback.CallbackArgs;
 import fr.pederobien.communication.interfaces.connection.IConnection;
-import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
 import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
 import fr.pederobien.communication.interfaces.connection.IMessage;
@@ -20,11 +20,10 @@ import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.HealedCounter;
 import fr.pederobien.utils.IDisposable;
 import fr.pederobien.utils.event.EventManager;
-import fr.pederobien.utils.event.LogEvent;
-import fr.pederobien.utils.event.LogEvent.ELogLevel;
+import fr.pederobien.utils.event.Logger;
 
-public class Connection implements IConnection {
-	private IConnectionConfig config;
+public class Connection<T> implements IConnection {
+	private IConfiguration config;
 	private IConnectionImpl impl;
 	private String name;
 	private QueueManager queueManager;
@@ -44,15 +43,16 @@ public class Connection implements IConnection {
 	 * remote.
 	 * 
 	 * @param config         The object that holds the connection configuration.
+	 * @param endPoint       The object that gather remote information.
 	 * @param implementation The connection specific implementation for
 	 *                       sending/receiving data from the remote.
 	 */
-	public Connection(IConnectionConfig config, IConnectionImpl impl) {
+	public Connection(IConfiguration config, T endPoint, IConnectionImpl impl) {
 		this.config = config;
 		this.impl = impl;
 
 		String remote = config.getMode() == Mode.CLIENT_TO_SERVER ? "Server" : "Client";
-		name = String.format("%s %s:%s", remote, config.getAddress(), config.getPort());
+		name = String.format("%s %s", remote, endPoint);
 
 		queueManager = new QueueManager(name);
 		queueManager.setOnSend(message -> sendMessage(message));
@@ -61,10 +61,10 @@ public class Connection implements IConnection {
 
 		callbackManager = new CallbackManager();
 		disposable = new Disposable();
-		layerInitializer = config.getLayerInitializer().copy();
+		layerInitializer = config.getLayerInitializer();
 
-		int unstableCounter = config.getMaxUnstableCounterValue();
-		int healTime = config.getHealTime();
+		int unstableCounter = config.getConnectionMaxUnstableCounterValue();
+		int healTime = config.getConnectionHealTime();
 		String counterName = String.format("%s HealedCounter", name);
 		counter = new HealedCounter(unstableCounter, healTime, () -> onUnstableConnection(), counterName);
 		isEnabled = true;
@@ -77,13 +77,13 @@ public class Connection implements IConnection {
 		queueManager.initialize();
 
 		// Initializing layer
-		Token token = new Token(this);
+		Token token = new Token(this, config.getMode());
 		handler = token;
 
 		boolean success = layerInitializer.initialize(token);
 		token.dispose();
 
-		handler = getConfig().getOnUnexpectedRequestReceived();
+		handler = config.getOnUnexpectedRequestReceived();
 		return success;
 	}
 
@@ -123,7 +123,11 @@ public class Connection implements IConnection {
 	@Override
 	public void dispose() {
 		if (disposable.dispose()) {
-			impl.dispose();
+			try {
+				impl.dispose();
+			} catch (Exception e) {
+
+			}
 
 			// Dispose callback manager
 			callbackManager.dispose();
@@ -144,11 +148,6 @@ public class Connection implements IConnection {
 	}
 
 	@Override
-	public IConnectionConfig getConfig() {
-		return config;
-	}
-
-	@Override
 	public String toString() {
 		return String.format("[%s]", name);
 	}
@@ -157,8 +156,7 @@ public class Connection implements IConnection {
 	 * Throw an unstable connection event.
 	 */
 	private void onUnstableConnection() {
-		String formatter = "[%s] - Unstable connection detected";
-		EventManager.callEvent(new LogEvent(ELogLevel.ERROR, formatter, name));
+		Logger.error("[%s] - Unstable connection detected", name);
 		EventManager.callEvent(new ConnectionUnstableEvent(this));
 	}
 
@@ -190,31 +188,30 @@ public class Connection implements IConnection {
 
 			try {
 				raw = impl.receive();
-
-				// When raw is null, a problem happened while waiting
-				// for receiving data from the remote
-				if (raw == null) {
-
-					// If connection is disabled, client is being disconnected
-					if (isEnabled()) {
-						EventManager.callEvent(new ConnectionLostEvent(this));
-					}
-				} else {
-					// Adding raw data for asynchronous extraction
-					queueManager.getExtractingQueue().add(raw);
-				}
-
-			} catch (Exception exception) {
+			} catch (Exception e) {
 				if (!counter.increment() && !isDisposed()) {
 					// Waiting again for the reception
 					queueManager.getReceivingQueue().add(new Object());
 				}
-			} finally {
-				// If connection is not lost
-				if (raw != null) {
-					// Waiting again for the reception
-					queueManager.getReceivingQueue().add(new Object());
+
+				// No need to go further
+				return;
+			}
+
+			// When raw is null, a problem happened while waiting
+			// for receiving data from the remote
+			if (raw == null) {
+
+				// If connection is disabled, client is being disconnected
+				if (isEnabled()) {
+					EventManager.callEvent(new ConnectionLostEvent(this));
 				}
+			} else {
+				// Adding raw data for asynchronous extraction
+				queueManager.getExtractingQueue().add(raw);
+
+				// Waiting again for the reception
+				queueManager.getReceivingQueue().add(new Object());
 			}
 		}
 	}

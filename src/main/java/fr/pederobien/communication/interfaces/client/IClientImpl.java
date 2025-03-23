@@ -2,7 +2,7 @@ package fr.pederobien.communication.interfaces.client;
 
 import fr.pederobien.communication.interfaces.connection.IConnection;
 
-public interface IClientImpl {
+public interface IClientImpl<T> {
 
 	/**
 	 * Client implementation specific to connect to the remote.
@@ -12,5 +12,5 @@ public interface IClientImpl {
 	 * @throws Exception If an exception is thrown, it will be caught and a
 	 *                   reconnection will be attempted.
 	 */
-	IConnection connectImpl(IClientConfig config) throws Exception;
+	IConnection connectImpl(IClientConfig<T> config) throws Exception;
 }

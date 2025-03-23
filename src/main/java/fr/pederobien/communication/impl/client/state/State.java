@@ -1,19 +1,17 @@
 package fr.pederobien.communication.impl.client.state;
 
 import fr.pederobien.communication.interfaces.client.IClientConfig;
-import fr.pederobien.utils.event.EventManager;
-import fr.pederobien.utils.event.LogEvent;
-import fr.pederobien.utils.event.LogEvent.ELogLevel;
+import fr.pederobien.utils.event.Logger;
 
-public abstract class State implements IState {
-	private Context context;
+public abstract class State<T> implements IState {
+	private Context<T> context;
 
 	/**
 	 * Creates a new state associated to this context.
 	 * 
 	 * @param context The context of this state.
 	 */
-	public State(Context context) {
+	public State(Context<T> context) {
 		this.context = context;
 	}
 
@@ -35,36 +33,24 @@ public abstract class State implements IState {
 	/**
 	 * @return The context associated to this state.
 	 */
-	protected Context getContext() {
+	protected Context<T> getContext() {
 		return context;
 	}
 
 	/**
 	 * @return The client configuration.
 	 */
-	protected IClientConfig getConfig() {
+	protected IClientConfig<T> getConfig() {
 		return context.getClient().getConfig();
 	}
 
 	/**
-	 * Throw a LogEvent.
-	 * 
-	 * @param level   The level of the log.
-	 * @param message The message of the log.
-	 * @param args    The arguments of the message to display.
-	 */
-	protected void onLogEvent(ELogLevel level, String message, Object... args) {
-		String log = String.format("%s - %s", context.getClient().toString(), String.format(message, args));
-		EventManager.callEvent(new LogEvent(level, log));
-	}
-
-	/**
-	 * Throw a LogEvent.
+	 * Print a log using info debug level
 	 * 
 	 * @param message The message of the event.
 	 * @param args    The arguments of the message to display.
 	 */
-	protected void onLogEvent(String message, Object... args) {
-		onLogEvent(ELogLevel.INFO, message, args);
+	protected void info(String message, Object... args) {
+		Logger.info(String.format("%s - %s", context.getClient(), String.format(message, args)));
 	}
 }

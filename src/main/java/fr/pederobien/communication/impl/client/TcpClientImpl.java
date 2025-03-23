@@ -6,26 +6,23 @@ import java.net.Socket;
 
 import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.connection.TcpConnectionImpl;
+import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.client.IClientImpl;
 import fr.pederobien.communication.interfaces.connection.IConnection;
-import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
 
-public class TcpClientImpl implements IClientImpl {
+public class TcpClientImpl implements IClientImpl<IEthernetEndPoint> {
 
 	@Override
-	public IConnection connectImpl(IClientConfig config) throws Exception {
-		String address = config.getAddress();
-		int port = config.getPort();
+	public IConnection connectImpl(IClientConfig<IEthernetEndPoint> config) throws Exception {
+		String address = config.getEndPoint().getAddress();
+		int port = config.getEndPoint().getPort();
 		int connectionTimeout = config.getConnectionTimeout();
 
 		// Creating a TCP socket to connect with the remote
 		Socket socket = new Socket();
 		socket.connect(new InetSocketAddress(InetAddress.getByName(address), port), connectionTimeout);
 
-		// Creating a connection configuration.
-		IConnectionConfig configuration = Communication.createConnectionConfig(address, port, config);
-
-		return Communication.createCustomConnection(configuration, new TcpConnectionImpl(socket));
+		return Communication.createConnection(config, config.getEndPoint(), new TcpConnectionImpl(socket));
 	}
 }

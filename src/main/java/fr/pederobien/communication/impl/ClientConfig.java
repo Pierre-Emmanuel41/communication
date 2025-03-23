@@ -3,10 +3,9 @@ package fr.pederobien.communication.impl;
 import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 
-public class ClientConfig extends Configuration implements IClientConfig {
+public class ClientConfig<T> extends Configuration implements IClientConfig<T> {
 	private String name;
-	private String address;
-	private int port;
+	private T endPoint;
 	private int connectionTimeout;
 	private boolean automaticReconnection;
 	private int reconnectionDelay;
@@ -20,12 +19,11 @@ public class ClientConfig extends Configuration implements IClientConfig {
 	 * @param address The address of the remote.
 	 * @param port    The port number of the remote.
 	 */
-	protected ClientConfig(String name, String address, int port) {
+	protected ClientConfig(String name, T endPoint) {
 		super(Mode.CLIENT_TO_SERVER);
 
 		this.name = name;
-		this.address = address;
-		this.port = port;
+		this.endPoint = endPoint;
 
 		connectionTimeout = 500;
 		automaticReconnection = true;
@@ -40,13 +38,8 @@ public class ClientConfig extends Configuration implements IClientConfig {
 	}
 
 	@Override
-	public String getAddress() {
-		return address;
-	}
-
-	@Override
-	public int getPort() {
-		return port;
+	public T getEndPoint() {
+		return endPoint;
 	}
 
 	@Override

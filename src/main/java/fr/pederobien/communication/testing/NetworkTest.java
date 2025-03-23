@@ -2,9 +2,11 @@ package fr.pederobien.communication.testing;
 
 import fr.pederobien.communication.impl.ClientConfig;
 import fr.pederobien.communication.impl.Communication;
+import fr.pederobien.communication.impl.EthernetEndPoint;
 import fr.pederobien.communication.impl.ServerConfig;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.layer.LayerInitializer;
+import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.client.IClient;
 import fr.pederobien.communication.interfaces.server.IServer;
 import fr.pederobien.communication.testing.tools.DoOnceConnected;
@@ -14,11 +16,8 @@ import fr.pederobien.communication.testing.tools.Network;
 import fr.pederobien.communication.testing.tools.Network.ExceptionMode;
 import fr.pederobien.communication.testing.tools.NetworkCorruptor;
 import fr.pederobien.communication.testing.tools.RequestHandler;
-import fr.pederobien.utils.AsyncConsole;
 import fr.pederobien.utils.IExecutable;
-import fr.pederobien.utils.event.EventManager;
-import fr.pederobien.utils.event.LogEvent;
-import fr.pederobien.utils.event.LogEvent.ELogLevel;
+import fr.pederobien.utils.event.Logger;
 
 public class NetworkTest {
 	private static final String SERVER_NAME = "Dummy Server";
@@ -30,7 +29,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer server = createDefaultCustomServer(network);
+			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
 			server.open();
 
 			sleep(2000);
@@ -45,7 +44,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IClient client = createDefaultCustomClient(network);
+			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
 			client.connect();
 
 			sleep(5000);
@@ -61,12 +60,12 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IClient client = createDefaultCustomClient(network);
+			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
 			client.connect();
 
 			sleep(3000);
 
-			IServer server = createDefaultCustomServer(network);
+			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
 			server.open();
 
 			sleep(2000);
@@ -87,12 +86,12 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer server = createDefaultCustomServer(network);
+			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
 			server.open();
 
 			sleep(500);
 
-			IClient client = createDefaultCustomClient(network);
+			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
 			client.connect();
 
 			sleep(1000);
@@ -121,15 +120,15 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			ServerConfig serverConfig = createServerConfig();
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
-				EventManager.callEvent(new LogEvent("Server received %s", new String(event.getData())));
+				Logger.debug("Server received %s", new String(event.getData()));
 			}));
 
-			IServer server = Communication.createCustomServer(serverConfig, network.getServer());
+			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
-			IClient client = createDefaultCustomClient(network);
+			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
 			client.connect();
 
 			// Waiting for the client to be connected to the remote
@@ -155,7 +154,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer server = createDefaultCustomServer(network);
+			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -164,12 +163,12 @@ public class NetworkTest {
 
 			sendToClient.start();
 
-			ClientConfig clientConfig = createClientConfig();
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
-				EventManager.callEvent(new LogEvent("Client received %s", new String(event.getData())));
+				Logger.debug("Client received %s", new String(event.getData()));
 			}));
 
-			IClient client = Communication.createCustomClient(clientConfig, network.newClient());
+			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(1000);
@@ -192,27 +191,27 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			ServerConfig serverConfig = createServerConfig();
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
-				EventManager.callEvent(new LogEvent("Server received %s", new String(event.getData())));
+				Logger.debug("Server received %s", new String(event.getData()));
+
 				Message message = new Message("a message from the server".getBytes());
 				event.getConnection().answer(event.getIdentifier(), message);
 			}));
 
-			IServer server = Communication.createCustomServer(serverConfig, network.getServer());
+			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
-			IClient client = createDefaultCustomClient(network);
+			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
 			client.connect();
 
 			sleep(1000);
 
 			client.getConnection().send(new Message("a message from a client".getBytes(), args -> {
 				if (!args.isTimeout()) {
-					String received = new String(args.getResponse().getBytes());
-					EventManager.callEvent(new LogEvent("Client received %s", received));
+					Logger.debug("Client received %s", new String(args.getResponse().getBytes()));
 				} else {
-					EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Client: Unexpected timeout occurred"));
+					Logger.error("Client: Unexpected timeout occurred");
 				}
 			}));
 
@@ -234,26 +233,25 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			ServerConfig serverConfig = createServerConfig();
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
 				String formatter = "Server received %s, but will not respond to it";
-				EventManager.callEvent(new LogEvent(formatter, new String(event.getData())));
+				Logger.debug(formatter, new String(event.getData()));
 			}));
 
-			IServer server = Communication.createCustomServer(serverConfig, network.getServer());
+			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
-			IClient client = createDefaultCustomClient(network);
+			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
 			client.connect();
 
 			sleep(1000);
 
 			client.getConnection().send(new Message("a message from a client".getBytes(), args -> {
 				if (!args.isTimeout()) {
-					String received = new String(args.getResponse().getBytes());
-					EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected response received: %s", received));
+					Logger.error("Unexpected response received: %s", new String(args.getResponse().getBytes()));
 				} else {
-					EventManager.callEvent(new LogEvent("Client: Expected timeout occured"));
+					Logger.debug("Client: Expected timeout occured");
 				}
 			}));
 
@@ -275,16 +273,15 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer server = createDefaultCustomServer(network);
+			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				Message message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
-						String received = new String(args.getResponse().getBytes());
-						EventManager.callEvent(new LogEvent("Server received %s", received));
+						Logger.debug("Server received %s", new String(args.getResponse().getBytes()));
 					} else {
-						EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Server: Unexpected timeout occurred"));
+						Logger.error("Server: Unexpected timeout occurred");
 					}
 				});
 
@@ -293,13 +290,13 @@ public class NetworkTest {
 
 			sendToClient.start();
 
-			ClientConfig clientConfig = createClientConfig();
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
-				EventManager.callEvent(new LogEvent("Client received %s", new String(event.getData())));
+				Logger.debug("Client received %s", new String(event.getData()));
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
 			}));
 
-			IClient client = Communication.createCustomClient(clientConfig, network.newClient());
+			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(2000);
@@ -322,17 +319,15 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer server = createDefaultCustomServer(network);
+			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				Message message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
-						String received = new String(args.getResponse().getBytes());
-						String formatter = "Unexpected message received: %s";
-						EventManager.callEvent(new LogEvent(ELogLevel.ERROR, formatter, received));
+						Logger.error("Unexpected message received: %s", new String(args.getResponse().getBytes()));
 					} else {
-						EventManager.callEvent(new LogEvent("Server: Expected timeout occurred"));
+						Logger.debug("Server: Expected timeout occurred");
 					}
 				});
 
@@ -341,13 +336,13 @@ public class NetworkTest {
 
 			sendToClient.start();
 
-			ClientConfig clientConfig = createClientConfig();
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
 				String formatter = "Client received %s, but will not respond to it";
-				EventManager.callEvent(new LogEvent(formatter, new String(event.getData())));
+				Logger.debug(formatter, new String(event.getData()));
 			}));
 
-			IClient client = Communication.createCustomClient(clientConfig, network.newClient());
+			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(3000);
@@ -370,15 +365,15 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer server = createDefaultCustomServer(network);
+			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
 			server.open();
 
-			ClientConfig clientConfig = createClientConfig();
-			clientConfig.setLayerInitializer(new LayerInitializer(token -> {
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setLayerInitializer(() -> new LayerInitializer(token -> {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
-			IClient client = Communication.createCustomClient(clientConfig, network.newClient());
+			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(5000);
@@ -399,20 +394,21 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer server = createDefaultCustomServer(network);
+			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
 			server.open();
 
-			ClientConfig clientConfig = createClientConfig();
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
 
-			IClient client = Communication.createCustomClient(clientConfig, network.newClient(ExceptionMode.SEND));
+			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig,
+					network.newClient(ExceptionMode.SEND));
 			client.connect();
 
 			sleep(1000);
 
-			AsyncConsole.printlnWithTimeStamp("Expecting unstable connection after sending 17 messages");
+			Logger.print("Expecting unstable connection after sending 18 messages");
 			for (int i = 0; i < 18; i++) {
-				AsyncConsole.printlnWithTimeStamp("Sending message %s", i);
+				Logger.print("Sending message %s", i);
 				client.getConnection().send(new Message(new byte[0]));
 				sleep(500);
 			}
@@ -435,20 +431,21 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer server = createDefaultCustomServer(network);
+			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
 			server.open();
 
 			// In receive mode, no need for the server to send request to the client
 
-			ClientConfig clientConfig = createClientConfig();
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
 
-			IClient client = Communication.createCustomClient(clientConfig, network.newClient(ExceptionMode.RECEIVE));
+			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig,
+					network.newClient(ExceptionMode.RECEIVE));
 			client.connect();
 
 			sleep(250);
 
-			AsyncConsole.printlnWithTimeStamp("Expecting unstable connection after receiving 17 messages");
+			Logger.print("Expecting unstable connection after receiving 18 messages");
 
 			sleep(11000);
 
@@ -468,14 +465,14 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer server = createDefaultCustomServer(network);
+			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				sleep(500);
 
 				for (int i = 0; i < 18 && !event.getClient().getConnection().isDisposed(); i++) {
-					AsyncConsole.printlnWithTimeStamp("Extracting message %s", i);
+					Logger.print("Extracting message %s", i);
 
 					byte[] bytes = "a message from the server".getBytes();
 					event.getClient().getConnection().send(new Message(bytes));
@@ -485,16 +482,16 @@ public class NetworkTest {
 			});
 			sendToClient.start();
 
-			ClientConfig clientConfig = createClientConfig();
-			clientConfig.setLayerInitializer(new LayerInitializer(new ExceptionLayer(LayerExceptionMode.UNPACK)));
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setLayerInitializer(() -> new LayerInitializer(new ExceptionLayer(LayerExceptionMode.UNPACK)));
 			clientConfig.setAutomaticReconnection(false);
 
-			IClient client = Communication.createCustomClient(clientConfig, network.newClient());
+			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(250);
 
-			AsyncConsole.printlnWithTimeStamp("Expecting unstable connection after extracting 17 messages");
+			Logger.print("Expecting unstable connection after extracting 18 messages");
 
 			sleep(11000);
 
@@ -516,31 +513,31 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			ServerConfig serverConfig = createServerConfig();
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
 				byte[] bytes = "a message from the server".getBytes();
 				event.getConnection().answer(event.getIdentifier(), new Message(bytes));
 			}));
 
-			IServer server = Communication.createCustomServer(serverConfig, network.getServer());
+			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
-			IClient client = createDefaultCustomClient(network);
+			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
 			client.connect();
 
 			sleep(250);
 
-			AsyncConsole.printlnWithTimeStamp("Expecting unstable connection after sending 17 messages");
+			Logger.print("Expecting unstable connection after sending 18 messages");
 
 			for (int i = 0; i < 18 && !client.getConnection().isDisposed(); i++) {
-				AsyncConsole.printlnWithTimeStamp("Sending message %s", i);
+				Logger.print("Sending message %s", i);
 
 				String message = "a message from a client";
 				client.getConnection().send(new Message(message.getBytes(), args -> {
 					if (!args.isTimeout()) {
 						throw new RuntimeException("Exception to test unstable counter");
 					} else {
-						EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected timeout occured"));
+						Logger.error("Unexpected timeout occured");
 					}
 				}));
 
@@ -565,14 +562,14 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer server = createDefaultCustomServer(network);
+			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				sleep(500);
 
 				for (int i = 0; i < 18 && !event.getClient().getConnection().isDisposed(); i++) {
-					AsyncConsole.printlnWithTimeStamp("Server Sending message %s", i);
+					Logger.print("Server Sending message %s", i);
 					byte[] bytes = "a message from the server".getBytes();
 					event.getClient().getConnection().send(new Message(bytes));
 
@@ -582,18 +579,18 @@ public class NetworkTest {
 
 			sendToClient.start();
 
-			ClientConfig clientConfig = createClientConfig();
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
 			clientConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
-			IClient client = Communication.createCustomClient(clientConfig, network.newClient());
+			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(250);
 
-			AsyncConsole.printlnWithTimeStamp("Expecting unstable connection after receiving 17 unexpected messages");
+			Logger.print("Expecting unstable connection after receiving 18 unexpected messages");
 
 			sleep(12000);
 
@@ -613,16 +610,12 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer server = createDefaultCustomServer(network);
+			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
-				for (int i = 0; i < 18; i++) {
-					if (event.getClient().getConnection().isDisposed()) {
-						break;
-					}
-
-					AsyncConsole.printlnWithTimeStamp("Server Sending message %s", i);
+				for (int i = 0; i < 18 && !event.getClient().getConnection().isDisposed(); i++) {
+					Logger.print("Server Sending message %s", i);
 					byte[] bytes = "a message from the server".getBytes();
 					event.getClient().getConnection().send(new Message(bytes));
 
@@ -632,7 +625,7 @@ public class NetworkTest {
 
 			sendToClient.start();
 
-			ClientConfig clientConfig = createClientConfig();
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setClientMaxUnstableCounter(5);
 			clientConfig.setClientHealTime(9000);
 			clientConfig.setConnectionHealTime(500);
@@ -640,13 +633,12 @@ public class NetworkTest {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
-			IClient client = Communication.createCustomClient(clientConfig, network.newClient());
+			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(250);
 
-			AsyncConsole.printlnWithTimeStamp("Expecting unstable client after receiving %s unexpected messages",
-					17 * clientConfig.getClientMaxUnstableCounterValue());
+			Logger.print("Expecting unstable client after receiving 144 unexpected messages");
 
 			sleep(40000);
 
@@ -666,22 +658,22 @@ public class NetworkTest {
 		IExecutable tests = () -> {
 			Network network = new Network();
 
-			IClient client1 = createDefaultCustomClient(network);
+			IClient<IEthernetEndPoint> client1 = createDefaultCustomClient(network);
 			client1.connect();
 
 			sleep(5000);
 
-			ServerConfig serverConfig = createServerConfig();
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
-				EventManager.callEvent(new LogEvent("Server received %s", new String(event.getData())));
+				Logger.debug("Server received %s", new String(event.getData()));
 			}));
 
-			IServer server = Communication.createCustomServer(serverConfig, network.getServer());
+			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			sleep(2000);
 
-			IClient client2 = createDefaultCustomClient(network);
+			IClient<IEthernetEndPoint> client2 = createDefaultCustomClient(network);
 			client2.connect();
 
 			sleep(2000);
@@ -717,15 +709,15 @@ public class NetworkTest {
 
 			Network network = new Network(corruptor);
 
-			ServerConfig serverConfig = createServerConfig();
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setOnUnexpectedRequestReceived(new RequestHandler(event -> {
-				EventManager.callEvent(new LogEvent("Server received %s", new String(event.getData())));
+				Logger.debug("Server received %s", new String(event.getData()));
 			}));
 
-			IServer server = Communication.createCustomServer(serverConfig, network.getServer());
+			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
-			IClient client = createDefaultCustomClient(network);
+			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
 			client.connect();
 
 			sleep(1000);
@@ -750,16 +742,16 @@ public class NetworkTest {
 	}
 
 	private void runTest(String testName, IExecutable test) {
-		EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Begin %s", testName));
+		Logger.debug("Begin %s", testName);
 		try {
 			test.exec();
 		} catch (Exception e) {
-			EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected error: %s", e.getMessage()));
+			Logger.error("Unexpected error: %s", e.getMessage());
 			for (StackTraceElement trace : e.getStackTrace()) {
-				EventManager.callEvent(new LogEvent(ELogLevel.ERROR, trace.toString()));
+				Logger.error(trace.toString());
 			}
 		}
-		EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "End %s", testName));
+		Logger.debug("End %s", testName);
 	}
 
 	private void sleep(int millis) {
@@ -773,8 +765,8 @@ public class NetworkTest {
 	/**
 	 * @return Creates a server configuration with default name and port number.
 	 */
-	private static ServerConfig createServerConfig() {
-		return Communication.createServerConfig(SERVER_NAME, PORT);
+	private static ServerConfig<IEthernetEndPoint> createServerConfig() {
+		return Communication.createServerConfig(SERVER_NAME, new EthernetEndPoint(ADDRESS, PORT));
 	}
 
 	/**
@@ -784,16 +776,16 @@ public class NetworkTest {
 	 * 
 	 * @return The created server.
 	 */
-	private static IServer createDefaultCustomServer(Network network) {
-		return Communication.createDefaultCustomServer(SERVER_NAME, PORT, network.getServer());
+	private static IServer<IEthernetEndPoint> createDefaultCustomServer(Network network) {
+		return Communication.createDefaultServer(SERVER_NAME, new EthernetEndPoint(PORT), network.getServer());
 	}
 
 	/**
 	 * @return Creates a client configuration with default name, address and port
 	 *         number.
 	 */
-	private static ClientConfig createClientConfig() {
-		return Communication.createClientConfig(CLIENT_NAME, ADDRESS, PORT);
+	private static ClientConfig<IEthernetEndPoint> createClientConfig() {
+		return Communication.createClientConfig(CLIENT_NAME, new EthernetEndPoint(ADDRESS, PORT));
 	}
 
 	/**
@@ -803,7 +795,7 @@ public class NetworkTest {
 	 * 
 	 * @return The created client.
 	 */
-	private static IClient createDefaultCustomClient(Network network) {
-		return Communication.createDefaultCustomClient(CLIENT_NAME, ADDRESS, PORT, network.newClient());
+	private static IClient<IEthernetEndPoint> createDefaultCustomClient(Network network) {
+		return Communication.createDefaultClient(CLIENT_NAME, new EthernetEndPoint(ADDRESS, PORT), network.newClient());
 	}
 }

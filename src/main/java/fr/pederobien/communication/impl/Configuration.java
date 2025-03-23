@@ -1,14 +1,16 @@
 package fr.pederobien.communication.impl;
 
+import java.util.function.Supplier;
+
 import fr.pederobien.communication.impl.layer.LayerInitializer;
 import fr.pederobien.communication.interfaces.IConfiguration;
 import fr.pederobien.communication.interfaces.IUnexpectedRequestHandler;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
 
-public class Configuration implements IConfiguration {
+public abstract class Configuration implements IConfiguration {
 	private Mode mode;
-	private ILayerInitializer layerInitializer;
+	private Supplier<ILayerInitializer> layerInitializer;
 	private IUnexpectedRequestHandler onUnexpectedRequestReceived;
 	private int connectionMaxUnstableCounter;
 	private int connectionHealTime;
@@ -21,7 +23,7 @@ public class Configuration implements IConfiguration {
 	public Configuration(Mode mode) {
 		this.mode = mode;
 
-		layerInitializer = new LayerInitializer();
+		layerInitializer = () -> new LayerInitializer();
 		onUnexpectedRequestReceived = event -> {
 		};
 
@@ -36,7 +38,7 @@ public class Configuration implements IConfiguration {
 
 	@Override
 	public ILayerInitializer getLayerInitializer() {
-		return layerInitializer;
+		return layerInitializer.get();
 	}
 
 	/**
@@ -44,7 +46,7 @@ public class Configuration implements IConfiguration {
 	 * 
 	 * @param layerInitializer The initialisation sequence.
 	 */
-	public void setLayerInitializer(ILayerInitializer layerInitializer) {
+	public void setLayerInitializer(Supplier<ILayerInitializer> layerInitializer) {
 		this.layerInitializer = layerInitializer;
 	}
 

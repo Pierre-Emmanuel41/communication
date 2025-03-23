@@ -25,9 +25,7 @@ import fr.pederobien.communication.interfaces.layer.ICertificate;
 import fr.pederobien.communication.interfaces.layer.ILayer;
 import fr.pederobien.communication.testing.tools.SimpleCertificate;
 import fr.pederobien.utils.IExecutable;
-import fr.pederobien.utils.event.EventManager;
-import fr.pederobien.utils.event.LogEvent;
-import fr.pederobien.utils.event.LogEvent.ELogLevel;
+import fr.pederobien.utils.event.Logger;
 
 public class LayerTest {
 
@@ -39,8 +37,9 @@ public class LayerTest {
 			byte[] toSend = encapsuler.pack(message.getBytes());
 			List<byte[]> messages = encapsuler.unpack(toSend);
 
-			for (byte[] received : messages)
-				EventManager.callEvent(new LogEvent("Unpacked message: %s", new String(received)));
+			for (byte[] received : messages) {
+				Logger.info("Unpacked message: %s", new String(received));
+			}
 		};
 
 		runTest("testEncapsulerOneMessage", test);
@@ -62,8 +61,9 @@ public class LayerTest {
 			System.arraycopy(encapsulated2, 0, total, encapsulated1.length, encapsulated2.length);
 
 			List<byte[]> messages = encapsuler.unpack(total);
-			for (byte[] received : messages)
-				EventManager.callEvent(new LogEvent("Unpacked message: %s", new String(received)));
+			for (byte[] received : messages) {
+				Logger.info("Unpacked message: %s", new String(received));
+			}
 		};
 
 		runTest("testEncapsulerTwoMessages", test);
@@ -89,16 +89,18 @@ public class LayerTest {
 			System.arraycopy(total, 0, truncated, 0, truncated.length);
 
 			List<byte[]> messages = encapsuler.unpack(truncated);
-			for (byte[] received : messages)
-				EventManager.callEvent(new LogEvent("Unpacked message: %s", new String(received)));
+			for (byte[] received : messages) {
+				Logger.info("Unpacked message: %s", new String(received));
+			}
 
 			// Remaining bytes
 			byte[] remaining = new byte[5];
 			System.arraycopy(total, total.length - 5, remaining, 0, 5);
 
 			messages = encapsuler.unpack(remaining);
-			for (byte[] received : messages)
-				EventManager.callEvent(new LogEvent("Unpacked message: %s", new String(received)));
+			for (byte[] received : messages) {
+				Logger.info("Unpacked message: %s", new String(received));
+			}
 		};
 
 		runTest("testEncapsulerLastMessageTruncated", test);
@@ -114,8 +116,9 @@ public class LayerTest {
 			List<byte[]> messages = splitter.pack(identifier, message.getBytes());
 
 			Map<Integer, byte[]> concatenated = splitter.unpack(messages);
-			for (byte[] received : concatenated.values())
-				EventManager.callEvent(new LogEvent("Concatenated message: %s", new String(received)));
+			for (byte[] received : concatenated.values()) {
+				Logger.info("Concatenated message: %s", new String(received));
+			}
 		};
 
 		runTest("testSplitterOneMessage", test);
@@ -135,14 +138,17 @@ public class LayerTest {
 			List<byte[]> messages2 = splitter.pack(identifier, message2.getBytes());
 
 			List<byte[]> total = new ArrayList<byte[]>();
-			for (byte[] data : messages1)
+			for (byte[] data : messages1) {
 				total.add(data);
-			for (byte[] data : messages2)
+			}
+			for (byte[] data : messages2) {
 				total.add(data);
+			}
 
 			Map<Integer, byte[]> concatenated = splitter.unpack(total);
-			for (byte[] received : concatenated.values())
-				EventManager.callEvent(new LogEvent("Concatenated message: %s", new String(received)));
+			for (byte[] received : concatenated.values()) {
+				Logger.info("Concatenated message: %s", new String(received));
+			}
 		};
 
 		runTest("testSplitterTwoMessages", test);
@@ -163,13 +169,15 @@ public class LayerTest {
 
 			// Missing last packet
 			List<byte[]> total = new ArrayList<byte[]>();
-			for (int i = 0; i < messages1.size() - 1; i++)
+			for (int i = 0; i < messages1.size() - 1; i++) {
 				total.add(messages1.get(i));
+			}
 
-			for (int i = 0; i < messages2.size() - 1; i++)
+			for (int i = 0; i < messages2.size() - 1; i++) {
 				total.add(messages2.get(i));
+			}
 
-			EventManager.callEvent(new LogEvent("Intermediate size: %s", splitter.unpack(total).size()));
+			Logger.info("Intermediate size: %s", splitter.unpack(total).size());
 
 			// Remaining packet
 			List<byte[]> remaining = new ArrayList<byte[]>();
@@ -177,8 +185,9 @@ public class LayerTest {
 			remaining.add(messages2.getLast());
 
 			Map<Integer, byte[]> concatenated = splitter.unpack(remaining);
-			for (byte[] received : concatenated.values())
-				EventManager.callEvent(new LogEvent("Concatenated message: %s", new String(received)));
+			for (byte[] received : concatenated.values()) {
+				Logger.info("Concatenated message: %s", new String(received));
+			}
 		};
 
 		runTest("testSplitterLastMessageTruncated", test);
@@ -192,8 +201,9 @@ public class LayerTest {
 			byte[] toSend = layer.pack(new HeaderMessage(0, new Message(message.getBytes())));
 			List<IHeaderMessage> messages = layer.unpack(toSend);
 
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw message: %s, data=%s", received, new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw message: %s, data=%s", received, new String(received.getBytes()));
+			}
 		};
 
 		runTest("testSimpleLayerOneMessage", test);
@@ -214,8 +224,9 @@ public class LayerTest {
 			System.arraycopy(toSend2, 0, total, toSend1.length, toSend2.length);
 
 			List<IHeaderMessage> messages = layer.unpack(total);
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw message: %s, data=%s", received, new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw message: %s, data=%s", received, new String(received.getBytes()));
+			}
 		};
 
 		runTest("testSimpleLayerTwoMessages", test);
@@ -238,16 +249,18 @@ public class LayerTest {
 			System.arraycopy(toSend2, 0, total, toSend1.length, toSend2.length - 5);
 
 			List<IHeaderMessage> messages = layer.unpack(total);
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw message: %s, data=%s", received, new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw message: %s, data=%s", received, new String(received.getBytes()));
+			}
 
 			// Remaining bytes
 			byte[] remaining = new byte[5];
 			System.arraycopy(toSend2, toSend2.length - 5, remaining, 0, 5);
 
 			messages = layer.unpack(remaining);
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw message: %s, data=%s", received, new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw message: %s, data=%s", received, new String(received.getBytes()));
+			}
 		};
 
 		runTest("testSimpleLayerLastMessageTruncated", test);
@@ -261,8 +274,9 @@ public class LayerTest {
 			byte[] toSend = layer.pack(new HeaderMessage(0, new Message(message.getBytes())));
 			List<IHeaderMessage> messages = layer.unpack(toSend);
 
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw message: %s, data=%s", received, new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw message: %s, data=%s", received, new String(received.getBytes()));
+			}
 		};
 
 		runTest("testCertifiedLayerOneMessage", test);
@@ -284,8 +298,9 @@ public class LayerTest {
 			System.arraycopy(toSend2, 0, total, toSend1.length, toSend2.length);
 
 			List<IHeaderMessage> messages = layer.unpack(total);
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw message: %s, data=%s", received, new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw message: %s, data=%s", received, new String(received.getBytes()));
+			}
 		};
 
 		runTest("testCertifiedLayerTwoMessages", test);
@@ -307,16 +322,18 @@ public class LayerTest {
 			System.arraycopy(toSend2, 0, total, toSend1.length, toSend2.length - 5);
 
 			List<IHeaderMessage> messages = layer.unpack(total);
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw message: %s, data=%s", received, new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw message: %s, data=%s", received, new String(received.getBytes()));
+			}
 
 			// Remaining bytes
 			byte[] remaining = new byte[5];
 			System.arraycopy(toSend2, toSend2.length - 5, remaining, 0, 5);
 
 			messages = layer.unpack(remaining);
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw message: %s, data=%s", received, new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw message: %s, data=%s", received, new String(received.getBytes()));
+			}
 		};
 
 		runTest("testCertifiedLayerLastMessageTruncated", test);
@@ -335,7 +352,7 @@ public class LayerTest {
 			corrupted1[5] = 'g';
 
 			List<IHeaderMessage> messages = layer.unpack(corrupted1);
-			EventManager.callEvent(new LogEvent("Expecting no message, size: %s", messages.size()));
+			Logger.info("Expecting no message, size: %s", messages.size());
 
 			// Simulating corruption: modifying signature
 			byte[] corrupted2 = new byte[toSend.length];
@@ -343,7 +360,7 @@ public class LayerTest {
 			corrupted2[corrupted2.length - 1] = 0;
 
 			messages = layer.unpack(corrupted2);
-			EventManager.callEvent(new LogEvent("Expecting no message, size: %s", messages.size()));
+			Logger.info("Expecting no message, size: %s", messages.size());
 		};
 
 		runTest("testCertifiedLayerOneCorruptedMessage", test);
@@ -366,8 +383,9 @@ public class LayerTest {
 
 			List<IHeaderMessage> messages = rsaB.unpack(toSend);
 
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw data: %s", new String(received.getBytes()));
+			}
 		};
 
 		runTest("testRsaLayerOneMessage", test);
@@ -397,8 +415,9 @@ public class LayerTest {
 
 			List<IHeaderMessage> messages = rsaB.unpack(total);
 
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw data: %s", new String(received.getBytes()));
+			}
 		};
 
 		runTest("testRsaLayerTwoMessages", test);
@@ -427,16 +446,18 @@ public class LayerTest {
 			System.arraycopy(toSend2, 0, total, toSend1.length, toSend2.length - 5);
 
 			List<IHeaderMessage> messages = rsaB.unpack(total);
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw data: %s", new String(received.getBytes()));
+			}
 
 			// Remaining bytes
 			byte[] remaining = new byte[5];
 			System.arraycopy(toSend2, toSend2.length - 5, remaining, 0, 5);
 
 			messages = rsaB.unpack(remaining);
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw data: %s", new String(received.getBytes()));
+			}
 		};
 
 		runTest("testRsaLayerLastMessageTruncated", test);
@@ -463,7 +484,7 @@ public class LayerTest {
 			corrupted[5] = 'g';
 
 			List<IHeaderMessage> messages = rsaB.unpack(corrupted);
-			EventManager.callEvent(new LogEvent("Expecting no message, size: %s", messages.size()));
+			Logger.info("Expecting no message, size: %s", messages.size());
 		};
 
 		runTest("testRsaLayerOneCorruptedMessage", test);
@@ -481,18 +502,22 @@ public class LayerTest {
 			ILayer rsaB = new RsaLayer(pairB.getPrivate(), pairA.getPublic());
 
 			byte[] message = new byte[500];
-			for (int i = 0; i < 200; i++)
+			for (int i = 0; i < 200; i++) {
 				message[i] = 'a';
-			for (int i = 200; i < 400; i++)
+			}
+			for (int i = 200; i < 400; i++) {
 				message[i] = 'b';
-			for (int i = 400; i < 499; i++)
+			}
+			for (int i = 400; i < 499; i++) {
 				message[i] = 'c';
+			}
 
 			byte[] toSend = rsaA.pack(new HeaderMessage(0, new Message(message)));
 
 			List<IHeaderMessage> messages = rsaB.unpack(toSend);
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw data: %s", new String(received.getBytes()));
+			}
 		};
 
 		runTest("testRsaLayerOneBigMessage", test);
@@ -519,8 +544,9 @@ public class LayerTest {
 
 			List<IHeaderMessage> messages = aesB.unpack(toSend);
 
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw data: %s", new String(received.getBytes()));
+			}
 		};
 
 		runTest("testAesLayerOneMessage", test);
@@ -554,8 +580,9 @@ public class LayerTest {
 
 			List<IHeaderMessage> messages = aesB.unpack(total);
 
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw data: %s", new String(received.getBytes()));
+			}
 		};
 
 		runTest("testAesLayerTwoMessages", test);
@@ -588,16 +615,18 @@ public class LayerTest {
 			System.arraycopy(toSend2, 0, total, toSend1.length, toSend2.length - 5);
 
 			List<IHeaderMessage> messages = aesB.unpack(total);
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw data: %s", new String(received.getBytes()));
+			}
 
 			// Remaining bytes
 			byte[] remaining = new byte[5];
 			System.arraycopy(toSend2, toSend2.length - 5, remaining, 0, 5);
 
 			messages = aesB.unpack(remaining);
-			for (IHeaderMessage received : messages)
-				EventManager.callEvent(new LogEvent("Raw data: %s", new String(received.getBytes())));
+			for (IHeaderMessage received : messages) {
+				Logger.info("Raw data: %s", new String(received.getBytes()));
+			}
 		};
 
 		runTest("testAesLayerLastMessageTruncated", test);
@@ -628,19 +657,22 @@ public class LayerTest {
 			corrupted[5] = 'g';
 
 			List<IHeaderMessage> messages = aesB.unpack(corrupted);
-			EventManager.callEvent(new LogEvent("Expecting no message, size: %s", messages.size()));
+			Logger.info("Expecting no message, size: %s", messages.size());
 		};
 
 		runTest("testAesLayerOneCorruptedMessage", test);
 	}
 
 	private void runTest(String testName, IExecutable test) {
-		EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Begin %s", testName));
+		Logger.debug("Begin %s", testName);
 		try {
 			test.exec();
 		} catch (Exception e) {
-			EventManager.callEvent(new LogEvent(ELogLevel.ERROR, "Unexpected error: %s", e.getMessage()));
+			Logger.error("Unexpected error: %s", e.getMessage());
+			for (StackTraceElement trace : e.getStackTrace()) {
+				Logger.error(trace.toString());
+			}
 		}
-		EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "End %s", testName));
+		Logger.debug("End %s", testName);
 	}
 }

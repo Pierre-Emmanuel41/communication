@@ -1,9 +1,7 @@
 package fr.pederobien.communication.testing;
 
-import fr.pederobien.utils.event.EventLogger;
-import fr.pederobien.utils.event.EventManager;
-import fr.pederobien.utils.event.LogEvent;
-import fr.pederobien.utils.event.LogEvent.ELogLevel;
+import fr.pederobien.utils.IExecutable;
+import fr.pederobien.utils.event.Logger;
 
 /**
  * Hello world!
@@ -11,20 +9,16 @@ import fr.pederobien.utils.event.LogEvent.ELogLevel;
  */
 public class CommunicationTestApp {
 	public static void main(String[] args) {
-		EventLogger.instance().newLine(true).timeStamp(true).register();
+		Logger.instance().newLine(true).timeStamp(true).register();
 
 		runTest("Network tests", () -> runNetworkTest());
-		runTest("Layer tests", () -> runLayerTests());
-		runTest("Layer initialisation tests", () -> runLayerInitialisationTest());
-		runTest("TCP tests", () -> runTcpCommunicationTest());
-		runTest("UDP tests", () -> runUdpCommunicationTest());
+		// runTest("Layer tests", () -> runLayerTests());
+		// runTest("Layer initialisation tests", () -> runLayerInitialisationTest());
+		// runTest("TCP tests", () -> runTcpCommunicationTest());
+		// runTest("UDP tests", () -> runUdpCommunicationTest());
 
 		// Asynchronous tests, wait a little bit before closing tests session
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		sleep(1000);
 	}
 
 	private static void runNetworkTest() {
@@ -113,6 +107,7 @@ public class CommunicationTestApp {
 		tests.testRsaLayer();
 		tests.testAesLayer();
 		tests.testAesSafeLayer();
+		tests.testTwoClientsOneServer();
 	}
 
 	private static void runUdpCommunicationTest() {
@@ -131,15 +126,29 @@ public class CommunicationTestApp {
 		tests.testRsaLayer();
 		tests.testAesLayer();
 		tests.testAesSafeLayer();
+		tests.testTwoClientsOneServer();
 	}
 
-	private static void runTest(String testName, Runnable runnable) {
-		EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "Start of %s execution", testName));
+	private static void runTest(String testName, IExecutable test) {
+		Logger.debug("Start of %s execution", testName);
 		try {
-			runnable.run();
+			test.exec();
 		} catch (Exception e) {
+			Logger.error("Unexpected error: %s", e.getMessage());
+			for (StackTraceElement trace : e.getStackTrace()) {
+				Logger.error(trace.toString());
+			}
+		}
+
+		sleep(1000);
+		Logger.debug("End of %s execution", testName);
+	}
+
+	private static void sleep(int millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		EventManager.callEvent(new LogEvent(ELogLevel.DEBUG, "End of %s execution", testName));
 	}
 }

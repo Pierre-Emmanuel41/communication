@@ -6,8 +6,6 @@ import fr.pederobien.communication.interfaces.layer.ICertificate;
 import fr.pederobien.communication.interfaces.layer.ILayer;
 
 public class AesKeyExchange {
-	public static final byte[] SUCCESS_PATTERN = "SUCCESS_PATTERN".getBytes();
-
 	private ICertificate certificate;
 	private SymmetricKeyExchange keyExchange;
 	private IvParameterSpecExchange ivExchange;
@@ -20,10 +18,12 @@ public class AesKeyExchange {
 	 * @param certificate To sign the data before AES encryption.
 	 * @param keySize     This is an algorithm-specific metric, specified in number
 	 *                    of bits.
+	 * @param timeout     The maximum time, in ms, to wait for remote response
+	 *                    during the key exchange.
 	 */
-	public AesKeyExchange(IToken token, ICertificate certificate, int keySize) {
+	public AesKeyExchange(IToken token, ICertificate certificate, int keySize, int timeout) {
 		this.certificate = certificate;
-		keyExchange = new SymmetricKeyExchange(token, new AesKeyManager(keySize));
+		keyExchange = new SymmetricKeyExchange(token, new AesKeyManager(keySize), timeout);
 		ivExchange = new IvParameterSpecExchange(token);
 	}
 
@@ -33,11 +33,7 @@ public class AesKeyExchange {
 	 * @return True if the key exchange succeed, false otherwise.
 	 */
 	public ILayer exchange() {
-		if (keyExchange == null || !keyExchange.exchange()) {
-			return null;
-		}
-
-		if (ivExchange == null || !ivExchange.exchange()) {
+		if (!keyExchange.exchange() || !ivExchange.exchange()) {
 			return null;
 		}
 

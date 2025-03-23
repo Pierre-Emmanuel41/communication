@@ -11,7 +11,7 @@ public class ClientUnstableEvent extends ClientEvent {
 	 * 
 	 * @param client The client involved in this event.
 	 */
-	public ClientUnstableEvent(IClient client) {
+	public ClientUnstableEvent(IClient<?> client) {
 		super(client);
 	}
 

@@ -5,14 +5,14 @@ import java.util.StringJoiner;
 import fr.pederobien.communication.interfaces.server.IClient;
 
 public class NewClientEvent extends ServerEvent {
-	private IClient client;
+	private IClient<?> client;
 
 	/**
 	 * Creates an event thrown when a new client is connected to a server.
 	 * 
 	 * @param client The client involved in this event.
 	 */
-	public NewClientEvent(IClient client) {
+	public NewClientEvent(IClient<?> client) {
 		super(client.getServer());
 		this.client = client;
 	}
@@ -20,7 +20,7 @@ public class NewClientEvent extends ServerEvent {
 	/**
 	 * @return The client involved in this event.
 	 */
-	public IClient getClient() {
+	public IClient<?> getClient() {
 		return client;
 	}
 

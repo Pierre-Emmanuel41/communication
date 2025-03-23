@@ -1,6 +1,6 @@
 package fr.pederobien.communication.interfaces.server;
 
-public interface IServer {
+public interface IServer<T> {
 
 	public enum EState {
 		/**
@@ -53,5 +53,5 @@ public interface IServer {
 	/**
 	 * @return The server configuration.
 	 */
-	IServerConfig getConfig();
+	IServerConfig<T> getConfig();
 }

@@ -7,21 +7,21 @@ import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;
 
-public class Connected extends State implements IEventListener {
+public class Connected<T> extends State<T> implements IEventListener {
 
 	/**
 	 * Create a state where the client is connected to the remote.
 	 * 
 	 * @param context The context of this state.
 	 */
-	public Connected(Context context) {
+	public Connected(Context<T> context) {
 		super(context);
 	}
 
 	@Override
 	public void setEnabled(boolean isEnabled) {
 		if (isEnabled) {
-			onLogEvent("Client connected");
+			info("Client connected");
 			EventManager.callEvent(new ClientConnectedEvent(getContext().getClient()));
 			EventManager.registerListener(this);
 		} else {
@@ -31,7 +31,7 @@ public class Connected extends State implements IEventListener {
 
 	@Override
 	public void disconnect() {
-		onLogEvent("Disconnecting client");
+		info("Disconnecting client");
 
 		getContext().getConnection().setEnabled(false);
 		getContext().getConnection().dispose();
@@ -40,7 +40,7 @@ public class Connected extends State implements IEventListener {
 
 	@Override
 	public void dispose() {
-		onLogEvent("Disposing client");
+		info("Disposing client");
 
 		getContext().getConnection().setEnabled(false);
 		getContext().getConnection().dispose();
@@ -74,7 +74,7 @@ public class Connected extends State implements IEventListener {
 			getContext().setState(getContext().getDisconnected());
 
 			if (getConfig().isAutomaticReconnection()) {
-				onLogEvent("Starting automatic reconnection");
+				info("Starting automatic reconnection");
 				getContext().connect();
 			}
 		}

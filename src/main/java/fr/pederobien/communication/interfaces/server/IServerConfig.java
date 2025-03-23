@@ -2,16 +2,15 @@ package fr.pederobien.communication.interfaces.server;
 
 import fr.pederobien.communication.interfaces.IConfiguration;
 
-public interface IServerConfig extends IConfiguration {
+public interface IServerConfig<T> extends IConfiguration {
 
 	/**
 	 * @return The name of the server.
 	 */
 	String getName();
-	
 
 	/**
-	 * @return The port number of the server.
+	 * @return The properties of the server communication point.
 	 */
-	int getPort();
+	T getPoint();
 }

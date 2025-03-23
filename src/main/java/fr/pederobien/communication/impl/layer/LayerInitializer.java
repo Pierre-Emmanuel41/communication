@@ -6,7 +6,6 @@ import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
 import fr.pederobien.communication.interfaces.layer.IStep;
 
 public class LayerInitializer implements ILayerInitializer {
-	private ILayer initialisation;
 	private IStep[] steps;
 	private ILayerInitializer impl;
 
@@ -18,7 +17,6 @@ public class LayerInitializer implements ILayerInitializer {
 	 *                       initialisation.
 	 */
 	public LayerInitializer(ILayer initialisation, IStep... steps) {
-		this.initialisation = initialisation;
 		this.steps = steps;
 
 		impl = new NotInitializedState(initialisation);
@@ -64,11 +62,6 @@ public class LayerInitializer implements ILayerInitializer {
 		return impl.getLayer();
 	}
 
-	@Override
-	public ILayerInitializer copy() {
-		return new LayerInitializer(initialisation, steps);
-	}
-
 	private class NotInitializedState implements ILayerInitializer {
 		private ILayer layer;
 
@@ -94,11 +87,6 @@ public class LayerInitializer implements ILayerInitializer {
 		public ILayer getLayer() {
 			return layer;
 		}
-
-		@Override
-		public ILayerInitializer copy() {
-			return this;
-		}
 	}
 
 	private class InitializedState implements ILayerInitializer {
@@ -116,11 +104,6 @@ public class LayerInitializer implements ILayerInitializer {
 		@Override
 		public ILayer getLayer() {
 			return initialized;
-		}
-
-		@Override
-		public ILayerInitializer copy() {
-			return this;
 		}
 	}
 }

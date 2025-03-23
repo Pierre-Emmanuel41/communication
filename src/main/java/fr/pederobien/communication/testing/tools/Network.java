@@ -6,16 +6,17 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import fr.pederobien.communication.impl.Communication;
+import fr.pederobien.communication.impl.EthernetEndPoint;
+import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.client.IClientImpl;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
-import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
 import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 import fr.pederobien.communication.interfaces.server.IServerConfig;
 import fr.pederobien.communication.interfaces.server.IServerImpl;
-import fr.pederobien.utils.AsyncConsole;
 import fr.pederobien.utils.Watchdog;
+import fr.pederobien.utils.event.Logger;
 
 public class Network {
 
@@ -51,7 +52,7 @@ public class Network {
 	}
 
 	private Networkstakeholder network;
-	private IServerImpl server;
+	private IServerImpl<IEthernetEndPoint> server;
 
 	/**
 	 * Create a network to simulate data transmission.
@@ -74,14 +75,14 @@ public class Network {
 	/**
 	 * @return The server of this network.
 	 */
-	public IServerImpl getServer() {
+	public IServerImpl<IEthernetEndPoint> getServer() {
 		return server;
 	}
 
 	/**
 	 * @return A new client ready to be connected to the server.
 	 */
-	public IClientImpl newClient() {
+	public IClientImpl<IEthernetEndPoint> newClient() {
 		return new ClientImpl(network, ExceptionMode.NONE);
 	}
 
@@ -91,7 +92,7 @@ public class Network {
 	 * 
 	 * @return A new client ready to be connected to the server.
 	 */
-	public IClientImpl newClient(ExceptionMode mode) {
+	public IClientImpl<IEthernetEndPoint> newClient(ExceptionMode mode) {
 		return new ClientImpl(network, mode);
 	}
 
@@ -419,12 +420,14 @@ public class Network {
 		public byte[] receive() throws Exception {
 			if (mode == ExceptionMode.RECEIVE) {
 				Thread.sleep(500);
-				AsyncConsole.printlnWithTimeStamp("Receiving message %s", counter);
+				Logger.print("Receiving message %s", counter);
+
 				counter++;
 				throw new RuntimeException("Exception to test unstable counter");
 			}
 
-			return socket.receive();
+			byte[] data = socket.receive();
+			return data;
 		}
 
 		@Override
@@ -433,7 +436,7 @@ public class Network {
 		}
 	}
 
-	private class ClientImpl implements IClientImpl {
+	private class ClientImpl implements IClientImpl<IEthernetEndPoint> {
 		private Networkstakeholder network;
 		private ExceptionMode mode;
 
@@ -443,23 +446,20 @@ public class Network {
 		}
 
 		@Override
-		public IConnection connectImpl(IClientConfig config) throws Exception {
-			String address = config.getAddress();
-			int port = config.getPort();
+		public IConnection connectImpl(IClientConfig<IEthernetEndPoint> config) throws Exception {
+			String address = config.getEndPoint().getAddress();
+			int port = config.getEndPoint().getPort();
 			int connectionTimeout = config.getConnectionTimeout();
 
 			// Creating a new socket to connect with the remote
 			NetworkSocket socket = new NetworkSocket(network, new Address(address, port), Mode.CLIENT_TO_SERVER);
 			socket.connect(connectionTimeout);
 
-			// Creating a connection configuration.
-			IConnectionConfig configuration = Communication.createConnectionConfig(address, port, config);
-
-			return Communication.createCustomConnection(configuration, new Connection(socket, mode));
+			return Communication.createConnection(config, config.getEndPoint(), new Connection(socket, mode));
 		}
 	}
 
-	private class ServerImpl implements IServerImpl {
+	private class ServerImpl implements IServerImpl<IEthernetEndPoint> {
 		private Networkstakeholder network;
 		private NetworkServerSocket server;
 
@@ -468,26 +468,26 @@ public class Network {
 		}
 
 		@Override
-		public void openImpl(int port) throws Exception {
-			server = new NetworkServerSocket(network, port);
+		public void open(IServerConfig<IEthernetEndPoint> config) throws Exception {
+			server = new NetworkServerSocket(network, config.getPoint().getPort());
 		}
 
 		@Override
-		public void closeImpl() throws Exception {
+		public void close() throws Exception {
 			server.close();
 		}
 
 		@Override
-		public IConnection waitForClientImpl(IServerConfig config) throws Exception {
+		public IConnection waitForClient(IServerConfig<IEthernetEndPoint> config) throws Exception {
 			NetworkSocket socket = server.accept();
 
 			String address = socket.getRemote().getAddress();
 			int port = socket.getRemote().getPort();
 
-			// Creating a connection configuration.
-			IConnectionConfig configuration = Communication.createConnectionConfig(address, port, config);
+			// Creating remote end point
+			IEthernetEndPoint endPoint = new EthernetEndPoint(address, port);
 
-			return Communication.createCustomConnection(configuration, new Connection(socket, ExceptionMode.NONE));
+			return Communication.createConnection(config, endPoint, new Connection(socket, ExceptionMode.NONE));
 		}
 	}
 }

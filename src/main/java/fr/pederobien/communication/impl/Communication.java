@@ -1,19 +1,18 @@
 package fr.pederobien.communication.impl;
 
-import fr.pederobien.communication.impl.client.CustomClient;
+import fr.pederobien.communication.impl.client.Client;
 import fr.pederobien.communication.impl.client.TcpClientImpl;
 import fr.pederobien.communication.impl.client.UdpClientImpl;
 import fr.pederobien.communication.impl.connection.Connection;
-import fr.pederobien.communication.impl.connection.ConnectionConfig;
-import fr.pederobien.communication.impl.server.CustomServer;
+import fr.pederobien.communication.impl.server.Server;
 import fr.pederobien.communication.impl.server.TcpServerImpl;
 import fr.pederobien.communication.impl.server.UdpServerImpl;
 import fr.pederobien.communication.interfaces.IConfiguration;
+import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.client.IClient;
 import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.client.IClientImpl;
 import fr.pederobien.communication.interfaces.connection.IConnection;
-import fr.pederobien.communication.interfaces.connection.IConnectionConfig;
 import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 import fr.pederobien.communication.interfaces.server.IServer;
 import fr.pederobien.communication.interfaces.server.IServerConfig;
@@ -22,36 +21,25 @@ import fr.pederobien.communication.interfaces.server.IServerImpl;
 public class Communication {
 
 	/**
-	 * Creates a configuration for a connection.
-	 * 
-	 * @param address The IP address of the remote.
-	 * @param port    The port number of the remote.
-	 * @param config  The configuration that holds the parameters for a connection.
-	 */
-	public static final IConnectionConfig createConnectionConfig(String address, int port, IConfiguration config) {
-		return new ConnectionConfig(address, port, config);
-	}
-
-	/**
 	 * Create custom connection that send asynchronously messages to the remote.
 	 * 
-	 * @param config The object that holds the client configuration.
-	 * @param impl   The connection specific implementation for sending/receiving
-	 *               data from the remote.
+	 * @param config   The object that holds the client configuration.
+	 * @param endPoint The object that gather remote information.
+	 * @param impl     The connection specific implementation for sending/receiving
+	 *                 data from the remote.
 	 */
-	public static final IConnection createCustomConnection(IConnectionConfig config, IConnectionImpl impl) {
-		return new Connection(config, impl);
+	public static final <T> IConnection createConnection(IConfiguration config, T endPoint, IConnectionImpl impl) {
+		return new Connection<T>(config, endPoint, impl);
 	}
 
 	/**
 	 * Creates a configuration that holds parameters for a client.
 	 * 
-	 * @param name    The client's name. Essentially used for logging.
-	 * @param address The address of the remote.
-	 * @param port    The port number of the remote.
+	 * @param name     The client's name. Essentially used for logging.
+	 * @param endPoint The object that gather remote information.
 	 */
-	public static final ClientConfig createClientConfig(String name, String address, int port) {
-		return new ClientConfig(name, address, port);
+	public static final <T> ClientConfig<T> createClientConfig(String name, T endPoint) {
+		return new ClientConfig<T>(name, endPoint);
 	}
 
 	/**
@@ -61,21 +49,20 @@ public class Communication {
 	 * @param impl   The client specific implementation to connect/disconnect from
 	 *               the server.
 	 */
-	public static final IClient createCustomClient(IClientConfig config, IClientImpl impl) {
-		return new CustomClient(config, impl);
+	public static final <T> IClient<T> createClient(IClientConfig<T> config, IClientImpl<T> impl) {
+		return new Client<T>(config, impl);
 	}
 
 	/**
 	 * Create a client with default configuration ready to be connected to a remote.
 	 * 
-	 * @param name    The client's name. Essentially used for logging.
-	 * @param address The IP address of the server.
-	 * @param port    The port number of the server.
-	 * @param impl    The client specific implementation to connect/disconnect from
-	 *                the server.
+	 * @param name     The client's name. Essentially used for logging.
+	 * @param endPoint The object that gather remote information.
+	 * @param impl     The client specific implementation to connect/disconnect from
+	 *                 the server.
 	 */
-	public static final IClient createDefaultCustomClient(String name, String address, int port, IClientImpl impl) {
-		return new CustomClient(createClientConfig(name, address, port), impl);
+	public static final <T> IClient<T> createDefaultClient(String name, T endPoint, IClientImpl<T> impl) {
+		return new Client<T>(createClientConfig(name, endPoint), impl);
 	}
 
 	/**
@@ -83,8 +70,8 @@ public class Communication {
 	 * 
 	 * @param config The object that holds the client configuration.
 	 */
-	public static final IClient createTcpClient(IClientConfig config) {
-		return createCustomClient(config, new TcpClientImpl());
+	public static final IClient<IEthernetEndPoint> createTcpClient(IClientConfig<IEthernetEndPoint> config) {
+		return createClient(config, new TcpClientImpl());
 	}
 
 	/**
@@ -92,8 +79,8 @@ public class Communication {
 	 * 
 	 * @param config The object that holds the client configuration.
 	 */
-	public static final IClient createUdpClient(IClientConfig config) {
-		return createCustomClient(config, new UdpClientImpl());
+	public static final IClient<IEthernetEndPoint> createUdpClient(IClientConfig<IEthernetEndPoint> config) {
+		return createClient(config, new UdpClientImpl());
 	}
 
 	/**
@@ -103,8 +90,8 @@ public class Communication {
 	 * @param address The IP address of the server.
 	 * @param port    The port number of the server.
 	 */
-	public static final IClient createDefaultTcpClient(String name, String address, int port) {
-		return createTcpClient(createClientConfig(name, address, port));
+	public static final IClient<IEthernetEndPoint> createDefaultTcpClient(String name, String address, int port) {
+		return createTcpClient(createClientConfig(name, new EthernetEndPoint(address, port)));
 	}
 
 	/**
@@ -114,41 +101,39 @@ public class Communication {
 	 * @param address The IP address of the server.
 	 * @param port    The port number of the server.
 	 */
-	public static final IClient createDefaultUdpClient(String name, String address, int port) {
-		return createUdpClient(createClientConfig(name, address, port));
+	public static final IClient<IEthernetEndPoint> createDefaultUdpClient(String name, String address, int port) {
+		return createUdpClient(createClientConfig(name, new EthernetEndPoint(address, port)));
 	}
 
 	/**
 	 * Creates a configuration that holds the parameters for a server.
 	 * 
-	 * @param name The server's name.
-	 * @param port The server port number.
+	 * @param name  The server's name.
+	 * @param point The properties of the server communication point.
 	 */
-	public static final ServerConfig createServerConfig(String name, int port) {
-		return new ServerConfig(name, port);
+	public static final <T> ServerConfig<T> createServerConfig(String name, T point) {
+		return new ServerConfig<T>(name, point);
 	}
 
 	/**
 	 * Creates a custom server.
 	 * 
-	 * @param config         The object that holds the server configuration.
-	 * @param implementation The server specific implementation to open/close the
-	 *                       server.
+	 * @param config The object that holds the server configuration.
+	 * @param impl   The server specific implementation to open/close the server.
 	 */
-	public static final IServer createCustomServer(IServerConfig config, IServerImpl implementation) {
-		return new CustomServer(config, implementation);
+	public static final <T> IServer<T> createServer(IServerConfig<T> config, IServerImpl<T> impl) {
+		return new Server<T>(config, impl);
 	}
 
 	/**
 	 * Creates a custom server with default configuration ready to be opened.
 	 * 
-	 * @param name           The name of the server.
-	 * @param port           The port number of the server.
-	 * @param implementation The server specific implementation to open/close the
-	 *                       server.
+	 * @param name  The name of the server.
+	 * @param point The properties of the server communication point.
+	 * @param impl  The server specific implementation to open/close the server.
 	 */
-	public static final IServer createDefaultCustomServer(String name, int port, IServerImpl implementation) {
-		return new CustomServer(createServerConfig(name, port), implementation);
+	public static final <T> IServer<T> createDefaultServer(String name, T point, IServerImpl<T> impl) {
+		return new Server<T>(createServerConfig(name, point), impl);
 	}
 
 	/**
@@ -156,8 +141,8 @@ public class Communication {
 	 * 
 	 * @param config The object that holds the server configuration.
 	 */
-	public static final IServer createTcpServer(IServerConfig config) {
-		return createCustomServer(config, new TcpServerImpl());
+	public static final IServer<IEthernetEndPoint> createTcpServer(IServerConfig<IEthernetEndPoint> config) {
+		return createServer(config, new TcpServerImpl());
 	}
 
 	/**
@@ -165,8 +150,8 @@ public class Communication {
 	 * 
 	 * @param config The object that holds the server configuration.
 	 */
-	public static final IServer createUdpServer(IServerConfig config) {
-		return createCustomServer(config, new UdpServerImpl(config.getName()));
+	public static final IServer<IEthernetEndPoint> createUdpServer(IServerConfig<IEthernetEndPoint> config) {
+		return createServer(config, new UdpServerImpl());
 	}
 
 	/**
@@ -175,8 +160,8 @@ public class Communication {
 	 * @param name The name of the server.
 	 * @param port The port number of the server.
 	 */
-	public static final IServer createDefaultTcpServer(String name, int port) {
-		return createTcpServer(createServerConfig(name, port));
+	public static final IServer<IEthernetEndPoint> createDefaultTcpServer(String name, int port) {
+		return createTcpServer(createServerConfig(name, new EthernetEndPoint(port)));
 	}
 
 	/**
@@ -185,7 +170,7 @@ public class Communication {
 	 * @param name The name of the server.
 	 * @param port The port number of the server.
 	 */
-	public static final IServer createDefaultUdpServer(String name, int port) {
-		return createUdpServer(createServerConfig(name, port));
+	public static final IServer<IEthernetEndPoint> createDefaultUdpServer(String name, int port) {
+		return createUdpServer(createServerConfig(name, new EthernetEndPoint(port)));
 	}
 }
