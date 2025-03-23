@@ -12,10 +12,10 @@ public class CommunicationTestApp {
 		Logger.instance().newLine(true).timeStamp(true).register();
 
 		runTest("Network tests", () -> runNetworkTest());
-		// runTest("Layer tests", () -> runLayerTests());
-		// runTest("Layer initialisation tests", () -> runLayerInitialisationTest());
-		// runTest("TCP tests", () -> runTcpCommunicationTest());
-		// runTest("UDP tests", () -> runUdpCommunicationTest());
+		runTest("Layer tests", () -> runLayerTests());
+		runTest("Layer initialisation tests", () -> runLayerInitialisationTest());
+		runTest("TCP tests", () -> runTcpCommunicationTest());
+		runTest("UDP tests", () -> runUdpCommunicationTest());
 
 		// Asynchronous tests, wait a little bit before closing tests session
 		sleep(1000);
