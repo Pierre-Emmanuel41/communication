@@ -168,7 +168,7 @@ server = Communication.createUdpServer(serverConfig);
 
 ### 3.3) Data exchange
 
-Once the client and the server is connected with each other, data can be sent. The connection interface proposes two function to send data: <code>send</code> and <code>answer</code>. Both functions expects a <code>Message</code> that gather message properties to be sent to the remote. The message contains the payload to send to the remote, but it contains also a callback if a response is expected. Moreover, it is possible to send data synchronously to the remote.
+Once the client and the server are connected with each other, data can be sent. The connection interface proposes two functions to send data: <code>send</code> and <code>answer</code>. Both functions expects a <code>Message</code> that gather message properties to be sent to the remote. The message contains the payload to send to the remote, but it contains also a callback if a response is expected. Moreover, it is possible to send data synchronously to the remote.
 
 ```java
 IServer<IEthernetEndPoint> server = Communication.createDefaultTcpServer("TCP Server", 12345);
@@ -178,7 +178,7 @@ IClient<IEthernetEndPoint> client = Communication.createDefaultTcpClient("TCP Cl
 client.connect();
 
 try {
-	// Waiting to let the connection happen
+	// Waiting to let the connection happening
 	Thread.sleep(250);
 } catch (Exception e) {
 	// Do nothing
