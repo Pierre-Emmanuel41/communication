@@ -3,7 +3,9 @@ package fr.pederobien.communication.impl.server;
 import fr.pederobien.communication.event.NewClientEvent;
 import fr.pederobien.communication.event.ServerCloseEvent;
 import fr.pederobien.communication.event.ServerUnstableEvent;
+import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.interfaces.connection.IConnection;
+import fr.pederobien.communication.interfaces.server.IClientInfo;
 import fr.pederobien.communication.interfaces.server.IServer;
 import fr.pederobien.communication.interfaces.server.IServerConfig;
 import fr.pederobien.communication.interfaces.server.IServerImpl;
@@ -144,10 +146,13 @@ public class Server<T> implements IServer {
 		IConnection connection = null;
 
 		try {
-			connection = impl.waitForClient(config);
-			if (state != EState.OPENED) {
-				connection.dispose();
-				connection = null;
+			IClientInfo<T> info = impl.waitForClient();
+
+			// The client is not allowed to be connected with the server
+			if (state == EState.OPENED && config.getClientValidator().isValid(info.getEndPoint())) {
+				connection = Communication.createConnection(config, info.getEndPoint(), info.getImplementation());
+			} else {
+				info.getImplementation().dispose();
 			}
 
 			newClientExceptionCounter = 0;

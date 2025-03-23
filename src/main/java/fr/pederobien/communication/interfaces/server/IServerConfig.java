@@ -13,4 +13,10 @@ public interface IServerConfig<T> extends IConfiguration {
 	 * @return The properties of the server communication point.
 	 */
 	T getPoint();
+
+	/**
+	 * @return The validator to authorize or not the client to be connected to the
+	 *         server.
+	 */
+	IClientValidator<T> getClientValidator();
 }

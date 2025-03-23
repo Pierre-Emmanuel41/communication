@@ -1,11 +1,10 @@
 package fr.pederobien.communication.impl.server;
 
-import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.EthernetEndPoint;
 import fr.pederobien.communication.impl.connection.UdpConnectionImpl;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
-import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.connection.IUdpSocket;
+import fr.pederobien.communication.interfaces.server.IClientInfo;
 import fr.pederobien.communication.interfaces.server.IServerConfig;
 import fr.pederobien.communication.interfaces.server.IServerImpl;
 
@@ -23,7 +22,7 @@ public class UdpServerImpl implements IServerImpl<IEthernetEndPoint> {
 	}
 
 	@Override
-	public IConnection waitForClient(IServerConfig<IEthernetEndPoint> config) throws Exception {
+	public IClientInfo<IEthernetEndPoint> waitForClient() throws Exception {
 		IUdpSocket socket = serverSocket.accept();
 
 		String address = socket.getInetAddress().getHostName();
@@ -32,6 +31,6 @@ public class UdpServerImpl implements IServerImpl<IEthernetEndPoint> {
 		// Creating remote end point
 		EthernetEndPoint endPoint = new EthernetEndPoint(address, port);
 
-		return Communication.createConnection(config, endPoint, new UdpConnectionImpl(socket));
+		return new ClientInfo<IEthernetEndPoint>(endPoint, new UdpConnectionImpl(socket));
 	}
 }

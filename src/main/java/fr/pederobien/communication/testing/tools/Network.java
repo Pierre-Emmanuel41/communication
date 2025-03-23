@@ -7,12 +7,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.EthernetEndPoint;
+import fr.pederobien.communication.impl.server.ClientInfo;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.client.IClientImpl;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
+import fr.pederobien.communication.interfaces.server.IClientInfo;
 import fr.pederobien.communication.interfaces.server.IServerConfig;
 import fr.pederobien.communication.interfaces.server.IServerImpl;
 import fr.pederobien.utils.Watchdog;
@@ -478,7 +480,7 @@ public class Network {
 		}
 
 		@Override
-		public IConnection waitForClient(IServerConfig<IEthernetEndPoint> config) throws Exception {
+		public IClientInfo<IEthernetEndPoint> waitForClient() throws Exception {
 			NetworkSocket socket = server.accept();
 
 			String address = socket.getRemote().getAddress();
@@ -487,7 +489,7 @@ public class Network {
 			// Creating remote end point
 			IEthernetEndPoint endPoint = new EthernetEndPoint(address, port);
 
-			return Communication.createConnection(config, endPoint, new Connection(socket, ExceptionMode.NONE));
+			return new ClientInfo<IEthernetEndPoint>(endPoint, new Connection(socket, ExceptionMode.NONE));
 		}
 	}
 }
