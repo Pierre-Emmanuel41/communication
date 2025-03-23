@@ -10,10 +10,10 @@ import fr.pederobien.communication.interfaces.server.IServerImpl;
 import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
-import fr.pederobien.utils.event.Logger;
 import fr.pederobien.utils.event.EventManager;
+import fr.pederobien.utils.event.Logger;
 
-public class Server<T> implements IServer<T> {
+public class Server<T> implements IServer {
 	private static final int MAX_EXCEPTION_NUMBER = 10;
 
 	private IServerConfig<T> config;
@@ -109,11 +109,6 @@ public class Server<T> implements IServer<T> {
 	@Override
 	public EState getState() {
 		return state;
-	}
-
-	@Override
-	public IServerConfig<T> getConfig() {
-		return config;
 	}
 
 	@Override

@@ -2,14 +2,13 @@ package fr.pederobien.communication.testing.tools;
 
 import fr.pederobien.communication.event.NewClientEvent;
 import fr.pederobien.communication.impl.connection.Message;
-import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.server.IServer;
 import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;
 
 public class SimpleSendMessageToClientOnceConnected implements IEventListener {
-	private IServer<IEthernetEndPoint> server;
+	private IServer server;
 	private String message;
 	private int times;
 
@@ -20,7 +19,7 @@ public class SimpleSendMessageToClientOnceConnected implements IEventListener {
 	 * @param message The message to send back to the client.
 	 * @param times   The number of time the message should be sent to the client.
 	 */
-	public SimpleSendMessageToClientOnceConnected(IServer<IEthernetEndPoint> server, String message, int times) {
+	public SimpleSendMessageToClientOnceConnected(IServer server, String message, int times) {
 		this.server = server;
 		this.message = message;
 		this.times = times;

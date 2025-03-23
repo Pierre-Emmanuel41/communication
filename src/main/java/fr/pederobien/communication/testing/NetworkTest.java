@@ -29,7 +29,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
+			IServer server = createDefaultCustomServer(network);
 			server.open();
 
 			sleep(2000);
@@ -65,7 +65,7 @@ public class NetworkTest {
 
 			sleep(3000);
 
-			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
+			IServer server = createDefaultCustomServer(network);
 			server.open();
 
 			sleep(2000);
@@ -86,7 +86,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
+			IServer server = createDefaultCustomServer(network);
 			server.open();
 
 			sleep(500);
@@ -125,7 +125,7 @@ public class NetworkTest {
 				Logger.debug("Server received %s", new String(event.getData()));
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
@@ -154,7 +154,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
+			IServer server = createDefaultCustomServer(network);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -199,7 +199,7 @@ public class NetworkTest {
 				event.getConnection().answer(event.getIdentifier(), message);
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
@@ -239,7 +239,7 @@ public class NetworkTest {
 				Logger.debug(formatter, new String(event.getData()));
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
@@ -273,7 +273,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
+			IServer server = createDefaultCustomServer(network);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -319,7 +319,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
+			IServer server = createDefaultCustomServer(network);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -365,7 +365,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
+			IServer server = createDefaultCustomServer(network);
 			server.open();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
@@ -394,7 +394,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
+			IServer server = createDefaultCustomServer(network);
 			server.open();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
@@ -431,7 +431,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
+			IServer server = createDefaultCustomServer(network);
 			server.open();
 
 			// In receive mode, no need for the server to send request to the client
@@ -465,7 +465,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
+			IServer server = createDefaultCustomServer(network);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -519,7 +519,7 @@ public class NetworkTest {
 				event.getConnection().answer(event.getIdentifier(), new Message(bytes));
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
@@ -562,7 +562,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
+			IServer server = createDefaultCustomServer(network);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -610,7 +610,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IServer<IEthernetEndPoint> server = createDefaultCustomServer(network);
+			IServer server = createDefaultCustomServer(network);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -668,7 +668,7 @@ public class NetworkTest {
 				Logger.debug("Server received %s", new String(event.getData()));
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			sleep(2000);
@@ -714,7 +714,7 @@ public class NetworkTest {
 				Logger.debug("Server received %s", new String(event.getData()));
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
@@ -776,7 +776,7 @@ public class NetworkTest {
 	 * 
 	 * @return The created server.
 	 */
-	private static IServer<IEthernetEndPoint> createDefaultCustomServer(Network network) {
+	private static IServer createDefaultCustomServer(Network network) {
 		return Communication.createDefaultServer(SERVER_NAME, new EthernetEndPoint(PORT), network.getServer());
 	}
 

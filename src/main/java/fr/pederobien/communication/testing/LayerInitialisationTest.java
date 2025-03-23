@@ -31,7 +31,7 @@ public class LayerInitialisationTest {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
@@ -66,7 +66,7 @@ public class LayerInitialisationTest {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
@@ -103,7 +103,7 @@ public class LayerInitialisationTest {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
@@ -140,7 +140,7 @@ public class LayerInitialisationTest {
 				event.getConnection().answer(event.getIdentifier(), message);
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
@@ -181,7 +181,7 @@ public class LayerInitialisationTest {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
@@ -216,7 +216,7 @@ public class LayerInitialisationTest {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
@@ -253,7 +253,7 @@ public class LayerInitialisationTest {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
@@ -291,7 +291,7 @@ public class LayerInitialisationTest {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
@@ -328,7 +328,7 @@ public class LayerInitialisationTest {
 				event.getConnection().answer(event.getIdentifier(), message);
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
@@ -369,7 +369,7 @@ public class LayerInitialisationTest {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
@@ -405,7 +405,7 @@ public class LayerInitialisationTest {
 				event.getConnection().answer(event.getIdentifier(), message);
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createServer(serverConfig, network.getServer());
+			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();

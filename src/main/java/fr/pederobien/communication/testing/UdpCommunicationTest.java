@@ -33,7 +33,7 @@ public class UdpCommunicationTest {
 				Logger.debug("Server received %s", new String(event.getData()));
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
+			IServer server = Communication.createUdpServer(serverConfig);
 			server.open();
 
 			IClient<IEthernetEndPoint> client = createDefaultUdpClient();
@@ -63,7 +63,7 @@ public class UdpCommunicationTest {
 
 	public void testServerToClientCommunication() {
 		IExecutable test = () -> {
-			IServer<IEthernetEndPoint> server = createDefaultUdpServer();
+			IServer server = createDefaultUdpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -111,7 +111,7 @@ public class UdpCommunicationTest {
 				event.getConnection().answer(event.getIdentifier(), message);
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
+			IServer server = Communication.createUdpServer(serverConfig);
 			server.open();
 
 			IClient<IEthernetEndPoint> client = createDefaultUdpClient();
@@ -150,7 +150,7 @@ public class UdpCommunicationTest {
 				Logger.debug(formatter, new String(event.getData()));
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
+			IServer server = Communication.createUdpServer(serverConfig);
 			server.open();
 
 			IClient<IEthernetEndPoint> client = createDefaultUdpClient();
@@ -183,7 +183,7 @@ public class UdpCommunicationTest {
 
 	public void testServerToClientWithCallback() {
 		IExecutable test = () -> {
-			IServer<IEthernetEndPoint> server = createDefaultUdpServer();
+			IServer server = createDefaultUdpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -229,7 +229,7 @@ public class UdpCommunicationTest {
 
 	public void testServerToClientWithCallbackButTimeout() {
 		IExecutable test = () -> {
-			IServer<IEthernetEndPoint> server = createDefaultUdpServer();
+			IServer server = createDefaultUdpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -273,7 +273,7 @@ public class UdpCommunicationTest {
 
 	public void testExtractionException() {
 		IExecutable test = () -> {
-			IServer<IEthernetEndPoint> server = createDefaultUdpServer();
+			IServer server = createDefaultUdpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -324,7 +324,7 @@ public class UdpCommunicationTest {
 				event.getConnection().answer(event.getIdentifier(), new Message(bytes));
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
+			IServer server = Communication.createUdpServer(serverConfig);
 			server.open();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
@@ -367,7 +367,7 @@ public class UdpCommunicationTest {
 
 	public void testUnexpectedRequestException() {
 		IExecutable test = () -> {
-			IServer<IEthernetEndPoint> server = createDefaultUdpServer();
+			IServer server = createDefaultUdpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -408,7 +408,7 @@ public class UdpCommunicationTest {
 
 	public void testUnstableClient() {
 		IExecutable test = () -> {
-			IServer<IEthernetEndPoint> server = createDefaultUdpServer();
+			IServer server = createDefaultUdpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -462,7 +462,7 @@ public class UdpCommunicationTest {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
+			IServer server = Communication.createUdpServer(serverConfig);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -511,7 +511,7 @@ public class UdpCommunicationTest {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
+			IServer server = Communication.createUdpServer(serverConfig);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -559,7 +559,7 @@ public class UdpCommunicationTest {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 
-			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
+			IServer server = Communication.createUdpServer(serverConfig);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -610,7 +610,7 @@ public class UdpCommunicationTest {
 				Logger.debug("Server received %s", new String(event.getData()));
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createUdpServer(serverConfig);
+			IServer server = Communication.createUdpServer(serverConfig);
 			server.open();
 
 			sleep(1000);
@@ -678,7 +678,7 @@ public class UdpCommunicationTest {
 	 * 
 	 * @return The created server.
 	 */
-	private static IServer<IEthernetEndPoint> createDefaultUdpServer() {
+	private static IServer createDefaultUdpServer() {
 		return Communication.createDefaultUdpServer(SERVER_NAME, PORT);
 	}
 

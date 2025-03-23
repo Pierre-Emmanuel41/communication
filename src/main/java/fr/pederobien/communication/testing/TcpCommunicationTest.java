@@ -47,7 +47,7 @@ public class TcpCommunicationTest {
 
 			sleep(3000);
 
-			IServer<IEthernetEndPoint> server = createDefaultTcpServer();
+			IServer server = createDefaultTcpServer();
 			server.open();
 
 			sleep(2000);
@@ -66,7 +66,7 @@ public class TcpCommunicationTest {
 
 	public void testClientAutomaticReconnectionButServerClosedLater() {
 		IExecutable test = () -> {
-			IServer<IEthernetEndPoint> server = createDefaultTcpServer();
+			IServer server = createDefaultTcpServer();
 			server.open();
 
 			sleep(500);
@@ -103,7 +103,7 @@ public class TcpCommunicationTest {
 				Logger.debug("Server received %s", new String(event.getData()));
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createTcpServer(serverConfig);
+			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 
 			IClient<IEthernetEndPoint> client = createDefaultTcpClient();
@@ -130,7 +130,7 @@ public class TcpCommunicationTest {
 
 	public void testServerToClientCommunication() {
 		IExecutable test = () -> {
-			IServer<IEthernetEndPoint> server = createDefaultTcpServer();
+			IServer server = createDefaultTcpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -172,7 +172,7 @@ public class TcpCommunicationTest {
 				event.getConnection().answer(event.getIdentifier(), new Message(bytes));
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createTcpServer(serverConfig);
+			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 
 			IClient<IEthernetEndPoint> client = createDefaultTcpClient();
@@ -210,7 +210,7 @@ public class TcpCommunicationTest {
 				Logger.debug(formatter, new String(event.getData()));
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createTcpServer(serverConfig);
+			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 
 			IClient<IEthernetEndPoint> client = createDefaultTcpClient();
@@ -242,7 +242,7 @@ public class TcpCommunicationTest {
 
 	public void testServerToClientWithCallback() {
 		IExecutable test = () -> {
-			IServer<IEthernetEndPoint> server = createDefaultTcpServer();
+			IServer server = createDefaultTcpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -287,7 +287,7 @@ public class TcpCommunicationTest {
 
 	public void testServerToClientWithCallbackButTimeout() {
 		IExecutable test = () -> {
-			IServer<IEthernetEndPoint> server = createDefaultTcpServer();
+			IServer server = createDefaultTcpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -331,7 +331,7 @@ public class TcpCommunicationTest {
 
 	public void testExtractionException() {
 		IExecutable test = () -> {
-			IServer<IEthernetEndPoint> server = createDefaultTcpServer();
+			IServer server = createDefaultTcpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -382,7 +382,7 @@ public class TcpCommunicationTest {
 				event.getConnection().answer(event.getIdentifier(), new Message(bytes));
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createTcpServer(serverConfig);
+			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 
 			IClient<IEthernetEndPoint> client = createDefaultTcpClient();
@@ -422,7 +422,7 @@ public class TcpCommunicationTest {
 
 	public void testUnexpectedRequestException() {
 		IExecutable test = () -> {
-			IServer<IEthernetEndPoint> server = createDefaultTcpServer();
+			IServer server = createDefaultTcpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -463,7 +463,7 @@ public class TcpCommunicationTest {
 
 	public void testUnstableClient() {
 		IExecutable test = () -> {
-			IServer<IEthernetEndPoint> server = createDefaultTcpServer();
+			IServer server = createDefaultTcpServer();
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -517,7 +517,7 @@ public class TcpCommunicationTest {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-			IServer<IEthernetEndPoint> server = Communication.createTcpServer(serverConfig);
+			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -566,7 +566,7 @@ public class TcpCommunicationTest {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-			IServer<IEthernetEndPoint> server = Communication.createTcpServer(serverConfig);
+			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -614,7 +614,7 @@ public class TcpCommunicationTest {
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 
-			IServer<IEthernetEndPoint> server = Communication.createTcpServer(serverConfig);
+			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
@@ -669,7 +669,7 @@ public class TcpCommunicationTest {
 				Logger.debug("Server received %s", new String(event.getData()));
 			}));
 
-			IServer<IEthernetEndPoint> server = Communication.createTcpServer(serverConfig);
+			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 
 			sleep(2000);
@@ -732,7 +732,7 @@ public class TcpCommunicationTest {
 	 * 
 	 * @return The created server.
 	 */
-	private static IServer<IEthernetEndPoint> createDefaultTcpServer() {
+	private static IServer createDefaultTcpServer() {
 		return Communication.createDefaultTcpServer(SERVER_NAME, PORT);
 	}
 

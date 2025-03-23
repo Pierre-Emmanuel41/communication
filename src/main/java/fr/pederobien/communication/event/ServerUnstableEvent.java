@@ -11,7 +11,7 @@ public class ServerUnstableEvent extends ServerEvent {
 	 * 
 	 * @param server The server involved in this event.
 	 */
-	public ServerUnstableEvent(IServer<?> server) {
+	public ServerUnstableEvent(IServer server) {
 		super(server);
 	}
 

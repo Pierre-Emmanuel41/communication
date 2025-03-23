@@ -121,7 +121,7 @@ public class Communication {
 	 * @param config The object that holds the server configuration.
 	 * @param impl   The server specific implementation to open/close the server.
 	 */
-	public static final <T> IServer<T> createServer(IServerConfig<T> config, IServerImpl<T> impl) {
+	public static final <T> IServer createServer(IServerConfig<T> config, IServerImpl<T> impl) {
 		return new Server<T>(config, impl);
 	}
 
@@ -132,7 +132,7 @@ public class Communication {
 	 * @param point The properties of the server communication point.
 	 * @param impl  The server specific implementation to open/close the server.
 	 */
-	public static final <T> IServer<T> createDefaultServer(String name, T point, IServerImpl<T> impl) {
+	public static final <T> IServer createDefaultServer(String name, T point, IServerImpl<T> impl) {
 		return new Server<T>(createServerConfig(name, point), impl);
 	}
 
@@ -141,7 +141,7 @@ public class Communication {
 	 * 
 	 * @param config The object that holds the server configuration.
 	 */
-	public static final IServer<IEthernetEndPoint> createTcpServer(IServerConfig<IEthernetEndPoint> config) {
+	public static final IServer createTcpServer(IServerConfig<IEthernetEndPoint> config) {
 		return createServer(config, new TcpServerImpl());
 	}
 
@@ -150,7 +150,7 @@ public class Communication {
 	 * 
 	 * @param config The object that holds the server configuration.
 	 */
-	public static final IServer<IEthernetEndPoint> createUdpServer(IServerConfig<IEthernetEndPoint> config) {
+	public static final IServer createUdpServer(IServerConfig<IEthernetEndPoint> config) {
 		return createServer(config, new UdpServerImpl());
 	}
 
@@ -160,7 +160,7 @@ public class Communication {
 	 * @param name The name of the server.
 	 * @param port The port number of the server.
 	 */
-	public static final IServer<IEthernetEndPoint> createDefaultTcpServer(String name, int port) {
+	public static final IServer createDefaultTcpServer(String name, int port) {
 		return createTcpServer(createServerConfig(name, new EthernetEndPoint(port)));
 	}
 
@@ -170,7 +170,7 @@ public class Communication {
 	 * @param name The name of the server.
 	 * @param port The port number of the server.
 	 */
-	public static final IServer<IEthernetEndPoint> createDefaultUdpServer(String name, int port) {
+	public static final IServer createDefaultUdpServer(String name, int port) {
 		return createUdpServer(createServerConfig(name, new EthernetEndPoint(port)));
 	}
 }

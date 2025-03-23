@@ -11,8 +11,8 @@ import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;
 
-public class Client<T> implements IClient<T>, IEventListener {
-	private IServer<T> server;
+public class Client<T> implements IClient, IEventListener {
+	private IServer server;
 	private IConnection connection;
 
 	/**
@@ -21,7 +21,7 @@ public class Client<T> implements IClient<T>, IEventListener {
 	 * @param server     The server from which this client has been created.
 	 * @param connection The connection to send/receive data from the remote.
 	 */
-	public Client(IServer<T> server, IConnection connection) {
+	public Client(IServer server, IConnection connection) {
 		this.server = server;
 		this.connection = connection;
 
@@ -29,7 +29,7 @@ public class Client<T> implements IClient<T>, IEventListener {
 	}
 
 	@Override
-	public IServer<T> getServer() {
+	public IServer getServer() {
 		return server;
 	}
 
