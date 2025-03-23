@@ -31,68 +31,28 @@ The network implementation is encapsulated using the following interfaces:<br>
 <code>IServerImpl</code> which specify how to open/close a server but also how to wait for a new client<br>
 <code>IConnectionImpl</code> which specify how to send/receive data from the remote but also how to close the connection with the remote<br>
 
+The library has been conceived to be used independently from the network properties, that is why on both client and side, interfaces are generic a needs an intermediate class that contains data to be used to connect with the remote (on the client side), or to open a communication point (on the server side). The library has only been tested with ethernet network therefore we will use this kind of network as our communication network.
+
+The interface / class we will use to gather information used to connect with the remote is <code>IEthernetEndPoint</code> and it's implementation class is <code>EthernetEndPoint</code>. This class contains only two parameters: The remote IP address and the remote port number. The IP address is only used on client side as the server will open a communication point on each ethernet interface.
+
 A <code>ClientConfig</code> is mandatory to create a Client:
 
 ```java
 String clientName = "Demo Client";
-String address = "127.0.0.1";
-int port = 12345;
+IEthernetEndPoint endPoint = new EthernetEndPoint("127.0.0.1", 12345);
 
 // Creating a client configuration with default parameter values
-ClientConfig clientConfig = Communication.createClientConfig(clientName, address, port);
+ClientConfig<IEthernetEndPoint> clientConfig = Communication.createClientConfig(clientName, endPoint);
 ```
 
 A <code>ServerConfig</code> is mandatory to create a Server:
 
 ```java
 String serverName = "Demo server"
-int port = 12345;
+IEthernetEndPoint endPoint = new EthernetEndPoint(12345);
 
 // Creating a server configuration with default parameter values
-ServerConfig serverConfig = Communication.createServerConfig(serverName, port);
-```
-
-A <code>ConnectionConfig</code> is mandatory to create a Connection:
-
-```java
-String address = "127.0.0.1";
-int port = 12345;
-
-IConfiguration configuration = null;
-
-// Compilation error as configuration is null
-ConnectionConfig connectionConfig = Communication.createConnection(address, port, configuration);
-```
-
-A part of the connection configuration is directly defined in the client configuration or in the server configuration. That is why, depending on the direction of the communication a connection can be defined<br>
-
-From a client configuration:
-
-```java
-// Creating a client configuration used to create a connection configuration
-ClientConfig clientConfig = Communication.createClientConfig("Demo client", "127.0.0.1", 12345);
-
-String address = clientConfig.getAddress();
-int port = clientConfig.getPort();
-ConnectionConfig connectionConfig = Communication.createConnectionConfig(address, port, clientConfig);
-```
-
-The server configuration does not embed a specific IP address as well as a specific port, but those values are coming from the socket connected with the client:
-
-```java
-ServerConfig serverConfig = Communication.createServerConfig("Demo server", 12345);
-
-// Waiting for a new client
-Socket socket = serverSocket.received();
-
-// Socket contains the client IP address and port number
-// The getAddress() method does not exists but depends on the socket implementation
-String address = socket.getAddress();
-
-// The getPort() method does not exists but depends on the socket implementation
-int port = socket.getPort();
-
-ConnectionConfig connectionConfig = Communication.createConnectionConfig(address, port, serverConfig);
+ServerConfig<IEthernetEndPoint> serverConfig = Communication.createServerConfig(serverName, endPoint);
 ```
 
 Finally once the configurations are created, the implementation needs to be defined. As mentioned at the beginning, the network implementation is completely encapsulated so that all the client, server, connection's architecture related can be used whatever the network is.
@@ -118,19 +78,29 @@ IServer server = Communication.createCustomServer(serverConfig, myCustomServerIm
 To define your own connection implementation, the interface <code>IConnectionImpl</code> has to be implemented and to create the associated connection:
 
 ```java
-// The configuration value should be replaced with the client or server configuration
-IConfiguration configuration = null;
 
-// Address defined by the client configuration or the socket connected to the client
-String address;
+// Client side
+IConnection connection = Communication.createConnection(clientConfig, clientConfig.getEndPoint(), new MyCustomConnectionImplementation(clientConfig));
 
-// Port defined by the client configuration or the socket connected to the client
-int port;
-ConnectionConfig connectionConfig = Communication.createConnectionConfig(address, port, configuration);
-IConnectionImpl myCustomConnectionImpl = new MyCustomConnectionImplementation();
 
-IConnection connection = Communication.createCustomConnection(connectionConfig, myCustomConnectionImpl);
+// Server side
+
+// Waiting for a new client
+Socket socket = serverSocket.received();
+
+// Socket contains the client IP address and port number
+// The getAddress() method does not exists but depends on the socket implementation
+String address = socket.getAddress();
+
+// The getPort() method does not exists but depends on the socket implementation
+int port = socket.getPort();
+
+// Creating endPoint specific for ethernet communication
+IEthernetEndPoint endPoint = new EthernetEndPoint(address, port);
+
+IConnection connection = Communication.createConnection(serverConfig, endPoint, new MyCustomConnectionImplementation(serverConfig));
 ```
+
 
 ### 3.1) TCP/IP protocol
 
@@ -138,10 +108,11 @@ Two methods exists to create a TCP client, depending if you want to use default 
 
 ```java
 // Using default parameter values
-IClient client = Communication.createDefaultTcpClient("TCP client", "127.0.0.1", 12345);
+IClient<IEthernetEndPoint> client = Communication.createDefaultTcpClient("TCP client", "127.0.0.1", 12345);
 
 // Specifying client configuration
-ClientConfig clientConfig = Communication.createClientConfig("TCP client", "127.0.0.1", 12345");
+IEthernetEndPoint endPoint = new EthernetEndPoint("127.0.0.1", 12345");
+ClientConfig<IEthernetEndPoint> clientConfig = Communication.createClientConfig("TCP client", endPoint);
 
 // Change configuration parameter values here
 
@@ -152,34 +123,87 @@ Two methods exist to create a TCP server, depending if you want to use default p
 
 ```java
 // Using default parameter values
-IServer server = Communication.createDefaultTcpClient("TCP server", 12345);
+IServer<IEthernetEndPoint> server = Communication.createDefaultTcpServer("TCP server", 12345);
 
 // Specifying server configuration
-ServerConfig serverConfig = Communication.createServerConfig("TCP server", 12345);
+IEthernetEndPoint endPoint = new EthernetEndPoint(12345);
+ServerConfig<IEthernetEndPoint> serverConfig = Communication.createServerConfig("TCP server", endPoint);
 
 // Change configuration parameter values here
 
 server = Communication.createTcpServer(serverConfig);
 ```
 
-To create a TCP connection:
+### 3.2) UDP protocol
+
+Two methods exists to create a UDP client, depending if you want to use default parameter values for the client configuration or not.
 
 ```java
-// The configuration value should be replaced with the client or server configuration
-IConfiguration configuration = null;
+// Using default parameter values
+IClient<IEthernetEndPoint> client = Communication.createDefaultUdpClient("UDP client", "127.0.0.1", 12345);
 
-// Address defined by the client configuration or the socket connected to the client
-String address;
+// Specifying client configuration
+IEthernetEndPoint endPoint = new EthernetEndPoint("127.0.0.1", 12345");
+ClientConfig<IEthernetEndPoint> clientConfig = Communication.createClientConfig("UDP client", endPoint);
 
-// Port defined by the client configuration or the socket connected to the client
-int port;
-ConnectionConfig connectionConfig = Communication.createConnectionConfig("127.0.0.1", 12345, configuration);
-IConnectionImpl myCustomConnectionImpl = new MyCustomConnectionImplementation();
+// Change configuration parameter values here
 
-// The socket connected to the remote.
-socket;
-
-IConnection connection = Communication.createCustomConnection(connectionConfig, new ConnectionImpl(socket));
+client = Communication.createUdpClient(clientConfig);
 ```
 
-To have a better understanding on how the TCP connection is created, please have a look at <code>TcpClientImpl</code> and <code>TcpServerImpl</code>.
+Two methods exist to create a TCP server, depending if you want to use default parameter values for the server configuration or not.
+
+```java
+// Using default parameter values
+IServer<IEthernetEndPoint> server = Communication.createDefaultUdpServer("UDP server", 12345);
+
+// Specifying server configuration
+IEthernetEndPoint endPoint = new EthernetEndPoint(12345);
+ServerConfig<IEthernetEndPoint> serverConfig = Communication.createServerConfig("UDP server", endPoint);
+
+// Change configuration parameter values here
+
+server = Communication.createUdpServer(serverConfig);
+```
+
+### 3.3) Data exchange
+
+Once the client and the server is connected with each other, data can be sent. The connection interface proposes two function to send data: <code>send</code> and <code>answer</code>. Both functions expects a <code>Message</code> that gather message properties to be sent to the remote. The message contains the payload to send to the remote, but it contains also a callback if a response is expected. Moreover, it is possible to send data synchronously to the remote.
+
+```java
+IServer<IEthernetEndPoint> server = Communication.createDefaultTcpServer("TCP Server", 12345);
+server.open();
+
+IClient<IEthernetEndPoint> client = Communication.createDefaultTcpClient("TCP Client", "127.0.0.1", 12345);
+client.connect();
+
+try {
+	// Waiting to let the connection happen
+	Thread.sleep(250);
+} catch (Exception e) {
+	// Do nothing
+}
+
+// Sending a simple message to the server
+client.getConnection().send(new Message("Hello world".getBytes()));
+
+try {
+	// Waiting before sending another message
+	Thread.sleep(250);
+} catch (Exception e) {
+	// Do nothing
+}
+
+// Sending a message that expects a response
+client.getConnection().send(new Message("Hello world".getBytes(), args -> {
+	if (!args.isTimeout()) {
+		System.out.println(String.format("Client received: %s", new String(args.getResponse().getBytes())));
+	}
+	else {
+		// Expected as the server has not been configured to send a response
+		System.err.println("No response from server");
+	}
+});
+```
+
+For more details, please have a look in the example folder.
