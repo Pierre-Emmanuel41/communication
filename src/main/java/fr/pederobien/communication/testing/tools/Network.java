@@ -446,7 +446,7 @@ public class Network {
 		}
 
 		@Override
-		public IConnection connectImpl(IClientConfig<IEthernetEndPoint> config) throws Exception {
+		public IConnection connect(IClientConfig<IEthernetEndPoint> config) throws Exception {
 			String address = config.getEndPoint().getAddress();
 			int port = config.getEndPoint().getPort();
 			int connectionTimeout = config.getConnectionTimeout();

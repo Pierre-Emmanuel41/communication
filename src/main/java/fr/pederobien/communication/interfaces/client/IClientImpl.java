@@ -12,5 +12,5 @@ public interface IClientImpl<T> {
 	 * @throws Exception If an exception is thrown, it will be caught and a
 	 *                   reconnection will be attempted.
 	 */
-	IConnection connectImpl(IClientConfig<T> config) throws Exception;
+	IConnection connect(IClientConfig<T> config) throws Exception;
 }

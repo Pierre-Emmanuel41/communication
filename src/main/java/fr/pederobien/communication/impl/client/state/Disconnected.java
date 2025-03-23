@@ -63,7 +63,7 @@ public class Disconnected<T> extends State<T> {
 		try {
 
 			// Attempting connection with the remote
-			connection = getContext().getImpl().connectImpl(getConfig());
+			connection = getContext().getImpl().connect(getConfig());
 		} catch (Exception e) {
 			retry();
 		}

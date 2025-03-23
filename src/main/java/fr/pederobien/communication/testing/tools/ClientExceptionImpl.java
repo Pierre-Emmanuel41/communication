@@ -26,7 +26,7 @@ public class ClientExceptionImpl implements IClientImpl<IEthernetEndPoint> {
 	}
 
 	@Override
-	public IConnection connectImpl(IClientConfig<IEthernetEndPoint> config) throws Exception {
+	public IConnection connect(IClientConfig<IEthernetEndPoint> config) throws Exception {
 		return Communication.createConnection(config, config.getEndPoint(), impl);
 	}
 
