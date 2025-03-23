@@ -41,7 +41,7 @@ public abstract class State<T> implements IState {
 	 * @return The client configuration.
 	 */
 	protected IClientConfig<T> getConfig() {
-		return context.getClient().getConfig();
+		return context.getConfig();
 	}
 
 	/**

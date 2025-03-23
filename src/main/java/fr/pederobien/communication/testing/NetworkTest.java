@@ -44,7 +44,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
+			IClient client = createDefaultCustomClient(network);
 			client.connect();
 
 			sleep(5000);
@@ -60,7 +60,7 @@ public class NetworkTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
+			IClient client = createDefaultCustomClient(network);
 			client.connect();
 
 			sleep(3000);
@@ -91,7 +91,7 @@ public class NetworkTest {
 
 			sleep(500);
 
-			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
+			IClient client = createDefaultCustomClient(network);
 			client.connect();
 
 			sleep(1000);
@@ -128,7 +128,7 @@ public class NetworkTest {
 			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
-			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
+			IClient client = createDefaultCustomClient(network);
 			client.connect();
 
 			// Waiting for the client to be connected to the remote
@@ -168,7 +168,7 @@ public class NetworkTest {
 				Logger.debug("Client received %s", new String(event.getData()));
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(1000);
@@ -202,7 +202,7 @@ public class NetworkTest {
 			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
-			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
+			IClient client = createDefaultCustomClient(network);
 			client.connect();
 
 			sleep(1000);
@@ -242,7 +242,7 @@ public class NetworkTest {
 			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
-			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
+			IClient client = createDefaultCustomClient(network);
 			client.connect();
 
 			sleep(1000);
@@ -296,7 +296,7 @@ public class NetworkTest {
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(2000);
@@ -342,7 +342,7 @@ public class NetworkTest {
 				Logger.debug(formatter, new String(event.getData()));
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(3000);
@@ -373,7 +373,7 @@ public class NetworkTest {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(5000);
@@ -400,8 +400,7 @@ public class NetworkTest {
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig,
-					network.newClient(ExceptionMode.SEND));
+			IClient client = Communication.createClient(clientConfig, network.newClient(ExceptionMode.SEND));
 			client.connect();
 
 			sleep(1000);
@@ -439,8 +438,7 @@ public class NetworkTest {
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig,
-					network.newClient(ExceptionMode.RECEIVE));
+			IClient client = Communication.createClient(clientConfig, network.newClient(ExceptionMode.RECEIVE));
 			client.connect();
 
 			sleep(250);
@@ -486,7 +484,7 @@ public class NetworkTest {
 			clientConfig.setLayerInitializer(() -> new LayerInitializer(new ExceptionLayer(LayerExceptionMode.UNPACK)));
 			clientConfig.setAutomaticReconnection(false);
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(250);
@@ -522,7 +520,7 @@ public class NetworkTest {
 			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
-			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
+			IClient client = createDefaultCustomClient(network);
 			client.connect();
 
 			sleep(250);
@@ -585,7 +583,7 @@ public class NetworkTest {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(250);
@@ -633,7 +631,7 @@ public class NetworkTest {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(250);
@@ -658,7 +656,7 @@ public class NetworkTest {
 		IExecutable tests = () -> {
 			Network network = new Network();
 
-			IClient<IEthernetEndPoint> client1 = createDefaultCustomClient(network);
+			IClient client1 = createDefaultCustomClient(network);
 			client1.connect();
 
 			sleep(5000);
@@ -673,7 +671,7 @@ public class NetworkTest {
 
 			sleep(2000);
 
-			IClient<IEthernetEndPoint> client2 = createDefaultCustomClient(network);
+			IClient client2 = createDefaultCustomClient(network);
 			client2.connect();
 
 			sleep(2000);
@@ -717,7 +715,7 @@ public class NetworkTest {
 			IServer server = Communication.createServer(serverConfig, network.getServer());
 			server.open();
 
-			IClient<IEthernetEndPoint> client = createDefaultCustomClient(network);
+			IClient client = createDefaultCustomClient(network);
 			client.connect();
 
 			sleep(1000);
@@ -795,7 +793,7 @@ public class NetworkTest {
 	 * 
 	 * @return The created client.
 	 */
-	private static IClient<IEthernetEndPoint> createDefaultCustomClient(Network network) {
+	private static IClient createDefaultCustomClient(Network network) {
 		return Communication.createDefaultClient(CLIENT_NAME, new EthernetEndPoint(ADDRESS, PORT), network.newClient());
 	}
 }

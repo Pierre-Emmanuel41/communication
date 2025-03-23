@@ -36,7 +36,7 @@ public class UdpCommunicationTest {
 			IServer server = Communication.createUdpServer(serverConfig);
 			server.open();
 
-			IClient<IEthernetEndPoint> client = createDefaultUdpClient();
+			IClient client = createDefaultUdpClient();
 			client.connect();
 
 			sleep(100);
@@ -82,7 +82,7 @@ public class UdpCommunicationTest {
 				event.getConnection().send(message);
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
+			IClient client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(2000);
@@ -114,7 +114,7 @@ public class UdpCommunicationTest {
 			IServer server = Communication.createUdpServer(serverConfig);
 			server.open();
 
-			IClient<IEthernetEndPoint> client = createDefaultUdpClient();
+			IClient client = createDefaultUdpClient();
 			client.connect();
 
 			sleep(500);
@@ -153,7 +153,7 @@ public class UdpCommunicationTest {
 			IServer server = Communication.createUdpServer(serverConfig);
 			server.open();
 
-			IClient<IEthernetEndPoint> client = createDefaultUdpClient();
+			IClient client = createDefaultUdpClient();
 			client.connect();
 
 			sleep(500);
@@ -208,7 +208,7 @@ public class UdpCommunicationTest {
 				event.getConnection().answer(event.getIdentifier(), message);
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
+			IClient client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(2000);
@@ -252,7 +252,7 @@ public class UdpCommunicationTest {
 				Logger.debug(formatter, new String(event.getData()));
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
+			IClient client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(2000);
@@ -293,7 +293,7 @@ public class UdpCommunicationTest {
 			clientConfig.setAutomaticReconnection(false);
 			clientConfig.setLayerInitializer(() -> new LayerInitializer(new ExceptionLayer(LayerExceptionMode.UNPACK)));
 
-			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
+			IClient client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(250);
@@ -330,7 +330,7 @@ public class UdpCommunicationTest {
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
 
-			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
+			IClient client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(250);
@@ -389,7 +389,7 @@ public class UdpCommunicationTest {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
+			IClient client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(12000);
@@ -435,7 +435,7 @@ public class UdpCommunicationTest {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
+			IClient client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(250);
@@ -489,7 +489,7 @@ public class UdpCommunicationTest {
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
+			IClient client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(3000);
@@ -537,7 +537,7 @@ public class UdpCommunicationTest {
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
+			IClient client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(3000);
@@ -585,7 +585,7 @@ public class UdpCommunicationTest {
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createUdpClient(clientConfig);
+			IClient client = Communication.createUdpClient(clientConfig);
 			client.connect();
 
 			sleep(3000);
@@ -615,10 +615,10 @@ public class UdpCommunicationTest {
 
 			sleep(1000);
 
-			IClient<IEthernetEndPoint> client1 = createDefaultUdpClient();
+			IClient client1 = createDefaultUdpClient();
 			client1.connect();
 
-			IClient<IEthernetEndPoint> client2 = createDefaultUdpClient();
+			IClient client2 = createDefaultUdpClient();
 			client2.connect();
 
 			sleep(2000);
@@ -695,7 +695,7 @@ public class UdpCommunicationTest {
 	 * 
 	 * @return The created client.
 	 */
-	private static IClient<IEthernetEndPoint> createDefaultUdpClient() {
+	private static IClient createDefaultUdpClient() {
 		return Communication.createDefaultUdpClient(CLIENT_NAME, ADDRESS, PORT);
 	}
 }

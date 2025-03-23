@@ -28,7 +28,7 @@ public class TcpCommunicationTest {
 
 	public void testClientAutomaticReconnection() {
 		IExecutable test = () -> {
-			IClient<IEthernetEndPoint> client = createDefaultTcpClient();
+			IClient client = createDefaultTcpClient();
 			client.connect();
 
 			sleep(5000);
@@ -42,7 +42,7 @@ public class TcpCommunicationTest {
 
 	public void testClientAutomaticReconnectionButWithServerOpenedLater() {
 		IExecutable test = () -> {
-			IClient<IEthernetEndPoint> client = createDefaultTcpClient();
+			IClient client = createDefaultTcpClient();
 			client.connect();
 
 			sleep(3000);
@@ -71,7 +71,7 @@ public class TcpCommunicationTest {
 
 			sleep(500);
 
-			IClient<IEthernetEndPoint> client = createDefaultTcpClient();
+			IClient client = createDefaultTcpClient();
 			client.connect();
 
 			sleep(1000);
@@ -106,7 +106,7 @@ public class TcpCommunicationTest {
 			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 
-			IClient<IEthernetEndPoint> client = createDefaultTcpClient();
+			IClient client = createDefaultTcpClient();
 			client.connect();
 
 			// Waiting for the client to be connected to the remote
@@ -144,7 +144,7 @@ public class TcpCommunicationTest {
 				Logger.debug("Client received %s", new String(event.getData()));
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createTcpClient(clientConfig);
+			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 
 			sleep(2000);
@@ -175,7 +175,7 @@ public class TcpCommunicationTest {
 			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 
-			IClient<IEthernetEndPoint> client = createDefaultTcpClient();
+			IClient client = createDefaultTcpClient();
 			client.connect();
 
 			sleep(2000);
@@ -213,7 +213,7 @@ public class TcpCommunicationTest {
 			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 
-			IClient<IEthernetEndPoint> client = createDefaultTcpClient();
+			IClient client = createDefaultTcpClient();
 			client.connect();
 
 			sleep(2000);
@@ -266,7 +266,7 @@ public class TcpCommunicationTest {
 				event.getConnection().answer(event.getIdentifier(), new Message(bytes));
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createTcpClient(clientConfig);
+			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 
 			sleep(2000);
@@ -310,7 +310,7 @@ public class TcpCommunicationTest {
 				Logger.debug(formatter, new String(event.getData()));
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createTcpClient(clientConfig);
+			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 
 			sleep(2000);
@@ -351,7 +351,7 @@ public class TcpCommunicationTest {
 			clientConfig.setAutomaticReconnection(false);
 			clientConfig.setLayerInitializer(() -> new LayerInitializer(new ExceptionLayer(LayerExceptionMode.UNPACK)));
 
-			IClient<IEthernetEndPoint> client = Communication.createTcpClient(clientConfig);
+			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 
 			sleep(250);
@@ -385,7 +385,7 @@ public class TcpCommunicationTest {
 			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 
-			IClient<IEthernetEndPoint> client = createDefaultTcpClient();
+			IClient client = createDefaultTcpClient();
 			client.connect();
 
 			sleep(250);
@@ -444,7 +444,7 @@ public class TcpCommunicationTest {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createTcpClient(clientConfig);
+			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 
 			sleep(12000);
@@ -490,7 +490,7 @@ public class TcpCommunicationTest {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createTcpClient(clientConfig);
+			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 
 			sleep(250);
@@ -544,7 +544,7 @@ public class TcpCommunicationTest {
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createTcpClient(clientConfig);
+			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 
 			sleep(3000);
@@ -592,7 +592,7 @@ public class TcpCommunicationTest {
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createTcpClient(clientConfig);
+			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 
 			sleep(3000);
@@ -640,7 +640,7 @@ public class TcpCommunicationTest {
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
 			}));
 
-			IClient<IEthernetEndPoint> client = Communication.createTcpClient(clientConfig);
+			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 
 			sleep(3000);
@@ -659,7 +659,7 @@ public class TcpCommunicationTest {
 
 	public void testTwoClientsOneServer() {
 		IExecutable tests = () -> {
-			IClient<IEthernetEndPoint> client1 = createDefaultTcpClient();
+			IClient client1 = createDefaultTcpClient();
 			client1.connect();
 
 			sleep(5000);
@@ -674,7 +674,7 @@ public class TcpCommunicationTest {
 
 			sleep(2000);
 
-			IClient<IEthernetEndPoint> client2 = createDefaultTcpClient();
+			IClient client2 = createDefaultTcpClient();
 			client2.connect();
 
 			sleep(2000);
@@ -749,7 +749,7 @@ public class TcpCommunicationTest {
 	 * 
 	 * @return The created client.
 	 */
-	private static IClient<IEthernetEndPoint> createDefaultTcpClient() {
+	private static IClient createDefaultTcpClient() {
 		return Communication.createDefaultTcpClient(CLIENT_NAME, ADDRESS, PORT);
 	}
 }

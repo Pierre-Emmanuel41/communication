@@ -49,7 +49,7 @@ public class Communication {
 	 * @param impl   The client specific implementation to connect/disconnect from
 	 *               the server.
 	 */
-	public static final <T> IClient<T> createClient(IClientConfig<T> config, IClientImpl<T> impl) {
+	public static final <T> IClient createClient(IClientConfig<T> config, IClientImpl<T> impl) {
 		return new Client<T>(config, impl);
 	}
 
@@ -61,7 +61,7 @@ public class Communication {
 	 * @param impl     The client specific implementation to connect/disconnect from
 	 *                 the server.
 	 */
-	public static final <T> IClient<T> createDefaultClient(String name, T endPoint, IClientImpl<T> impl) {
+	public static final <T> IClient createDefaultClient(String name, T endPoint, IClientImpl<T> impl) {
 		return new Client<T>(createClientConfig(name, endPoint), impl);
 	}
 
@@ -70,7 +70,7 @@ public class Communication {
 	 * 
 	 * @param config The object that holds the client configuration.
 	 */
-	public static final IClient<IEthernetEndPoint> createTcpClient(IClientConfig<IEthernetEndPoint> config) {
+	public static final IClient createTcpClient(IClientConfig<IEthernetEndPoint> config) {
 		return createClient(config, new TcpClientImpl());
 	}
 
@@ -79,7 +79,7 @@ public class Communication {
 	 * 
 	 * @param config The object that holds the client configuration.
 	 */
-	public static final IClient<IEthernetEndPoint> createUdpClient(IClientConfig<IEthernetEndPoint> config) {
+	public static final IClient createUdpClient(IClientConfig<IEthernetEndPoint> config) {
 		return createClient(config, new UdpClientImpl());
 	}
 
@@ -90,7 +90,7 @@ public class Communication {
 	 * @param address The IP address of the server.
 	 * @param port    The port number of the server.
 	 */
-	public static final IClient<IEthernetEndPoint> createDefaultTcpClient(String name, String address, int port) {
+	public static final IClient createDefaultTcpClient(String name, String address, int port) {
 		return createTcpClient(createClientConfig(name, new EthernetEndPoint(address, port)));
 	}
 
@@ -101,7 +101,7 @@ public class Communication {
 	 * @param address The IP address of the server.
 	 * @param port    The port number of the server.
 	 */
-	public static final IClient<IEthernetEndPoint> createDefaultUdpClient(String name, String address, int port) {
+	public static final IClient createDefaultUdpClient(String name, String address, int port) {
 		return createUdpClient(createClientConfig(name, new EthernetEndPoint(address, port)));
 	}
 

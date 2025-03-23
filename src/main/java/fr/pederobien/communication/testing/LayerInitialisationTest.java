@@ -37,7 +37,7 @@ public class LayerInitialisationTest {
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(2000);
@@ -73,7 +73,7 @@ public class LayerInitialisationTest {
 			clientConfig.setAutomaticReconnection(false);
 			clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(5000);
@@ -110,7 +110,7 @@ public class LayerInitialisationTest {
 			clientConfig.setAutomaticReconnection(false);
 			clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(5000);
@@ -146,7 +146,7 @@ public class LayerInitialisationTest {
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(2000);
@@ -187,7 +187,7 @@ public class LayerInitialisationTest {
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(2000);
@@ -223,7 +223,7 @@ public class LayerInitialisationTest {
 			clientConfig.setAutomaticReconnection(false);
 			clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(4000);
@@ -260,7 +260,7 @@ public class LayerInitialisationTest {
 			clientConfig.setAutomaticReconnection(false);
 			clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(5000);
@@ -298,7 +298,7 @@ public class LayerInitialisationTest {
 			clientConfig.setAutomaticReconnection(false);
 			clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(5000);
@@ -334,7 +334,7 @@ public class LayerInitialisationTest {
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(1000);
@@ -375,7 +375,7 @@ public class LayerInitialisationTest {
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(2000);
@@ -411,7 +411,7 @@ public class LayerInitialisationTest {
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 
-			IClient<IEthernetEndPoint> client = Communication.createClient(clientConfig, network.newClient());
+			IClient client = Communication.createClient(clientConfig, network.newClient());
 			client.connect();
 
 			sleep(4000);

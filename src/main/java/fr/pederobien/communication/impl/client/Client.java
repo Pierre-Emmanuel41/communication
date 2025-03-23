@@ -7,8 +7,7 @@ import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.client.IClientImpl;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 
-public class Client<T> implements IClient<T> {
-	private IClientConfig<T> config;
+public class Client<T> implements IClient {
 	private String name;
 	private IContext context;
 
@@ -20,10 +19,8 @@ public class Client<T> implements IClient<T> {
 	 *               the server.
 	 */
 	public Client(IClientConfig<T> config, IClientImpl<T> impl) {
-		this.config = config;
-
 		name = String.format("[%s %s]", config.getName(), config.getEndPoint());
-		context = new Context<T>(this, impl);
+		context = new Context<T>(this, config, impl);
 	}
 
 	@Override
@@ -49,11 +46,6 @@ public class Client<T> implements IClient<T> {
 	@Override
 	public IConnection getConnection() {
 		return context.getConnection();
-	}
-
-	@Override
-	public IClientConfig<T> getConfig() {
-		return config;
 	}
 
 	@Override

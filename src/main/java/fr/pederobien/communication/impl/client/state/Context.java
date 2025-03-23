@@ -2,14 +2,16 @@ package fr.pederobien.communication.impl.client.state;
 
 import fr.pederobien.communication.event.ClientUnstableEvent;
 import fr.pederobien.communication.interfaces.client.IClient;
+import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.client.IClientImpl;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.utils.HealedCounter;
-import fr.pederobien.utils.event.Logger;
 import fr.pederobien.utils.event.EventManager;
+import fr.pederobien.utils.event.Logger;
 
 public class Context<T> implements IContext {
-	private IClient<T> client;
+	private IClient client;
+	private IClientConfig<T> config;
 	private IClientImpl<T> impl;
 	private IState disconnected;
 	private IState connected;
@@ -22,8 +24,9 @@ public class Context<T> implements IContext {
 	/**
 	 * Create a state context.
 	 */
-	public Context(IClient<T> client, IClientImpl<T> impl) {
+	public Context(IClient client, IClientConfig<T> config, IClientImpl<T> impl) {
 		this.client = client;
+		this.config = config;
 		this.impl = impl;
 
 		disconnected = new Disconnected<T>(this);
@@ -32,9 +35,9 @@ public class Context<T> implements IContext {
 
 		state = disconnected;
 
-		int unstableCounter = client.getConfig().getClientMaxUnstableCounterValue();
-		int healTime = client.getConfig().getClientHealTime();
-		String counterName = String.format("%s unstable counter", getClient());
+		int unstableCounter = config.getClientMaxUnstableCounterValue();
+		int healTime = config.getClientHealTime();
+		String counterName = String.format("%s unstable counter", client);
 		counter = new HealedCounter(unstableCounter, healTime, () -> onClientUnstable(), counterName);
 	}
 
@@ -76,8 +79,15 @@ public class Context<T> implements IContext {
 	/**
 	 * @return The client associated to this context.
 	 */
-	public IClient<T> getClient() {
+	public IClient getClient() {
 		return client;
+	}
+
+	/**
+	 * @return The client configuration.
+	 */
+	public IClientConfig<T> getConfig() {
+		return config;
 	}
 
 	/**
