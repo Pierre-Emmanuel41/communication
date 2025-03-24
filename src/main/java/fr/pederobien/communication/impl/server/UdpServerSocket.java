@@ -101,8 +101,8 @@ public class UdpServerSocket {
 	 */
 	private void receiving() {
 		try {
+			byte[] buffer = new byte[2048];
 			while (true) {
-				byte[] buffer = new byte[2048];
 				DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 				socket.receive(packet);
 
