@@ -1,7 +1,14 @@
-package fr.pederobien.communication.interfaces.server;
+package fr.pederobien.communication.impl.server.state;
 
-public interface IServer {
+public interface IState {
 
+	/**
+	 * Set if this state is enabled or disabled.
+	 * 
+	 * @param isEnabled True if enabled, false otherwise.
+	 */
+	void setEnabled(boolean isEnabled);
+	
 	/**
 	 * Start the server and wait for a client to be connected.
 	 *

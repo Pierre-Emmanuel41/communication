@@ -1,29 +1,13 @@
 package fr.pederobien.communication.impl.server;
 
-import fr.pederobien.communication.event.NewClientEvent;
-import fr.pederobien.communication.event.ServerCloseEvent;
-import fr.pederobien.communication.event.ServerUnstableEvent;
-import fr.pederobien.communication.impl.Communication;
-import fr.pederobien.communication.interfaces.connection.IConnection;
-import fr.pederobien.communication.interfaces.server.IClientInfo;
+import fr.pederobien.communication.impl.server.state.Context;
+import fr.pederobien.communication.impl.server.state.IContext;
 import fr.pederobien.communication.interfaces.server.IServer;
 import fr.pederobien.communication.interfaces.server.IServerConfig;
 import fr.pederobien.communication.interfaces.server.IServerImpl;
-import fr.pederobien.utils.BlockingQueueTask;
-import fr.pederobien.utils.Disposable;
-import fr.pederobien.utils.IDisposable;
-import fr.pederobien.utils.event.EventManager;
-import fr.pederobien.utils.event.Logger;
 
 public class Server<T> implements IServer {
-	private static final int MAX_EXCEPTION_NUMBER = 10;
-
-	private IServerConfig<T> config;
-	private IServerImpl<T> impl;
-	private EState state;
-	private BlockingQueueTask<Object> clientQueue;
-	private IDisposable disposable;
-	private int newClientExceptionCounter;
+	private IContext context;
 
 	/**
 	 * Creates a server.
@@ -33,167 +17,26 @@ public class Server<T> implements IServer {
 	 *                       server.
 	 */
 	public Server(IServerConfig<T> config, IServerImpl<T> impl) {
-		this.config = config;
-		this.impl = impl;
-
-		clientQueue = new BlockingQueueTask<Object>(String.format("%s[WaitForClient]", toString()),
-				object -> waitForClient(object));
-		disposable = new Disposable();
-
-		newClientExceptionCounter = 0;
-		state = EState.CLOSED;
+		context = new Context<T>(this, config, impl);
 	}
 
 	@Override
 	public boolean open() {
-		disposable.checkDisposed();
-
-		if (state != EState.CLOSED) {
-			return false;
-		}
-
-		try {
-			state = EState.OPENING;
-			info("Opening server");
-
-			impl.open(config);
-
-			state = EState.OPENED;
-			info("Server opened");
-
-			clientQueue.add(new Object());
-			clientQueue.start();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
-
-		return true;
+		return context.open();
 	}
 
 	@Override
 	public boolean close() {
-		disposable.checkDisposed();
-
-		if (state != EState.OPENED) {
-			return false;
-		}
-
-		try {
-			state = EState.CLOSING;
-			info("Closing server");
-
-			// First close the server and then close all connections with clients.
-			impl.close();
-			EventManager.callEvent(new ServerCloseEvent(this));
-
-			state = EState.CLOSED;
-			info("Server closed");
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
-
-		return true;
+		return context.close();
 	}
 
 	@Override
 	public boolean dispose() {
-		if (state != EState.CLOSED || !disposable.dispose()) {
-			return false;
-		}
-
-		clientQueue.dispose();
-		info("Server disposed");
-		return true;
-	}
-
-	@Override
-	public EState getState() {
-		return state;
+		return context.dispose();
 	}
 
 	@Override
 	public String toString() {
-		return String.format("[%s %s]", config.getName(), config.getPoint());
-	}
-
-	/**
-	 * Throw a LogEvent.
-	 * 
-	 * @param message The message of the event.
-	 * @param args    The arguments of the message to display.
-	 */
-	protected void info(String message, Object... args) {
-		Logger.info("%s - %s", this, String.format(message, args));
-	}
-
-	private void waitForClient(Object object) {
-		IConnection connection = establishConnection(object);
-		if (connection != null) {
-			initialiseConnection(connection);
-		}
-	}
-
-	/**
-	 * Wait for a client to connect.
-	 * 
-	 * @param object The object used to wait asynchronously for a client to connect.
-	 * 
-	 * @return Null if an error occurs, the connection with the client otherwise.
-	 */
-	private IConnection establishConnection(Object object) {
-		IConnection connection = null;
-
-		try {
-			IClientInfo<T> info = impl.waitForClient();
-
-			// The client is not allowed to be connected with the server
-			if (state == EState.OPENED && config.getClientValidator().isValid(info.getEndPoint())) {
-				connection = Communication.createConnection(config, info.getEndPoint(), info.getImplementation());
-			} else {
-				info.getImplementation().dispose();
-			}
-
-			newClientExceptionCounter = 0;
-		} catch (Exception e) {
-			newClientExceptionCounter++;
-			if (newClientExceptionCounter == MAX_EXCEPTION_NUMBER) {
-				info("Too much exceptions in a row, closing server");
-				EventManager.callEvent(new ServerUnstableEvent(this));
-			}
-		} finally {
-			// Wait for another client if the server is opened.
-			if (state == EState.OPENED) {
-				clientQueue.add(object);
-			}
-		}
-
-		return connection;
-	}
-
-	private void initialiseConnection(IConnection connection) {
-		boolean initialised = false;
-
-		try {
-			initialised = connection.initialise();
-		} catch (Exception e) {
-			// Do nothing
-		}
-
-		if (state != EState.OPENED) {
-			connection.dispose();
-			return;
-		}
-
-		if (!initialised) {
-			Logger.warning("%s - Initialisation failure", this);
-			connection.setEnabled(false);
-			connection.dispose();
-		} else {
-
-			// Notifying observers that a client is connected
-			EventManager.callEvent(new NewClientEvent(new Client<T>(this, connection)));
-		}
+		return context.getName();
 	}
 }

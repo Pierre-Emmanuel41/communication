@@ -9,7 +9,7 @@ import fr.pederobien.utils.event.Logger;
  */
 public class CommunicationTestApp {
 	public static void main(String[] args) {
-		Logger.instance().newLine(true).timeStamp(true).register();
+		Logger.instance().newLine(true).timeStamp(true).colorized(true);
 
 		runTest("Network tests", () -> runNetworkTest());
 		runTest("Layer tests", () -> runLayerTests());
