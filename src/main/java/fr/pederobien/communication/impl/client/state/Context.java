@@ -140,7 +140,7 @@ public class Context<T> implements IContext {
 	 * Function called when the healed counter reached its maximum value.
 	 */
 	private void onClientUnstable() {
-		Logger.error(String.format("%s - %s", client.toString(), "stopping automatic reconnection"));
+		Logger.error("%s - Stopping automatic reconnection", client);
 		EventManager.callEvent(new ClientUnstableEvent(client));
 	}
 }

@@ -78,7 +78,7 @@ public class Disconnected<T> extends State<T> {
 			}
 
 			if (!initialised) {
-				Logger.warning(String.format("%s - %s", getContext().getClient(), "Initialisation failure"));
+				Logger.warning("%s - Initialisation failure", getContext().getClient());
 				connection.setEnabled(false);
 				connection.dispose();
 

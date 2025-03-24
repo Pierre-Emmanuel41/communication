@@ -16,11 +16,6 @@ public abstract class State<T> implements IState {
 	}
 
 	@Override
-	public void setEnabled(boolean isEnabled) {
-		// Do nothing
-	}
-
-	@Override
 	public void connect() {
 		throw new IllegalStateException("Cannot connect to the remote, illegal state.");
 	}
@@ -45,12 +40,11 @@ public abstract class State<T> implements IState {
 	}
 
 	/**
-	 * Print a log using info debug level
+	 * Print a log using INFO debug level
 	 * 
 	 * @param message The message of the event.
-	 * @param args    The arguments of the message to display.
 	 */
-	protected void info(String message, Object... args) {
-		Logger.info(String.format("%s - %s", context.getClient(), String.format(message, args)));
+	protected void info(String message) {
+		Logger.info("%s - %s", context.getClient(), message);
 	}
 }
