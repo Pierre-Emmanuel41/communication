@@ -2,7 +2,7 @@
 
 @rem Dowloading dependencies
 @if not exist utils (
-    @call git clone --branch 2.0-SNAPSHOT --single-branch https://github.com/Pierre-Emmanuel41/utils
+    @call git clone https://github.com/Pierre-Emmanuel41/utils
 	
 	@call cd utils
 ) else ( 
