@@ -10,14 +10,16 @@ public class Message implements IMessage {
 	private byte[] bytes;
 	private boolean isSync;
 	private ICallback callback;
-	
+
 	/**
 	 * Creates a message to send to the remote.
 	 * 
-	 * @param bytes The bytes of the message.
-	 * @param isSync True if this message shall be sent synchronously, false to send it asynchronously.
-	 * @param timeout The maximum time, in ms, to wait for remote response.
-	 * @param callback The code to execute once a response has been received or a timeout occurs.
+	 * @param bytes    The bytes of the message.
+	 * @param isSync   True if this message shall be sent synchronously, false to
+	 *                 send it asynchronously.
+	 * @param timeout  The maximum time, in ms, to wait for remote response.
+	 * @param callback The code to execute once a response has been received or a
+	 *                 timeout occurs.
 	 */
 	public Message(byte[] bytes, boolean isSync, int timeout, Consumer<CallbackArgs> callback) {
 		this.bytes = bytes;
@@ -25,13 +27,16 @@ public class Message implements IMessage {
 
 		this.callback = new Callback(timeout, callback);
 	}
-	
+
 	/**
-	 * Creates a message to send to the remote. The timeout has default value 1000 ms.
+	 * Creates a message to send to the remote. The timeout has default value 1000
+	 * ms.
 	 * 
-	 * @param bytes The bytes of the message.
-	 * @param isSync True if this message shall be sent synchronously, false to send it asynchronously.
-	 * @param callback The code to execute once a response has been received or a timeout occurs.
+	 * @param bytes    The bytes of the message.
+	 * @param isSync   True if this message shall be sent synchronously, false to
+	 *                 send it asynchronously.
+	 * @param callback The code to execute once a response has been received or a
+	 *                 timeout occurs.
 	 */
 	public Message(byte[] bytes, boolean isSync, Consumer<CallbackArgs> callback) {
 		this(bytes, isSync, 1000, callback);
@@ -40,19 +45,22 @@ public class Message implements IMessage {
 	/**
 	 * Creates a message to send to the remote asynchronously.
 	 * 
-	 * @param bytes The bytes of the message.
-	 * @param timeout The maximum time, in ms, to wait for remote response.
-	 * @param callback The code to execute once a response has been received or a timeout occurs.
+	 * @param bytes    The bytes of the message.
+	 * @param timeout  The maximum time, in ms, to wait for remote response.
+	 * @param callback The code to execute once a response has been received or a
+	 *                 timeout occurs.
 	 */
 	public Message(byte[] bytes, int timeout, Consumer<CallbackArgs> callback) {
 		this(bytes, false, timeout, callback);
 	}
 
 	/**
-	 * Creates a message to send to the remote asynchronously. The timeout has default value 1000 ms.
+	 * Creates a message to send to the remote asynchronously. The timeout has
+	 * default value 1000 ms.
 	 * 
-	 * @param bytes The bytes of the message.
-	 * @param callback The code to execute once a response has been received or a timeout occurs.
+	 * @param bytes    The bytes of the message.
+	 * @param callback The code to execute once a response has been received or a
+	 *                 timeout occurs.
 	 */
 	public Message(byte[] bytes, Consumer<CallbackArgs> callback) {
 		this(bytes, false, 1000, callback);
@@ -61,11 +69,13 @@ public class Message implements IMessage {
 	/**
 	 * Creates a message to send to the remote. No callback.
 	 * 
-	 * @param bytes The bytes of the message.
-	 * @param isSync True if this message shall be sent synchronously, false to send it asynchronously.
+	 * @param bytes  The bytes of the message.
+	 * @param isSync True if this message shall be sent synchronously, false to send
+	 *               it asynchronously.
 	 */
 	public Message(byte[] bytes, boolean isSync) {
-		this(bytes, isSync, -1, args -> {});
+		this(bytes, isSync, -1, args -> {
+		});
 	}
 
 	/**
@@ -97,10 +107,12 @@ public class Message implements IMessage {
 		private Consumer<CallbackArgs> callback;
 
 		/**
-		 * Creates a callback to be executed once a response has been received from the remote.
+		 * Creates a callback to be executed once a response has been received from the
+		 * remote.
 		 * 
-		 * @param timeout The maximum time, in ms, to wait for remote response.
-		 * @param callback The code to execute once a response has been received or a timeout occurs.
+		 * @param timeout  The maximum time, in ms, to wait for remote response.
+		 * @param callback The code to execute once a response has been received or a
+		 *                 timeout occurs.
 		 */
 		public Callback(int timeout, Consumer<CallbackArgs> callback) {
 			this.timeout = timeout;

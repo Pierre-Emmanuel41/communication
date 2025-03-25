@@ -8,12 +8,12 @@ public class Closed<T> extends State<T> {
 	public Closed(Context<T> context) {
 		super(context);
 	}
-	
+
 	@Override
 	public void setEnabled(boolean isEnabled) {
 		if (isEnabled) {
 			try {
-				
+
 				// Server specific implementation to close the server
 				getContext().getImpl().close();
 
@@ -24,14 +24,14 @@ public class Closed<T> extends State<T> {
 			}
 		}
 	}
-	
+
 	@Override
 	public boolean open() {
 		info("Opening server");
 		getContext().setState(getContext().getOpened());
 		return true;
 	}
-	
+
 	@Override
 	public boolean dispose() {
 		info("Disposing server");

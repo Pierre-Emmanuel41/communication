@@ -15,5 +15,5 @@ public interface IHeaderMessage {
 	/**
 	 * @return The bytes of the message.
 	 */
-	byte[] getBytes();	
+	byte[] getBytes();
 }

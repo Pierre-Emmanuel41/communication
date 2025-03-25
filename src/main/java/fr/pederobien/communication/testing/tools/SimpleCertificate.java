@@ -29,10 +29,10 @@ public class SimpleCertificate implements ICertificate {
 	 */
 	private int checksum(byte[] message) {
 		int checksum = 0;
-		
+
 		for (byte value : message)
 			checksum += value;
-		
+
 		return checksum;
 	}
 }

@@ -22,7 +22,7 @@ public interface IContext {
 	 * @return true if the has been disposed, false otherwise.
 	 */
 	boolean dispose();
-	
+
 	/**
 	 * @return The server name.
 	 */

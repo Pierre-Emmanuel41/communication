@@ -84,7 +84,7 @@ public class CertifiedLayer implements ILayer {
 	public List<IHeaderMessage> unpack(byte[] raw) throws Exception {
 		List<IHeaderMessage> requests = new ArrayList<IHeaderMessage>();
 
-		List<byte[]> signedMessages = encapsuler.unpack(raw);	
+		List<byte[]> signedMessages = encapsuler.unpack(raw);
 		for (byte[] signed : signedMessages) {
 
 			byte[] message = postAuthentication.apply(certificate.authenticate(preAuthentication.apply(signed)));
@@ -97,7 +97,7 @@ public class CertifiedLayer implements ILayer {
 			// bytes 0 -> 3: ID
 			// bytes 4 -> 7: requestID
 			// byte 8 -> 11: length
-			// byte 12 -> 12 + length: payload			
+			// byte 12 -> 12 + length: payload
 
 			ReadableByteWrapper wrapper = ReadableByteWrapper.wrap(message);
 
