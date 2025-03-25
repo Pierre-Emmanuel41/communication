@@ -24,7 +24,7 @@ public class ClientInfo<T> implements IClientInfo<T> {
 	}
 
 	@Override
-	public IConnectionImpl getImplementation() {
+	public IConnectionImpl getImpl() {
 		return implementation;
 	}
 }

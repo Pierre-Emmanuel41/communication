@@ -12,5 +12,5 @@ public interface IClientInfo<T> {
 	/**
 	 * @return The connection implementation to use.
 	 */
-	IConnectionImpl getImplementation();
+	IConnectionImpl getImpl();
 }

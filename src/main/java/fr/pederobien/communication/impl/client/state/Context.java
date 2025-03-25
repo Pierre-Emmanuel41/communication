@@ -35,7 +35,7 @@ public class Context<T> implements IContext {
 
 		state = disconnected;
 
-		int unstableCounter = config.getClientMaxUnstableCounterValue();
+		int unstableCounter = config.getClientMaxUnstableCounter();
 		int healTime = config.getClientHealTime();
 		String counterName = String.format("%s unstable counter", client);
 		counter = new HealedCounter(unstableCounter, healTime, () -> onClientUnstable(), counterName);

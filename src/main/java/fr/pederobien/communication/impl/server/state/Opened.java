@@ -15,29 +15,29 @@ public class Opened<T> extends State<T> {
 	public Opened(Context<T> context) {
 		super(context);
 	}
-	
+
 	@Override
 	public void setEnabled(boolean isEnabled) {
 		if (isEnabled) {
 			try {
-				
+
 				// Server implementation specific to open the server
 				getContext().getImpl().open(getConfig());
 
 				closeRequested = false;
-	
+
 				String name = String.format("[%s %s - waitForClient]", getConfig().getName(), getConfig().getPoint());
 				waiter = new Thread(() -> waitForClient(), name);
 				waiter.setDaemon(true);
 				waiter.start();
-				
+
 				info("Server opened");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 	}
-	
+
 	@Override
 	public boolean close() {
 		info("Closing server");
@@ -47,7 +47,7 @@ public class Opened<T> extends State<T> {
 		getContext().setState(getContext().getClosed());
 		return true;
 	}
-	
+
 	private void waitForClient() {
 		while (!closeRequested) {
 			IClientInfo<T> info = null;
@@ -56,30 +56,35 @@ public class Opened<T> extends State<T> {
 
 				// Server implementation specific to wait for a new client
 				info = getImpl().waitForClient();
-				
+
 				// The client is not allowed to be connected with the server
 				if (closeRequested || !getConfig().getClientValidator().isValid(info.getEndPoint())) {
-					info.getImplementation().dispose();
+					info.getImpl().dispose();
 					continue;
 				}
 			} catch (Exception e) {
-				if (getContext().getCounter().increment())
+				if (getContext().getCounter().increment()) {
 					break;
+				}
 			}
-			
+
 			if (info != null && !closeRequested) {
 				boolean initialised = false;
-				IConnection connection = Communication.createConnection(getConfig(), info.getEndPoint(), info.getImplementation());
-				
+				IConnection connection = null;
+
 				try {
+					connection = Communication.createConnection(getConfig(), info.getEndPoint(), info.getImpl());
 					initialised = connection.initialise();
 				} catch (Exception e) {
-					// Do nothing
+					if (getContext().getCounter().increment()) {
+						break;
+					}
 				}
-				
+
 				if (!initialised || closeRequested) {
-					if (!initialised)
+					if (!initialised) {
 						Logger.warning("[%s] - Initialisation failure", getContext().getName());
+					}
 
 					connection.setEnabled(false);
 					connection.dispose();

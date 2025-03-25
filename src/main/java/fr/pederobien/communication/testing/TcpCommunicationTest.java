@@ -495,8 +495,7 @@ public class TcpCommunicationTest {
 
 			sleep(250);
 
-			Logger.print("Expecting unstable client after receiving %s unexpected messages",
-					18 * clientConfig.getClientMaxUnstableCounterValue());
+			Logger.print("Expecting unstable client after receiving 144 unexpected messages");
 
 			sleep(40000);
 
