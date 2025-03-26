@@ -89,7 +89,7 @@ public class ClientConfig<T> extends Configuration implements IClientConfig<T> {
 	}
 
 	@Override
-	public int getClientMaxUnstableCounterValue() {
+	public int getClientMaxUnstableCounter() {
 		return clientMaxUnstableCounter;
 	}
 

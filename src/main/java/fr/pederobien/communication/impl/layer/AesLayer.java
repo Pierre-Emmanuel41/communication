@@ -18,8 +18,8 @@ public class AesLayer implements ILayer {
 
 	/**
 	 * Creates an AES layer for symmetric encryption.
-	 *  
-	 * @param secretKey The secret key to encode/decode.
+	 * 
+	 * @param secretKey     The secret key to encode/decode.
 	 * @param parameterSpec The IV parameter spec.
 	 */
 	public AesLayer(ICertificate certificate, SecretKey secretKey, AlgorithmParameterSpec parameterSpec) {

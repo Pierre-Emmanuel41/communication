@@ -41,7 +41,7 @@ public interface IClientConfig<T> extends IConfiguration {
 	 * 
 	 * @return The maximum value the client's unstable counter can reach.
 	 */
-	int getClientMaxUnstableCounterValue();
+	int getClientMaxUnstableCounter();
 
 	/**
 	 * The connection to the remote is monitored so that if an error is happening, a

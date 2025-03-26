@@ -6,7 +6,7 @@ import java.util.function.Function;
 public class NetworkModifier implements Function<byte[], byte[]> {
 	private int min, max;
 	private int counter;
-	
+
 	public NetworkModifier(int min, int max) {
 		this.min = min;
 		this.max = max;

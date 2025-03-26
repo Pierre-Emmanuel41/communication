@@ -1,12 +1,16 @@
 package fr.pederobien.communication.impl.server;
 
+import fr.pederobien.communication.event.ServerUnstableEvent;
 import fr.pederobien.communication.impl.server.state.Context;
 import fr.pederobien.communication.impl.server.state.IContext;
 import fr.pederobien.communication.interfaces.server.IServer;
 import fr.pederobien.communication.interfaces.server.IServerConfig;
 import fr.pederobien.communication.interfaces.server.IServerImpl;
+import fr.pederobien.utils.event.EventHandler;
+import fr.pederobien.utils.event.EventManager;
+import fr.pederobien.utils.event.IEventListener;
 
-public class Server<T> implements IServer {
+public class Server<T> implements IServer, IEventListener {
 	private IContext context;
 
 	/**
@@ -18,6 +22,8 @@ public class Server<T> implements IServer {
 	 */
 	public Server(IServerConfig<T> config, IServerImpl<T> impl) {
 		context = new Context<T>(this, config, impl);
+
+		EventManager.registerListener(this);
 	}
 
 	@Override
@@ -38,5 +44,14 @@ public class Server<T> implements IServer {
 	@Override
 	public String toString() {
 		return context.getName();
+	}
+
+	@EventHandler
+	private void onUnstableServer(ServerUnstableEvent event) {
+		if (event.getServer() != this) {
+			return;
+		}
+
+		event.getServer().close();
 	}
 }

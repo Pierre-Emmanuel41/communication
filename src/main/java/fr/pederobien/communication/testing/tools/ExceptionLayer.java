@@ -11,15 +11,14 @@ import fr.pederobien.communication.interfaces.layer.ILayer;
 public class ExceptionLayer implements ILayer {
 
 	public enum LayerExceptionMode {
-		NONE,
-		PACK,
-		UNPACK
+		NONE, PACK, UNPACK
 	}
 
 	private LayerExceptionMode mode;
 
 	/**
-	 * Creates a layer that throw an exception when the pack/unpack method is called.
+	 * Creates a layer that throw an exception when the pack/unpack method is
+	 * called.
 	 * 
 	 * @param mode The exception mode of the layer.
 	 */
@@ -28,7 +27,8 @@ public class ExceptionLayer implements ILayer {
 	}
 
 	/**
-	 * Creates a layer that does not throw any exception when the pack/unpack method is called.
+	 * Creates a layer that does not throw any exception when the pack/unpack method
+	 * is called.
 	 */
 	public ExceptionLayer() {
 		this(LayerExceptionMode.NONE);

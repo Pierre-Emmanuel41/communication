@@ -6,7 +6,7 @@ import fr.pederobien.utils.event.Logger;
 
 public abstract class State<T> implements IState {
 	private Context<T> context;
-	
+
 	/**
 	 * Creates a new state associated to this context.
 	 * 
@@ -15,43 +15,43 @@ public abstract class State<T> implements IState {
 	public State(Context<T> context) {
 		this.context = context;
 	}
-	
+
 	@Override
 	public boolean open() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean close() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean dispose() {
 		return false;
 	}
-	
+
 	/**
 	 * @return The context associated to this state.
 	 */
 	public Context<T> getContext() {
 		return context;
 	}
-	
+
 	/**
 	 * @return The server configuration
 	 */
 	public IServerConfig<T> getConfig() {
 		return context.getConfig();
 	}
-	
+
 	/**
 	 * @return The server implementation.
 	 */
 	public IServerImpl<T> getImpl() {
 		return context.getImpl();
 	}
-	
+
 	/**
 	 * Print a log using info debug level
 	 * 

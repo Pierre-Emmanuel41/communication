@@ -8,7 +8,7 @@ public interface IState {
 	 * @param isEnabled True if enabled, false otherwise.
 	 */
 	void setEnabled(boolean isEnabled);
-	
+
 	/**
 	 * Start the server and wait for a client to be connected.
 	 *
