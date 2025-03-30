@@ -90,7 +90,7 @@ public class Opened<T> extends State<T> {
 					connection.dispose();
 				} else {
 					// Notifying observers that a client is connected
-					EventManager.callEvent(new NewClientEvent(new Client<T>(getContext().getServer(), connection)));
+					EventManager.callEvent(new NewClientEvent(new Client(getContext().getServer(), connection)));
 				}
 			}
 		}

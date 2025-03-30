@@ -11,7 +11,7 @@ import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;
 
-public class Client<T> implements IClient, IEventListener {
+public class Client implements IClient, IEventListener {
 	private IServer server;
 	private IConnection connection;
 
