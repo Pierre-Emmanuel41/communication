@@ -2,24 +2,18 @@ package fr.pederobien.communication.impl.client;
 
 import java.net.InetSocketAddress;
 
-import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.connection.UdpConnectionImpl;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
-import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.client.IClientImpl;
-import fr.pederobien.communication.interfaces.connection.IConnection;
-import fr.pederobien.communication.interfaces.connection.IUdpSocket;
+import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 
 public class UdpClientImpl implements IClientImpl<IEthernetEndPoint> {
 
 	@Override
-	public IConnection connect(IClientConfig<IEthernetEndPoint> config) throws Exception {
-		String address = config.getEndPoint().getAddress();
-		int port = config.getEndPoint().getPort();
+	public IConnectionImpl connect(String name, IEthernetEndPoint endPoint, int timeout) throws Exception {
+		String address = endPoint.getAddress();
+		int port = endPoint.getPort();
 
-		// Creating a TCP socket to connect with the remote
-		IUdpSocket socket = new UdpSocket(new InetSocketAddress(address, port));
-
-		return Communication.createConnection(config, config.getEndPoint(), new UdpConnectionImpl(socket));
+		return new UdpConnectionImpl(new UdpSocket(new InetSocketAddress(address, port)));
 	}
 }

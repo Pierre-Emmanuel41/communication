@@ -4,25 +4,22 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.connection.TcpConnectionImpl;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
-import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.client.IClientImpl;
-import fr.pederobien.communication.interfaces.connection.IConnection;
+import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 
 public class TcpClientImpl implements IClientImpl<IEthernetEndPoint> {
 
 	@Override
-	public IConnection connect(IClientConfig<IEthernetEndPoint> config) throws Exception {
-		String address = config.getEndPoint().getAddress();
-		int port = config.getEndPoint().getPort();
-		int connectionTimeout = config.getConnectionTimeout();
+	public IConnectionImpl connect(String name, IEthernetEndPoint endPoint, int timeout) throws Exception {
+		String address = endPoint.getAddress();
+		int port = endPoint.getPort();
 
 		// Creating a TCP socket to connect with the remote
 		Socket socket = new Socket();
-		socket.connect(new InetSocketAddress(InetAddress.getByName(address), port), connectionTimeout);
+		socket.connect(new InetSocketAddress(InetAddress.getByName(address), port), timeout);
 
-		return Communication.createConnection(config, config.getEndPoint(), new TcpConnectionImpl(socket));
+		return new TcpConnectionImpl(socket);
 	}
 }

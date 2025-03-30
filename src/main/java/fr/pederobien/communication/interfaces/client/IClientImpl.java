@@ -1,6 +1,6 @@
 package fr.pederobien.communication.interfaces.client;
 
-import fr.pederobien.communication.interfaces.connection.IConnection;
+import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 
 public interface IClientImpl<T> {
 
@@ -12,5 +12,5 @@ public interface IClientImpl<T> {
 	 * @throws Exception If an exception is thrown, it will be caught and a
 	 *                   reconnection will be attempted.
 	 */
-	IConnection connect(IClientConfig<T> config) throws Exception;
+	IConnectionImpl connect(String name, T endPoint, int timeout) throws Exception;
 }

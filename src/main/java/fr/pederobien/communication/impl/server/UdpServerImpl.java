@@ -29,7 +29,7 @@ public class UdpServerImpl implements IServerImpl<IEthernetEndPoint> {
 		int port = socket.getInetAddress().getPort();
 
 		// Creating remote end point
-		EthernetEndPoint endPoint = new EthernetEndPoint(address, port);
+		IEthernetEndPoint endPoint = new EthernetEndPoint(address, port);
 
 		return new ClientInfo<IEthernetEndPoint>(endPoint, new UdpConnectionImpl(socket));
 	}
