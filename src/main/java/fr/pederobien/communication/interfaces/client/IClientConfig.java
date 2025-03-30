@@ -15,8 +15,8 @@ public interface IClientConfig<T> extends IConfiguration {
 	String getName();
 
 	/**
-	 * @return The value considered as a timeout in ms the client tries to connect
-	 *         to a server. The default value is 1000 ms.
+	 * @return The value considered as a timeout in ms when the client tries to
+	 *         connect to a server. The default value is 1000 ms.
 	 */
 	int getConnectionTimeout();
 
