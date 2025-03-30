@@ -46,11 +46,11 @@ public class SimpleSendMessageToClientOnceConnected implements IEventListener {
 				try {
 					Thread.sleep(200);
 
-					if (event.getClient().getConnection().isDisposed()) {
+					if (event.getConnection().isDisposed()) {
 						break;
 					}
 
-					event.getClient().getConnection().send(new Message(message.getBytes()));
+					event.getConnection().send(new Message(message.getBytes()));
 				} catch (InterruptedException e) {
 					// Do nothing
 				}

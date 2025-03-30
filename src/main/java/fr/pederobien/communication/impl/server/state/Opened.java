@@ -1,24 +1,35 @@
 package fr.pederobien.communication.impl.server.state;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import fr.pederobien.communication.event.ConnectionDisposedEvent;
+import fr.pederobien.communication.event.ConnectionLostEvent;
+import fr.pederobien.communication.event.ConnectionUnstableEvent;
 import fr.pederobien.communication.event.NewClientEvent;
 import fr.pederobien.communication.impl.Communication;
-import fr.pederobien.communication.impl.server.Client;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.server.IClientInfo;
+import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
+import fr.pederobien.utils.event.IEventListener;
 import fr.pederobien.utils.event.Logger;
 
-public class Opened<T> extends State<T> {
+public class Opened<T> extends State<T> implements IEventListener {
 	private Thread waiter;
 	private boolean closeRequested;
+	private List<IConnection> connections;
 
 	public Opened(Context<T> context) {
 		super(context);
+
+		connections = new ArrayList<IConnection>();
 	}
 
 	@Override
 	public void setEnabled(boolean isEnabled) {
 		if (isEnabled) {
+			EventManager.registerListener(this);
 			try {
 
 				// Server implementation specific to open the server
@@ -44,6 +55,13 @@ public class Opened<T> extends State<T> {
 		closeRequested = true;
 		waiter.interrupt();
 
+		EventManager.unregisterListener(this);
+
+		for (IConnection connection : connections) {
+			disposeConnection(connection);
+		}
+
+		connections.clear();
 		getContext().setState(getContext().getClosed());
 		return true;
 	}
@@ -86,13 +104,43 @@ public class Opened<T> extends State<T> {
 						Logger.warning("[%s] - Initialisation failure", getContext().getName());
 					}
 
-					connection.setEnabled(false);
-					connection.dispose();
+					disposeConnection(connection);
 				} else {
+					connections.add(connection);
+
 					// Notifying observers that a client is connected
-					EventManager.callEvent(new NewClientEvent(new Client(getContext().getServer(), connection)));
+					EventManager.callEvent(new NewClientEvent(getContext().getServer(), connection));
 				}
 			}
 		}
+	}
+
+	@EventHandler
+	private void onConnectionLost(ConnectionLostEvent event) {
+		if (connections.remove(event.getConnection())) {
+			disposeConnection(event.getConnection());
+		}
+	}
+
+	@EventHandler
+	private void onConnectionUnstable(ConnectionUnstableEvent event) {
+		if (connections.remove(event.getConnection())) {
+			disposeConnection(event.getConnection());
+		}
+	}
+
+	@EventHandler
+	private void onConnectionDisposed(ConnectionDisposedEvent event) {
+		connections.remove(event.getConnection());
+	}
+
+	/**
+	 * Disable and dispose in given connection.
+	 * 
+	 * @param connection The connection to dispose.
+	 */
+	private void disposeConnection(IConnection connection) {
+		connection.setEnabled(false);
+		connection.dispose();
 	}
 }

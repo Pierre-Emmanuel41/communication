@@ -2,33 +2,38 @@ package fr.pederobien.communication.event;
 
 import java.util.StringJoiner;
 
-import fr.pederobien.communication.interfaces.server.IClient;
+import fr.pederobien.communication.interfaces.connection.IConnection;
+import fr.pederobien.communication.interfaces.server.IServer;
 
 public class NewClientEvent extends ServerEvent {
-	private IClient client;
+	private IConnection connection;
 
 	/**
-	 * Creates an event thrown when a new client is connected to a server.
+	 * Creates an event thrown when a new client is connected to a server. The
+	 * connection is already monitored by the server so that if the connection with
+	 * the remote is lost or if it is unstable, The connection will be automatically
+	 * closed.
 	 * 
-	 * @param client The client involved in this event.
+	 * @param server     The server involved in this event.
+	 * @param connection The connection with the remote.
 	 */
-	public NewClientEvent(IClient client) {
-		super(client.getServer());
-		this.client = client;
+	public NewClientEvent(IServer server, IConnection connection) {
+		super(server);
+		this.connection = connection;
 	}
 
 	/**
-	 * @return The client involved in this event.
+	 * @return The connection with the remote.
 	 */
-	public IClient getClient() {
-		return client;
+	public IConnection getConnection() {
+		return connection;
 	}
 
 	@Override
 	public String toString() {
 		StringJoiner joiner = new StringJoiner(", ", "{", "}");
 		joiner.add("server=" + getServer());
-		joiner.add("remote=" + getClient());
+		joiner.add("remote=" + getConnection());
 		return String.format("%s_%s", getName(), joiner);
 	}
 }

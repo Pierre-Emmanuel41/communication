@@ -3,21 +3,20 @@ package fr.pederobien.communication.example.server;
 import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.interfaces.connection.IConnection;
-import fr.pederobien.communication.interfaces.server.IClient;
 import fr.pederobien.utils.event.Logger;
 
 public class MyCustomClient {
-	private IClient tcpClient;
+	private IConnection connection;
 
-	public MyCustomClient(IClient tcpClient) {
-		this.tcpClient = tcpClient;
+	public MyCustomClient(IConnection connection) {
+		this.connection = connection;
 	}
 
 	/**
 	 * @return The connection to the remote
 	 */
 	public IConnection getConnection() {
-		return tcpClient.getConnection();
+		return connection;
 	}
 
 	/**
@@ -33,7 +32,7 @@ public class MyCustomClient {
 			String message = "Here is your response";
 			Logger.info("[Server] Sending \"%s\" to client", message);
 			Message response = new Message(message.getBytes());
-			tcpClient.getConnection().answer(event.getIdentifier(), response);
+			connection.answer(event.getIdentifier(), response);
 		}
 	}
 }

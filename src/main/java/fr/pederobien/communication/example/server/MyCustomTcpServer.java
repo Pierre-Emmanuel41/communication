@@ -116,7 +116,7 @@ public class MyCustomTcpServer implements IEventListener {
 			return;
 		}
 
-		MyCustomClient client = new MyCustomClient(event.getClient());
+		MyCustomClient client = new MyCustomClient(event.getConnection());
 		synchronized (lock) {
 			clients.put(client.getConnection(), client);
 		}

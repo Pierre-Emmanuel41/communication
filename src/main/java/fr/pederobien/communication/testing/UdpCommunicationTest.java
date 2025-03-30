@@ -69,7 +69,7 @@ public class UdpCommunicationTest {
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				sleep(500);
 				Message message = new Message("a message from the server".getBytes());
-				event.getClient().getConnection().send(message);
+				event.getConnection().send(message);
 			});
 
 			sendToClient.start();
@@ -195,7 +195,7 @@ public class UdpCommunicationTest {
 					}
 				});
 
-				event.getClient().getConnection().send(message);
+				event.getConnection().send(message);
 			});
 
 			sendToClient.start();
@@ -241,7 +241,7 @@ public class UdpCommunicationTest {
 					}
 				});
 
-				event.getClient().getConnection().send(message);
+				event.getConnection().send(message);
 			});
 
 			sendToClient.start();
@@ -278,10 +278,10 @@ public class UdpCommunicationTest {
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				sleep(500);
-				for (int i = 0; i < 18 && !event.getClient().getConnection().isDisposed(); i++) {
+				for (int i = 0; i < 18 && !event.getConnection().isDisposed(); i++) {
 					Logger.print("Extracting message %s", i);
 					byte[] bytes = "a message from the server".getBytes();
-					event.getClient().getConnection().send(new Message(bytes));
+					event.getConnection().send(new Message(bytes));
 
 					sleep(500);
 				}
@@ -372,10 +372,10 @@ public class UdpCommunicationTest {
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				sleep(500);
-				for (int i = 0; i < 18 && !event.getClient().getConnection().isDisposed(); i++) {
+				for (int i = 0; i < 18 && !event.getConnection().isDisposed(); i++) {
 					Logger.print("Server Sending message %s", i);
 					byte[] bytes = "a message from the server".getBytes();
-					event.getClient().getConnection().send(new Message(bytes));
+					event.getConnection().send(new Message(bytes));
 
 					sleep(500);
 				}
@@ -413,13 +413,13 @@ public class UdpCommunicationTest {
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				for (int i = 0; i < 18; i++) {
-					if (event.getClient().getConnection().isDisposed()) {
+					if (event.getConnection().isDisposed()) {
 						break;
 					}
 
 					Logger.print("Server Sending message %s", i);
 					byte[] bytes = "a message from the server".getBytes();
-					event.getClient().getConnection().send(new Message(bytes));
+					event.getConnection().send(new Message(bytes));
 
 					sleep(250);
 				}
@@ -475,7 +475,7 @@ public class UdpCommunicationTest {
 					}
 				});
 
-				event.getClient().getConnection().send(message);
+				event.getConnection().send(message);
 			});
 
 			sendToClient.start();
@@ -523,7 +523,7 @@ public class UdpCommunicationTest {
 					}
 				});
 
-				event.getClient().getConnection().send(message);
+				event.getConnection().send(message);
 			});
 
 			sendToClient.start();
@@ -571,7 +571,7 @@ public class UdpCommunicationTest {
 					}
 				});
 
-				event.getClient().getConnection().send(message);
+				event.getConnection().send(message);
 			});
 
 			sendToClient.start();

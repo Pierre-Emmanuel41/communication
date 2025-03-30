@@ -158,7 +158,7 @@ public class NetworkTest {
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
-				event.getClient().getConnection().send(new Message("a message from the server".getBytes()));
+				event.getConnection().send(new Message("a message from the server".getBytes()));
 			});
 
 			sendToClient.start();
@@ -285,7 +285,7 @@ public class NetworkTest {
 					}
 				});
 
-				event.getClient().getConnection().send(message);
+				event.getConnection().send(message);
 			});
 
 			sendToClient.start();
@@ -331,7 +331,7 @@ public class NetworkTest {
 					}
 				});
 
-				event.getClient().getConnection().send(message);
+				event.getConnection().send(message);
 			});
 
 			sendToClient.start();
@@ -469,11 +469,11 @@ public class NetworkTest {
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				sleep(500);
 
-				for (int i = 0; i < 18 && !event.getClient().getConnection().isDisposed(); i++) {
+				for (int i = 0; i < 18 && !event.getConnection().isDisposed(); i++) {
 					Logger.print("Extracting message %s", i);
 
 					byte[] bytes = "a message from the server".getBytes();
-					event.getClient().getConnection().send(new Message(bytes));
+					event.getConnection().send(new Message(bytes));
 
 					sleep(500);
 				}
@@ -566,10 +566,10 @@ public class NetworkTest {
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
 				sleep(500);
 
-				for (int i = 0; i < 18 && !event.getClient().getConnection().isDisposed(); i++) {
+				for (int i = 0; i < 18 && !event.getConnection().isDisposed(); i++) {
 					Logger.print("Server Sending message %s", i);
 					byte[] bytes = "a message from the server".getBytes();
-					event.getClient().getConnection().send(new Message(bytes));
+					event.getConnection().send(new Message(bytes));
 
 					sleep(500);
 				}
@@ -612,10 +612,10 @@ public class NetworkTest {
 			server.open();
 
 			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
-				for (int i = 0; i < 18 && !event.getClient().getConnection().isDisposed(); i++) {
+				for (int i = 0; i < 18 && !event.getConnection().isDisposed(); i++) {
 					Logger.print("Server Sending message %s", i);
 					byte[] bytes = "a message from the server".getBytes();
-					event.getClient().getConnection().send(new Message(bytes));
+					event.getConnection().send(new Message(bytes));
 
 					sleep(250);
 				}
