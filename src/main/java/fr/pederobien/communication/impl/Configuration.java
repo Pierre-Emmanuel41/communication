@@ -66,7 +66,7 @@ public abstract class Configuration implements IConfiguration {
 	}
 
 	@Override
-	public int getConnectionMaxUnstableCounterValue() {
+	public int getConnectionMaxUnstableCounter() {
 		return connectionMaxUnstableCounter;
 	}
 

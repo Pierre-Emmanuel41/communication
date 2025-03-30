@@ -30,7 +30,7 @@ public interface IConfiguration {
 	 * 
 	 * @return The maximum value the connection's unstable counter can reach.
 	 */
-	int getConnectionMaxUnstableCounterValue();
+	int getConnectionMaxUnstableCounter();
 
 	/**
 	 * The connection to the remote is monitored so that if an error is happening, a

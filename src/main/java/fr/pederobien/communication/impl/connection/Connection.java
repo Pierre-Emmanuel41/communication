@@ -63,7 +63,7 @@ public class Connection<T> implements IConnection {
 		disposable = new Disposable();
 		layerInitializer = config.getLayerInitializer();
 
-		int unstableCounter = config.getConnectionMaxUnstableCounterValue();
+		int unstableCounter = config.getConnectionMaxUnstableCounter();
 		int healTime = config.getConnectionHealTime();
 		String counterName = String.format("%s HealedCounter", name);
 		counter = new HealedCounter(unstableCounter, healTime, () -> onUnstableConnection(), counterName);
