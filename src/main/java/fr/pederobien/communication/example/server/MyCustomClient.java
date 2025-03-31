@@ -3,29 +3,30 @@ package fr.pederobien.communication.example.server;
 import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.interfaces.connection.IConnection;
-import fr.pederobien.communication.interfaces.server.IClient;
 import fr.pederobien.utils.event.Logger;
 
 public class MyCustomClient {
-	private IClient tcpClient;
+	private IConnection connection;
 
-	public MyCustomClient(IClient tcpClient) {
-		this.tcpClient = tcpClient;
+	public MyCustomClient(IConnection connection) {
+		this.connection = connection;
+
+		connection.setMessageHandler(event -> onMessageReceived(event));
 	}
 
 	/**
 	 * @return The connection to the remote
 	 */
 	public IConnection getConnection() {
-		return tcpClient.getConnection();
+		return connection;
 	}
 
 	/**
-	 * Method called when the remote has sent an unexpected message
+	 * Handler when unexpected message has been received from the remote.
 	 * 
-	 * @param event The event that contains the message sent by the remote.
+	 * @param event The event that contains remote message
 	 */
-	public void handle(MessageEvent event) {
+	private void onMessageReceived(MessageEvent event) {
 		String received = new String(event.getData());
 		Logger.info("[Server] Received %s", received);
 
@@ -33,7 +34,9 @@ public class MyCustomClient {
 			String message = "Here is your response";
 			Logger.info("[Server] Sending \"%s\" to client", message);
 			Message response = new Message(message.getBytes());
-			tcpClient.getConnection().answer(event.getIdentifier(), response);
+
+			// event.getConnection() is equivalent to call connection class member directly
+			event.getConnection().answer(event.getIdentifier(), response);
 		}
 	}
 }

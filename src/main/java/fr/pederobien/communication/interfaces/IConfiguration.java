@@ -16,13 +16,6 @@ public interface IConfiguration {
 	ILayerInitializer getLayerInitializer();
 
 	/**
-	 * @return The handler to execute when an unexpected request has been received
-	 *         from the remote. The default handler do nothing, it is highly
-	 *         recommended to override it.
-	 */
-	IMessageHandler getMessageHandler();
-
-	/**
 	 * The connection to the remote is monitored so that if an error is happening, a
 	 * counter is incremented automatically. The connection max counter value is the
 	 * maximum value the unstable counter can reach before throwing an connection
@@ -30,7 +23,7 @@ public interface IConfiguration {
 	 * 
 	 * @return The maximum value the connection's unstable counter can reach.
 	 */
-	int getConnectionMaxUnstableCounterValue();
+	int getConnectionMaxUnstableCounter();
 
 	/**
 	 * The connection to the remote is monitored so that if an error is happening, a

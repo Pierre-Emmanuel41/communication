@@ -63,7 +63,7 @@ public class Connection<T> implements IConnection {
 		disposable = new Disposable();
 		layerInitializer = config.getLayerInitializer();
 
-		int unstableCounter = config.getConnectionMaxUnstableCounterValue();
+		int unstableCounter = config.getConnectionMaxUnstableCounter();
 		int healTime = config.getConnectionHealTime();
 		String counterName = String.format("%s HealedCounter", name);
 		counter = new HealedCounter(unstableCounter, healTime, () -> onUnstableConnection(), counterName);
@@ -83,8 +83,13 @@ public class Connection<T> implements IConnection {
 		boolean success = layerInitializer.initialize(token);
 		token.dispose();
 
-		handler = config.getMessageHandler();
+		setMessageHandler(null);
 		return success;
+	}
+
+	@Override
+	public void setMessageHandler(IMessageHandler handler) {
+		this.handler = handler == null ? (event -> doNothing(event)) : handler;
 	}
 
 	@Override
@@ -237,7 +242,7 @@ public class Connection<T> implements IConnection {
 						// Execute the callback of the original request
 						callbackManager.unregisterAndExecute(request);
 					} else {
-						// Dispatching asynchronously a request received event.
+						// Dispatching asynchronously a message event.
 						handler.handle(new MessageEvent(this, request.getIdentifier(), request.getBytes()));
 					}
 				}
@@ -285,5 +290,15 @@ public class Connection<T> implements IConnection {
 				message.getCallback().apply(argument);
 			}
 		}
+	}
+
+	/**
+	 * Default method to call when an unexpected message has been received from the
+	 * remote.
+	 * 
+	 * @param event The event that contains the unexpected message.
+	 */
+	private void doNothing(MessageEvent event) {
+
 	}
 }

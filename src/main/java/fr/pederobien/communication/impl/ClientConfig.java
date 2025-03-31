@@ -1,11 +1,14 @@
 package fr.pederobien.communication.impl;
 
+import fr.pederobien.communication.event.MessageEvent;
+import fr.pederobien.communication.interfaces.IMessageHandler;
 import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 
 public class ClientConfig<T> extends Configuration implements IClientConfig<T> {
 	private String name;
 	private T endPoint;
+	private IMessageHandler messageHandler;
 	private int connectionTimeout;
 	private boolean automaticReconnection;
 	private int reconnectionDelay;
@@ -25,6 +28,7 @@ public class ClientConfig<T> extends Configuration implements IClientConfig<T> {
 		this.name = name;
 		this.endPoint = endPoint;
 
+		messageHandler = event -> doNothing(event);
 		connectionTimeout = 500;
 		automaticReconnection = true;
 		reconnectionDelay = 500;
@@ -40,6 +44,21 @@ public class ClientConfig<T> extends Configuration implements IClientConfig<T> {
 	@Override
 	public T getEndPoint() {
 		return endPoint;
+	}
+
+	@Override
+	public IMessageHandler getMessageHandler() {
+		return messageHandler;
+	}
+
+	/**
+	 * Set the handler to execute when an unexpected request has been received from
+	 * the remote. The default handler to nothing.
+	 * 
+	 * @param messageHandler The handler to call.
+	 */
+	public void setMessageHandler(IMessageHandler messageHandler) {
+		this.messageHandler = messageHandler;
 	}
 
 	@Override
@@ -125,5 +144,9 @@ public class ClientConfig<T> extends Configuration implements IClientConfig<T> {
 	 */
 	public void setClientHealTime(int clientHealTime) {
 		this.clientHealTime = clientHealTime;
+	}
+
+	private void doNothing(MessageEvent event) {
+
 	}
 }

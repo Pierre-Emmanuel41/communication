@@ -31,8 +31,11 @@ public class Context<T> implements IContext {
 
 		int unstableCounter = config.getServerMaxUnstableCounter();
 		int healTime = config.getServerHealTime();
-		name = String.format("[%s %s unstable counter]", config.getName(), config.getPoint());
-		counter = new HealedCounter(unstableCounter, healTime, () -> onServerUnstable(), name);
+		String tempName = String.format("%s %s", config.getName(), config.getPoint());
+		String CounterName = String.format("[%s unstable counter]", tempName);
+		counter = new HealedCounter(unstableCounter, healTime, () -> onServerUnstable(), CounterName);
+
+		name = String.format("[%s]", tempName);
 
 		state = closed;
 	}

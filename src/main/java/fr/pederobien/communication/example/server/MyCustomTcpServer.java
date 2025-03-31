@@ -3,7 +3,6 @@ package fr.pederobien.communication.example.server;
 import java.util.HashMap;
 import java.util.Map;
 
-import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.event.NewClientEvent;
 import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.EthernetEndPoint;
@@ -26,9 +25,6 @@ public class MyCustomTcpServer implements IEventListener {
 		IEthernetEndPoint endPoint = new EthernetEndPoint(12345);
 		ServerConfig<IEthernetEndPoint> config = Communication.createServerConfig("My TCP server", endPoint);
 
-		// Set the code to execute when a message has been received
-		config.setMessageHandler(event -> onMessageReceived(event));
-
 		// Setting the layer to use to pack/unpack data.
 		// A new layer is defined each time a new client is connected
 		config.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
@@ -41,6 +37,13 @@ public class MyCustomTcpServer implements IEventListener {
 
 		// Validate or not if a client is allowed to be connected to the server
 		config.setClientValidator(remoteEndPoint -> validateClient(remoteEndPoint));
+
+		// If the server unstable counter reach 2, the server will be
+		// closed automatically as well as each client currently connected.
+		config.setServerMaxUnstableCounter(2);
+
+		// Decrement the value of the server unstable counter each 5 ms
+		config.setServerHealTime(5);
 
 		// Creating the server
 		server = Communication.createTcpServer(config);
@@ -96,27 +99,13 @@ public class MyCustomTcpServer implements IEventListener {
 		return true;
 	}
 
-	/**
-	 * Handler when unexpected message has been received from the remote.
-	 * 
-	 * @param event The event that contains remote message
-	 */
-	private void onMessageReceived(MessageEvent event) {
-		MyCustomClient client = null;
-		synchronized (lock) {
-			client = clients.get(event.getConnection());
-		}
-
-		client.handle(event);
-	}
-
 	@EventHandler
 	private void onNewClient(NewClientEvent event) {
 		if (event.getServer() != server) {
 			return;
 		}
 
-		MyCustomClient client = new MyCustomClient(event.getClient());
+		MyCustomClient client = new MyCustomClient(event.getConnection());
 		synchronized (lock) {
 			clients.put(client.getConnection(), client);
 		}

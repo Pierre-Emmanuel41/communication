@@ -1,6 +1,8 @@
 package fr.pederobien.communication.impl.client.state;
 
+import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.interfaces.connection.IConnection;
+import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.event.Logger;
 
@@ -58,20 +60,25 @@ public class Disconnected<T> extends State<T> {
 	}
 
 	private void connect(Object ignored) {
-		IConnection connection = null;
+		IConnectionImpl impl = null;
 
 		try {
 
 			// Attempting connection with the remote
-			connection = getContext().getImpl().connect(getConfig());
+			String name = getConfig().getName();
+			T endPoint = getConfig().getEndPoint();
+			int timeout = getConfig().getConnectionTimeout();
+			impl = getContext().getImpl().connect(name, endPoint, timeout);
 		} catch (Exception e) {
 			retry();
 		}
 
-		if (connection != null && !disconnectionRequested) {
+		if (impl != null && !disconnectionRequested) {
 			boolean initialised = false;
+			IConnection connection = null;
 
 			try {
+				connection = Communication.createConnection(getConfig(), getConfig().getEndPoint(), impl);
 				initialised = connection.initialise();
 			} catch (Exception e) {
 				// Do nothing
@@ -89,6 +96,7 @@ public class Disconnected<T> extends State<T> {
 				if (disconnectionRequested) {
 					connection.dispose();
 				} else {
+					connection.setMessageHandler(getConfig().getMessageHandler());
 					getContext().setConnection(connection);
 					getContext().setState(getContext().getConnected());
 					attemptingConnection = false;
