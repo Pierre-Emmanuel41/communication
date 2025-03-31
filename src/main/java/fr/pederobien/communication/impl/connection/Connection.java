@@ -83,7 +83,9 @@ public class Connection<T> implements IConnection {
 		boolean success = layerInitializer.initialize(token);
 		token.dispose();
 
-		handler = config.getMessageHandler();
+		if (success) {
+			handler = config.getMessageHandler();
+		}
 		return success;
 	}
 
@@ -237,7 +239,7 @@ public class Connection<T> implements IConnection {
 						// Execute the callback of the original request
 						callbackManager.unregisterAndExecute(request);
 					} else {
-						// Dispatching asynchronously a request received event.
+						// Dispatching asynchronously a message event.
 						handler.handle(new MessageEvent(this, request.getIdentifier(), request.getBytes()));
 					}
 				}
