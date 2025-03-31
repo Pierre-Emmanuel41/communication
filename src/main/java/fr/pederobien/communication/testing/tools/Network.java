@@ -5,13 +5,10 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.EthernetEndPoint;
 import fr.pederobien.communication.impl.server.ClientInfo;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
-import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.client.IClientImpl;
-import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 import fr.pederobien.communication.interfaces.server.IClientInfo;
@@ -398,12 +395,12 @@ public class Network {
 		}
 	}
 
-	private class Connection implements IConnectionImpl {
+	private class ConnectionImpl implements IConnectionImpl {
 		private NetworkSocket socket;
 		private ExceptionMode mode;
 		private int counter;
 
-		public Connection(NetworkSocket socket, ExceptionMode mode) {
+		public ConnectionImpl(NetworkSocket socket, ExceptionMode mode) {
 			this.socket = socket;
 			this.mode = mode;
 			counter = 0;
@@ -448,16 +445,15 @@ public class Network {
 		}
 
 		@Override
-		public IConnection connect(IClientConfig<IEthernetEndPoint> config) throws Exception {
-			String address = config.getEndPoint().getAddress();
-			int port = config.getEndPoint().getPort();
-			int connectionTimeout = config.getConnectionTimeout();
+		public IConnectionImpl connect(String name, IEthernetEndPoint endPoint, int timeout) throws Exception {
+			String address = endPoint.getAddress();
+			int port = endPoint.getPort();
 
 			// Creating a new socket to connect with the remote
 			NetworkSocket socket = new NetworkSocket(network, new Address(address, port), Mode.CLIENT_TO_SERVER);
-			socket.connect(connectionTimeout);
+			socket.connect(timeout);
 
-			return Communication.createConnection(config, config.getEndPoint(), new Connection(socket, mode));
+			return new ConnectionImpl(socket, mode);
 		}
 	}
 
@@ -489,7 +485,7 @@ public class Network {
 			// Creating remote end point
 			IEthernetEndPoint endPoint = new EthernetEndPoint(address, port);
 
-			return new ClientInfo<IEthernetEndPoint>(endPoint, new Connection(socket, ExceptionMode.NONE));
+			return new ClientInfo<IEthernetEndPoint>(endPoint, new ConnectionImpl(socket, ExceptionMode.NONE));
 		}
 	}
 }
