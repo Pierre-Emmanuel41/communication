@@ -13,7 +13,7 @@ import fr.pederobien.communication.interfaces.client.IClient;
 import fr.pederobien.communication.interfaces.server.IServer;
 import fr.pederobien.communication.testing.tools.Network;
 import fr.pederobien.communication.testing.tools.NetworkCorruptor;
-import fr.pederobien.communication.testing.tools.RequestHandler;
+import fr.pederobien.communication.testing.tools.ServerListener;
 import fr.pederobien.communication.testing.tools.SimpleCertificate;
 import fr.pederobien.utils.IExecutable;
 import fr.pederobien.utils.event.Logger;
@@ -133,15 +133,19 @@ public class LayerInitialisationTest {
 
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
-			serverConfig.setMessageHandler(new RequestHandler(event -> {
+
+			IServer server = Communication.createServer(serverConfig, network.getServer());
+			server.open();
+
+			ServerListener listener = new ServerListener(server);
+			listener.setMessageHandler(event -> {
 				Logger.debug("Server received %s", new String(event.getData()));
 
 				Message message = new Message("a message from the server".getBytes());
 				event.getConnection().answer(event.getIdentifier(), message);
-			}));
+			});
 
-			IServer server = Communication.createServer(serverConfig, network.getServer());
-			server.open();
+			listener.start();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
@@ -167,6 +171,7 @@ public class LayerInitialisationTest {
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};
@@ -321,15 +326,19 @@ public class LayerInitialisationTest {
 
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
-			serverConfig.setMessageHandler(new RequestHandler(event -> {
+
+			IServer server = Communication.createServer(serverConfig, network.getServer());
+			server.open();
+
+			ServerListener listener = new ServerListener(server);
+			listener.setMessageHandler(event -> {
 				Logger.debug("Server received %s", new String(event.getData()));
 
 				Message message = new Message("a message from the server".getBytes());
 				event.getConnection().answer(event.getIdentifier(), message);
-			}));
+			});
 
-			IServer server = Communication.createServer(serverConfig, network.getServer());
-			server.open();
+			listener.start();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
@@ -355,6 +364,7 @@ public class LayerInitialisationTest {
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};
@@ -398,15 +408,19 @@ public class LayerInitialisationTest {
 
 			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
-			serverConfig.setMessageHandler(new RequestHandler(event -> {
+
+			IServer server = Communication.createServer(serverConfig, network.getServer());
+			server.open();
+
+			ServerListener listener = new ServerListener(server);
+			listener.setMessageHandler(event -> {
 				Logger.debug("Server received %s", new String(event.getData()));
 
 				Message message = new Message("a message from the server".getBytes());
 				event.getConnection().answer(event.getIdentifier(), message);
-			}));
+			});
 
-			IServer server = Communication.createServer(serverConfig, network.getServer());
-			server.open();
+			listener.start();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
@@ -432,6 +446,7 @@ public class LayerInitialisationTest {
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};

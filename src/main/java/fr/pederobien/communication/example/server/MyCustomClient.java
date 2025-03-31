@@ -10,6 +10,8 @@ public class MyCustomClient {
 
 	public MyCustomClient(IConnection connection) {
 		this.connection = connection;
+
+		connection.setMessageHandler(event -> onMessageReceived(event));
 	}
 
 	/**
@@ -20,11 +22,11 @@ public class MyCustomClient {
 	}
 
 	/**
-	 * Method called when the remote has sent an unexpected message
+	 * Handler when unexpected message has been received from the remote.
 	 * 
-	 * @param event The event that contains the message sent by the remote.
+	 * @param event The event that contains remote message
 	 */
-	public void handle(MessageEvent event) {
+	private void onMessageReceived(MessageEvent event) {
 		String received = new String(event.getData());
 		Logger.info("[Server] Received %s", received);
 
@@ -32,7 +34,9 @@ public class MyCustomClient {
 			String message = "Here is your response";
 			Logger.info("[Server] Sending \"%s\" to client", message);
 			Message response = new Message(message.getBytes());
-			connection.answer(event.getIdentifier(), response);
+
+			// event.getConnection() is equivalent to call connection class member directly
+			event.getConnection().answer(event.getIdentifier(), response);
 		}
 	}
 }

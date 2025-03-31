@@ -1,5 +1,7 @@
 package fr.pederobien.communication.interfaces.connection;
 
+import fr.pederobien.communication.interfaces.IMessageHandler;
+
 public interface IConnection {
 
 	public enum Mode {
@@ -13,6 +15,14 @@ public interface IConnection {
 	 * @return True if this connection is successfully initialized, false otherwise.
 	 */
 	boolean initialise() throws Exception;
+
+	/**
+	 * Set the handler to call when an unexpected message is received from the
+	 * remote.
+	 * 
+	 * @param handler The handler to call.
+	 */
+	void setMessageHandler(IMessageHandler handler);
 
 	/**
 	 * Send asynchronously a request to the remote.

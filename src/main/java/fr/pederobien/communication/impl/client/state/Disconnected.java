@@ -96,6 +96,7 @@ public class Disconnected<T> extends State<T> {
 				if (disconnectionRequested) {
 					connection.dispose();
 				} else {
+					connection.setMessageHandler(getConfig().getMessageHandler());
 					getContext().setConnection(connection);
 					getContext().setState(getContext().getConnected());
 					attemptingConnection = false;

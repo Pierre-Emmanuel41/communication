@@ -83,10 +83,13 @@ public class Connection<T> implements IConnection {
 		boolean success = layerInitializer.initialize(token);
 		token.dispose();
 
-		if (success) {
-			handler = config.getMessageHandler();
-		}
+		setMessageHandler(null);
 		return success;
+	}
+
+	@Override
+	public void setMessageHandler(IMessageHandler handler) {
+		this.handler = handler == null ? (event -> doNothing(event)) : handler;
 	}
 
 	@Override
@@ -287,5 +290,15 @@ public class Connection<T> implements IConnection {
 				message.getCallback().apply(argument);
 			}
 		}
+	}
+
+	/**
+	 * Default method to call when an unexpected message has been received from the
+	 * remote.
+	 * 
+	 * @param event The event that contains the unexpected message.
+	 */
+	private void doNothing(MessageEvent event) {
+
 	}
 }

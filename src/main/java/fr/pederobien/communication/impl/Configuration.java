@@ -4,14 +4,12 @@ import java.util.function.Supplier;
 
 import fr.pederobien.communication.impl.layer.LayerInitializer;
 import fr.pederobien.communication.interfaces.IConfiguration;
-import fr.pederobien.communication.interfaces.IMessageHandler;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
 
 public abstract class Configuration implements IConfiguration {
 	private Mode mode;
 	private Supplier<ILayerInitializer> layerInitializer;
-	private IMessageHandler messageHandler;
 	private int connectionMaxUnstableCounter;
 	private int connectionHealTime;
 
@@ -24,8 +22,6 @@ public abstract class Configuration implements IConfiguration {
 		this.mode = mode;
 
 		layerInitializer = () -> new LayerInitializer();
-		messageHandler = event -> {
-		};
 
 		connectionMaxUnstableCounter = 10;
 		connectionHealTime = 1000;
@@ -48,21 +44,6 @@ public abstract class Configuration implements IConfiguration {
 	 */
 	public void setLayerInitializer(Supplier<ILayerInitializer> layerInitializer) {
 		this.layerInitializer = layerInitializer;
-	}
-
-	@Override
-	public IMessageHandler getMessageHandler() {
-		return messageHandler;
-	}
-
-	/**
-	 * Set the handler to execute when an unexpected request has been received from
-	 * the remote. The default handler to nothing.
-	 * 
-	 * @param messageHandler The handler to call.
-	 */
-	public void setMessageHandler(IMessageHandler messageHandler) {
-		this.messageHandler = messageHandler;
 	}
 
 	@Override

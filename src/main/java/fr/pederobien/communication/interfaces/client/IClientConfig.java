@@ -1,6 +1,7 @@
 package fr.pederobien.communication.interfaces.client;
 
 import fr.pederobien.communication.interfaces.IConfiguration;
+import fr.pederobien.communication.interfaces.IMessageHandler;
 
 public interface IClientConfig<T> extends IConfiguration {
 
@@ -15,8 +16,15 @@ public interface IClientConfig<T> extends IConfiguration {
 	String getName();
 
 	/**
-	 * @return The value considered as a timeout in ms when the client tries to
-	 *         connect to a server. The default value is 1000 ms.
+	 * @return The handler to execute when an unexpected request has been received
+	 *         from the remote. The default handler do nothing, it is highly
+	 *         recommended to override it.
+	 */
+	IMessageHandler getMessageHandler();
+
+	/**
+	 * @return The value considered as a timeout in ms the client tries to connect
+	 *         to a server. The default value is 1000 ms.
 	 */
 	int getConnectionTimeout();
 

@@ -1,23 +1,16 @@
 package fr.pederobien.communication.example.client;
 
-import fr.pederobien.communication.event.ClientConnectedEvent;
 import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.impl.ClientConfig;
 import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.EthernetEndPoint;
-import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.layer.AesLayerInitializer;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.client.IClient;
 import fr.pederobien.communication.interfaces.connection.IConnection;
-import fr.pederobien.communication.interfaces.connection.IMessage;
 import fr.pederobien.communication.testing.tools.SimpleCertificate;
-import fr.pederobien.utils.event.EventHandler;
-import fr.pederobien.utils.event.EventManager;
-import fr.pederobien.utils.event.IEventListener;
-import fr.pederobien.utils.event.Logger;
 
-public class MyCustomTcpClient implements IEventListener {
+public class MyCustomTcpClient {
 	private IClient tcpClient;
 
 	public MyCustomTcpClient() {
@@ -62,9 +55,6 @@ public class MyCustomTcpClient implements IEventListener {
 	 * Attempt the connection with the remote asynchronously
 	 */
 	public void connect() {
-		// To know exactly when the client is connected to the remote.
-		EventManager.registerListener(this);
-
 		tcpClient.connect();
 	}
 
@@ -74,9 +64,6 @@ public class MyCustomTcpClient implements IEventListener {
 	 */
 	public void disconnect() {
 		tcpClient.disconnect();
-
-		// Until the connect method is not called, no need to listen for events
-		EventManager.unregisterListener(this);
 	}
 
 	/**
@@ -93,38 +80,11 @@ public class MyCustomTcpClient implements IEventListener {
 		return tcpClient.getConnection();
 	}
 
-	@EventHandler
-	private void onClientConnected(ClientConnectedEvent event) {
-		if (event.getClient() != tcpClient) {
-			return;
-		}
-
-		// Sending a simple message
-		String message = "Hello World !";
-		Logger.info("[Client] Sending %s", message);
-		tcpClient.getConnection().send(new Message(message.getBytes()));
-
-		try {
-			Thread.sleep(1000);
-		} catch (Exception e) {
-			// Do nothing
-		}
-
-		message = "I expect a response";
-		Logger.info("[Client] Sending %s", message);
-		IMessage callback = new Message(message.getBytes(), args -> {
-			if (!args.isTimeout()) {
-				Logger.info("[Client] Received %s", new String(args.getResponse().getBytes()));
-			} else {
-				Logger.error("Unexpected timeout occurs");
-			}
-		});
-		tcpClient.getConnection().send(callback);
-	}
-
 	private void onMessageReceived(MessageEvent event) {
 		if (event.getConnection() != tcpClient.getConnection()) {
 			return;
 		}
+
+		// Write here what to do when an unexpected message is received from the server
 	}
 }

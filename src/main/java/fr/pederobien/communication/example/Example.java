@@ -2,6 +2,8 @@ package fr.pederobien.communication.example;
 
 import fr.pederobien.communication.example.client.MyCustomTcpClient;
 import fr.pederobien.communication.example.server.MyCustomTcpServer;
+import fr.pederobien.communication.impl.connection.Message;
+import fr.pederobien.communication.interfaces.connection.IMessage;
 import fr.pederobien.utils.event.Logger;
 
 public class Example {
@@ -16,9 +18,12 @@ public class Example {
 		MyCustomTcpClient client = new MyCustomTcpClient();
 		client.connect();
 
-		// Connection and data exchange is asynchronous
-		// Waiting before closing server/client
-		sleep(5000);
+		// Waiting for the client to be connected with the server
+		sleep(1000);
+
+		// The content of this function shall be call when the ClientConnectedEvent is
+		// thrown
+		demoMessageExchange(client);
 
 		server.close();
 		server.dispose();
@@ -27,6 +32,30 @@ public class Example {
 
 		client.disconnect();
 		client.dispose();
+	}
+
+	private static void demoMessageExchange(MyCustomTcpClient client) {
+		// Sending a simple message
+		String message = "Hello World !";
+		Logger.info("[Client] Sending %s", message);
+		client.getConnection().send(new Message(message.getBytes()));
+
+		try {
+			Thread.sleep(1000);
+		} catch (Exception e) {
+			// Do nothing
+		}
+
+		message = "I expect a response";
+		Logger.info("[Client] Sending %s", message);
+		IMessage callback = new Message(message.getBytes(), arguments -> {
+			if (!arguments.isTimeout()) {
+				Logger.info("[Client] Received %s", new String(arguments.getResponse().getBytes()));
+			} else {
+				Logger.error("Unexpected timeout occurs");
+			}
+		});
+		client.getConnection().send(callback);
 	}
 
 	private static void sleep(int millis) {

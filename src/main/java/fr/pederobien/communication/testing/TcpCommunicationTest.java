@@ -11,11 +11,11 @@ import fr.pederobien.communication.impl.layer.LayerInitializer;
 import fr.pederobien.communication.impl.layer.RsaLayerInitializer;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.client.IClient;
+import fr.pederobien.communication.interfaces.connection.IMessage;
 import fr.pederobien.communication.interfaces.server.IServer;
-import fr.pederobien.communication.testing.tools.DoOnceConnected;
 import fr.pederobien.communication.testing.tools.ExceptionLayer;
 import fr.pederobien.communication.testing.tools.ExceptionLayer.LayerExceptionMode;
-import fr.pederobien.communication.testing.tools.RequestHandler;
+import fr.pederobien.communication.testing.tools.ServerListener;
 import fr.pederobien.communication.testing.tools.SimpleCertificate;
 import fr.pederobien.utils.IExecutable;
 import fr.pederobien.utils.event.Logger;
@@ -98,13 +98,13 @@ public class TcpCommunicationTest {
 
 	public void testClientToServerCommunication() {
 		IExecutable test = () -> {
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-			serverConfig.setMessageHandler(new RequestHandler(event -> {
-				Logger.debug("Server received %s", new String(event.getData()));
-			}));
-
-			IServer server = Communication.createTcpServer(serverConfig);
+			IServer server = createDefaultTcpServer();
 			server.open();
+
+			ServerListener listener = new ServerListener(server);
+			listener.setMessageHandler(event -> Logger.debug("Server received %s", new String(event.getData())));
+
+			listener.start();
 
 			IClient client = createDefaultTcpClient();
 			client.connect();
@@ -121,6 +121,7 @@ public class TcpCommunicationTest {
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};
@@ -133,29 +134,27 @@ public class TcpCommunicationTest {
 			IServer server = createDefaultTcpServer();
 			server.open();
 
-			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
-				byte[] bytes = "a message from the server".getBytes();
-				event.getConnection().send(new Message(bytes));
+			ServerListener listener = new ServerListener(server);
+			listener.setActionOnNewClientConnected(event -> {
+				event.getConnection().send(new Message("a message from the server".getBytes()));
 			});
-			sendToClient.start();
+
+			listener.start();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-			clientConfig.setMessageHandler(new RequestHandler(event -> {
-				Logger.debug("Client received %s", new String(event.getData()));
-			}));
+			clientConfig.setMessageHandler(event -> Logger.debug("Client received %s", new String(event.getData())));
 
 			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 
 			sleep(2000);
 
-			sendToClient.stop();
-
 			client.disconnect();
 			client.dispose();
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};
@@ -165,15 +164,18 @@ public class TcpCommunicationTest {
 
 	public void testClientToServerWithCallback() {
 		IExecutable test = () -> {
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-			serverConfig.setMessageHandler(new RequestHandler(event -> {
+			IServer server = createDefaultTcpServer();
+			server.open();
+
+			ServerListener listener = new ServerListener(server);
+			listener.setMessageHandler(event -> {
 				Logger.debug("Server received %s", new String(event.getData()));
+
 				byte[] bytes = "a message from the server".getBytes();
 				event.getConnection().answer(event.getIdentifier(), new Message(bytes));
-			}));
+			});
 
-			IServer server = Communication.createTcpServer(serverConfig);
-			server.open();
+			listener.start();
 
 			IClient client = createDefaultTcpClient();
 			client.connect();
@@ -195,6 +197,7 @@ public class TcpCommunicationTest {
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};
@@ -204,14 +207,15 @@ public class TcpCommunicationTest {
 
 	public void testClientToServerWithCallbackButTimeout() {
 		IExecutable test = () -> {
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-			serverConfig.setMessageHandler(new RequestHandler(event -> {
-				String formatter = "Server received %s, but will not respond to it";
-				Logger.debug(formatter, new String(event.getData()));
-			}));
-
-			IServer server = Communication.createTcpServer(serverConfig);
+			IServer server = createDefaultTcpServer();
 			server.open();
+
+			ServerListener listener = new ServerListener(server);
+			listener.setMessageHandler(event -> {
+				Logger.debug("Server received %s, but will not respond to it", new String(event.getData()));
+			});
+
+			listener.start();
 
 			IClient client = createDefaultTcpClient();
 			client.connect();
@@ -233,6 +237,7 @@ public class TcpCommunicationTest {
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};
@@ -245,8 +250,9 @@ public class TcpCommunicationTest {
 			IServer server = createDefaultTcpServer();
 			server.open();
 
-			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
-				Message message = new Message("a message from the server".getBytes(), args -> {
+			ServerListener listener = new ServerListener(server);
+			listener.setActionOnNewClientConnected(event -> {
+				IMessage message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
 						Logger.debug("Server received %s", new String(args.getResponse().getBytes()));
 					} else {
@@ -257,27 +263,27 @@ public class TcpCommunicationTest {
 				event.getConnection().send(message);
 			});
 
-			sendToClient.start();
+			listener.start();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-			clientConfig.setMessageHandler(new RequestHandler(event -> {
+			clientConfig.setMessageHandler(event -> {
 				Logger.debug("Client received %s", new String(event.getData()));
+
 				byte[] bytes = "a message from a client".getBytes();
 				event.getConnection().answer(event.getIdentifier(), new Message(bytes));
-			}));
+			});
 
 			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 
 			sleep(2000);
 
-			sendToClient.stop();
-
 			client.disconnect();
 			client.dispose();
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};
@@ -290,8 +296,9 @@ public class TcpCommunicationTest {
 			IServer server = createDefaultTcpServer();
 			server.open();
 
-			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
-				Message message = new Message("a message from the server".getBytes(), args -> {
+			ServerListener listener = new ServerListener(server);
+			listener.setActionOnNewClientConnected(event -> {
+				IMessage message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
 						Logger.error("Server received %s", new String(args.getResponse().getBytes()));
 					} else {
@@ -302,26 +309,24 @@ public class TcpCommunicationTest {
 				event.getConnection().send(message);
 			});
 
-			sendToClient.start();
+			listener.start();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-			clientConfig.setMessageHandler(new RequestHandler(event -> {
-				String formatter = "Client received %s, but will not respond to it";
-				Logger.debug(formatter, new String(event.getData()));
-			}));
+			clientConfig.setMessageHandler(event -> {
+				Logger.debug("Client received %s, but will not respond to it", new String(event.getData()));
+			});
 
 			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
 
 			sleep(2000);
 
-			sendToClient.stop();
-
 			client.disconnect();
 			client.dispose();
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};
@@ -334,10 +339,13 @@ public class TcpCommunicationTest {
 			IServer server = createDefaultTcpServer();
 			server.open();
 
-			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
+			ServerListener listener = new ServerListener(server);
+			listener.setActionOnNewClientConnected(event -> {
 				sleep(500);
+
 				for (int i = 0; i < 18 && !event.getConnection().isDisposed(); i++) {
 					Logger.print("Extracting message %s", i);
+
 					byte[] bytes = "a message from the server".getBytes();
 					event.getConnection().send(new Message(bytes));
 
@@ -345,7 +353,7 @@ public class TcpCommunicationTest {
 				}
 			});
 
-			sendToClient.start();
+			listener.start();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
@@ -360,13 +368,12 @@ public class TcpCommunicationTest {
 
 			sleep(11000);
 
-			sendToClient.stop();
-
 			client.disconnect();
 			client.dispose();
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};
@@ -376,14 +383,16 @@ public class TcpCommunicationTest {
 
 	public void testCallbackException() {
 		IExecutable test = () -> {
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-			serverConfig.setMessageHandler(new RequestHandler(event -> {
+			IServer server = createDefaultTcpServer();
+			server.open();
+
+			ServerListener listener = new ServerListener(server);
+			listener.setMessageHandler(event -> {
 				byte[] bytes = "a message from the server".getBytes();
 				event.getConnection().answer(event.getIdentifier(), new Message(bytes));
-			}));
+			});
 
-			IServer server = Communication.createTcpServer(serverConfig);
-			server.open();
+			listener.start();
 
 			IClient client = createDefaultTcpClient();
 			client.connect();
@@ -394,6 +403,7 @@ public class TcpCommunicationTest {
 
 			for (int i = 0; i < 18; i++) {
 				Logger.print("Sending message %s", i);
+
 				String message = "a message from a client";
 				client.getConnection().send(new Message(message.getBytes(), args -> {
 					if (!args.isTimeout()) {
@@ -413,6 +423,7 @@ public class TcpCommunicationTest {
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};
@@ -425,10 +436,13 @@ public class TcpCommunicationTest {
 			IServer server = createDefaultTcpServer();
 			server.open();
 
-			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
+			ServerListener listener = new ServerListener(server);
+			listener.setActionOnNewClientConnected(event -> {
 				sleep(500);
+
 				for (int i = 0; i < 18 && !event.getConnection().isDisposed(); i++) {
 					Logger.print("Server Sending message %s", i);
+
 					byte[] bytes = "a message from the server".getBytes();
 					event.getConnection().send(new Message(bytes));
 
@@ -436,13 +450,13 @@ public class TcpCommunicationTest {
 				}
 			});
 
-			sendToClient.start();
+			listener.start();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
-			clientConfig.setMessageHandler(new RequestHandler(event -> {
+			clientConfig.setMessageHandler(event -> {
 				throw new RuntimeException("Exception to test unstable counter");
-			}));
+			});
 
 			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
@@ -454,6 +468,7 @@ public class TcpCommunicationTest {
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};
@@ -466,13 +481,11 @@ public class TcpCommunicationTest {
 			IServer server = createDefaultTcpServer();
 			server.open();
 
-			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
-				for (int i = 0; i < 18; i++) {
-					if (event.getConnection().isDisposed()) {
-						break;
-					}
-
+			ServerListener listener = new ServerListener(server);
+			listener.setActionOnNewClientConnected(event -> {
+				for (int i = 0; i < 18 && !event.getConnection().isDisposed(); i++) {
 					Logger.print("Server Sending message %s", i);
+
 					byte[] bytes = "a message from the server".getBytes();
 					event.getConnection().send(new Message(bytes));
 
@@ -480,15 +493,15 @@ public class TcpCommunicationTest {
 				}
 			});
 
-			sendToClient.start();
+			listener.start();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setClientMaxUnstableCounter(5);
 			clientConfig.setClientHealTime(9000);
 			clientConfig.setConnectionHealTime(500);
-			clientConfig.setMessageHandler(new RequestHandler(event -> {
+			clientConfig.setMessageHandler(event -> {
 				throw new RuntimeException("Exception to test unstable counter");
-			}));
+			});
 
 			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
@@ -504,6 +517,7 @@ public class TcpCommunicationTest {
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};
@@ -519,10 +533,11 @@ public class TcpCommunicationTest {
 			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 
-			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
+			ServerListener listener = new ServerListener(server);
+			listener.setActionOnNewClientConnected(event -> {
 				sleep(500);
 
-				Message message = new Message("a message from the server".getBytes(), args -> {
+				IMessage message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
 						Logger.debug("Server received %s", new String(args.getResponse().getBytes()));
 					} else {
@@ -533,15 +548,15 @@ public class TcpCommunicationTest {
 				event.getConnection().send(message);
 			});
 
-			sendToClient.start();
+			listener.start();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
-			clientConfig.setMessageHandler(new RequestHandler(event -> {
+			clientConfig.setMessageHandler(event -> {
 				Logger.debug("Client received %s", new String(event.getData()));
 
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
-			}));
+			});
 
 			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
@@ -553,6 +568,7 @@ public class TcpCommunicationTest {
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};
@@ -568,9 +584,11 @@ public class TcpCommunicationTest {
 			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 
-			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
+			ServerListener listener = new ServerListener(server);
+			listener.setActionOnNewClientConnected(event -> {
 				sleep(500);
-				Message message = new Message("a message from the server".getBytes(), args -> {
+
+				IMessage message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
 						Logger.debug("Server received %s", new String(args.getResponse().getBytes()));
 					} else {
@@ -581,15 +599,15 @@ public class TcpCommunicationTest {
 				event.getConnection().send(message);
 			});
 
-			sendToClient.start();
+			listener.start();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
-			clientConfig.setMessageHandler(new RequestHandler(event -> {
+			clientConfig.setMessageHandler(event -> {
 				Logger.debug("Client received %s", new String(event.getData()));
 
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
-			}));
+			});
 
 			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
@@ -601,6 +619,7 @@ public class TcpCommunicationTest {
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};
@@ -616,9 +635,11 @@ public class TcpCommunicationTest {
 			IServer server = Communication.createTcpServer(serverConfig);
 			server.open();
 
-			DoOnceConnected sendToClient = new DoOnceConnected(server, event -> {
+			ServerListener listener = new ServerListener(server);
+			listener.setActionOnNewClientConnected(event -> {
 				sleep(500);
-				Message message = new Message("a message from the server".getBytes(), args -> {
+
+				IMessage message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
 						Logger.debug("Server received %s", new String(args.getResponse().getBytes()));
 					} else {
@@ -629,15 +650,15 @@ public class TcpCommunicationTest {
 				event.getConnection().send(message);
 			});
 
-			sendToClient.start();
+			listener.start();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
-			clientConfig.setMessageHandler(new RequestHandler(event -> {
+			clientConfig.setMessageHandler(event -> {
 				Logger.debug("Client received %s", new String(event.getData()));
 
 				event.getConnection().answer(event.getIdentifier(), new Message("a message from a client".getBytes()));
-			}));
+			});
 
 			IClient client = Communication.createTcpClient(clientConfig);
 			client.connect();
@@ -649,6 +670,7 @@ public class TcpCommunicationTest {
 
 			sleep(500);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 		};
@@ -663,13 +685,13 @@ public class TcpCommunicationTest {
 
 			sleep(5000);
 
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-			serverConfig.setMessageHandler(new RequestHandler(event -> {
-				Logger.debug("Server received %s", new String(event.getData()));
-			}));
-
-			IServer server = Communication.createTcpServer(serverConfig);
+			IServer server = createDefaultTcpServer();
 			server.open();
+
+			ServerListener listener = new ServerListener(server);
+			listener.setMessageHandler(event -> Logger.debug("Server received %s", new String(event.getData())));
+
+			listener.start();
 
 			sleep(2000);
 
@@ -683,6 +705,7 @@ public class TcpCommunicationTest {
 
 			sleep(2000);
 
+			listener.stop();
 			server.close();
 			server.dispose();
 
