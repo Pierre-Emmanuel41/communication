@@ -1,10 +1,7 @@
 package fr.pederobien.communication.testing.tools;
 
-import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
-import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.client.IClientImpl;
-import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 
 public class ClientExceptionImpl implements IClientImpl<IEthernetEndPoint> {
@@ -26,8 +23,8 @@ public class ClientExceptionImpl implements IClientImpl<IEthernetEndPoint> {
 	}
 
 	@Override
-	public IConnection connect(IClientConfig<IEthernetEndPoint> config) throws Exception {
-		return Communication.createConnection(config, config.getEndPoint(), impl);
+	public IConnectionImpl connect(String name, IEthernetEndPoint endPoint, int timeout) throws Exception {
+		return impl;
 	}
 
 	private class ConnectionExceptionImpl implements IConnectionImpl {
