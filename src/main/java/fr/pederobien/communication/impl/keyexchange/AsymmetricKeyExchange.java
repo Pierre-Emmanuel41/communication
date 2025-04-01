@@ -38,7 +38,7 @@ public class AsymmetricKeyExchange extends Exchange {
 			if (!args.isTimeout()) {
 
 				// Extracting client public key
-				if (keyManager.parse(args.getResponse().getBytes()) != null) {
+				if (keyManager.parse(args.getResponse()) != null) {
 
 					// Sending positive acknowledgement to the client
 					serverToClient_sendPositiveAcknowledgement(args.getIdentifier());
@@ -96,7 +96,7 @@ public class AsymmetricKeyExchange extends Exchange {
 	private void serverToClient_sendPositiveAcknowledgement(int identifier) {
 		answer(identifier, SUCCESS_PATTERN, timeout, args -> {
 			if (!args.isTimeout()) {
-				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
+				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse())) {
 					success = true;
 				}
 			}
@@ -106,7 +106,7 @@ public class AsymmetricKeyExchange extends Exchange {
 	private void clientToServer_sendPublicKey(int identifier, byte[] keyToSend) {
 		answer(identifier, keyToSend, timeout, args -> {
 			if (!args.isTimeout()) {
-				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
+				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse())) {
 					answer(args.getIdentifier(), SUCCESS_PATTERN);
 					success = true;
 				}

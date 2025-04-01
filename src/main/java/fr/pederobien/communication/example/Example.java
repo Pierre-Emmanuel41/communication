@@ -50,7 +50,7 @@ public class Example {
 		Logger.info("[Client] Sending %s", message);
 		IMessage callback = new Message(message.getBytes(), arguments -> {
 			if (!arguments.isTimeout()) {
-				Logger.info("[Client] Received %s", new String(arguments.getResponse().getBytes()));
+				Logger.info("[Client] Received %s", new String(arguments.getResponse()));
 			} else {
 				Logger.error("Unexpected timeout occurs");
 			}

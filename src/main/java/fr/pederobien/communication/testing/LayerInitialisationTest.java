@@ -158,7 +158,7 @@ public class LayerInitialisationTest {
 			String message = "a message from a client";
 			client.getConnection().send(new Message(message.getBytes(), args -> {
 				if (!args.isTimeout()) {
-					Logger.debug("Client received %s", new String(args.getResponse().getBytes()));
+					Logger.debug("Client received %s", new String(args.getResponse()));
 				} else {
 					Logger.error("Unexpected timeout occurred");
 				}
@@ -351,7 +351,7 @@ public class LayerInitialisationTest {
 			String message = "a message from a client";
 			client.getConnection().send(new Message(message.getBytes(), args -> {
 				if (!args.isTimeout()) {
-					Logger.debug("Client received %s", new String(args.getResponse().getBytes()));
+					Logger.debug("Client received %s", new String(args.getResponse()));
 				} else {
 					Logger.error("Unexpected timeout occurred");
 				}
@@ -433,7 +433,7 @@ public class LayerInitialisationTest {
 			String message = "a message from a client";
 			client.getConnection().send(new Message(message.getBytes(), args -> {
 				if (!args.isTimeout()) {
-					Logger.debug("Client received %s", new String(args.getResponse().getBytes()));
+					Logger.debug("Client received %s", new String(args.getResponse()));
 				} else {
 					Logger.debug("Unexpected timeout occurred");
 				}

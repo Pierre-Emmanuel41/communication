@@ -4,7 +4,7 @@ public interface ICallback {
 
 	public class CallbackArgs {
 		private int identifier;
-		private IMessage response;
+		private byte[] response;
 		private boolean isTimeout;
 		private boolean isConnectionLost;
 
@@ -13,13 +13,13 @@ public interface ICallback {
 		 * not a response has been received from the remote.
 		 * 
 		 * @param identifier       The identifier of the response.
-		 * @param response         The response received from the remote.
+		 * @param response         The byte array received from the remote.
 		 * @param isTimeout        True if the remote did not answer in time, false
 		 *                         otherwise.
 		 * @param isConnectionLost True if the connection with the remote has been lost,
 		 *                         false otherwise.
 		 */
-		public CallbackArgs(int identifier, IMessage response, boolean isTimeout, boolean isConnectionLost) {
+		public CallbackArgs(int identifier, byte[] response, boolean isTimeout, boolean isConnectionLost) {
 			this.identifier = identifier;
 			this.response = response;
 			this.isTimeout = isTimeout;
@@ -34,10 +34,10 @@ public interface ICallback {
 		}
 
 		/**
-		 * @return Response message if it has been received before timeout. Otherwise
-		 *         value is null.
+		 * @return The bytes array received from the remote, or null if a timeout
+		 *         occurred.
 		 */
-		public IMessage getResponse() {
+		public byte[] getResponse() {
 			return response;
 		}
 

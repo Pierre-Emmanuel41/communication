@@ -45,7 +45,7 @@ public class SymmetricKeyExchange extends Exchange {
 			if (!args.isTimeout()) {
 
 				// Extracting client secret key
-				if (keyManager.parse(args.getResponse().getBytes())) {
+				if (keyManager.parse(args.getResponse())) {
 
 					// Sending positive acknowledgement to the client
 					serverToClient_sendPositiveAcknowledgement(args.getIdentifier());
@@ -88,7 +88,7 @@ public class SymmetricKeyExchange extends Exchange {
 	private void serverToClient_sendPositiveAcknowledgement(int identifier) {
 		answer(identifier, SUCCESS_PATTERN, timeout, args -> {
 			if (!args.isTimeout()) {
-				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
+				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse())) {
 					success = true;
 				}
 			}
@@ -98,7 +98,7 @@ public class SymmetricKeyExchange extends Exchange {
 	private void clientToServer_sendBackSecretKey(int identifier, byte[] remoteKey) {
 		answer(identifier, remoteKey, timeout, args -> {
 			if (!args.isTimeout()) {
-				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
+				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse())) {
 					answer(args.getIdentifier(), SUCCESS_PATTERN);
 					success = true;
 				}

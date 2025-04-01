@@ -45,7 +45,7 @@ public class IvParameterSpecExchange extends Exchange {
 			if (!args.isTimeout()) {
 
 				// Step 2: Receiving remote parameter specification
-				if (Arrays.equals(args.getResponse().getBytes(), iv)) {
+				if (Arrays.equals(args.getResponse(), iv)) {
 
 					// Sending positive acknowledgement to the client
 					serverToClient_sendPositiveAcknowledgement(args.getIdentifier(), iv);
@@ -81,7 +81,7 @@ public class IvParameterSpecExchange extends Exchange {
 		answer(identifier, SUCCESS_PATTERN, 2000, args -> {
 			if (!args.isTimeout()) {
 
-				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
+				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse())) {
 					ivParameterSpec = new IvParameterSpec(iv);
 					success = true;
 				}
@@ -92,7 +92,7 @@ public class IvParameterSpecExchange extends Exchange {
 	private void clientToServer_sendBackSecretKey(int identifier, byte[] iv) {
 		answer(identifier, iv, 2000, args -> {
 			if (!args.isTimeout()) {
-				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse().getBytes())) {
+				if (Arrays.equals(SUCCESS_PATTERN, args.getResponse())) {
 					answer(args.getIdentifier(), SUCCESS_PATTERN);
 					ivParameterSpec = new IvParameterSpec(iv);
 					success = true;

@@ -124,7 +124,7 @@ public class UdpCommunicationTest {
 			String message = "a message from a client";
 			client.getConnection().send(new Message(message.getBytes(), args -> {
 				if (!args.isTimeout()) {
-					Logger.debug("Client received %s", new String(args.getResponse().getBytes()));
+					Logger.debug("Client received %s", new String(args.getResponse()));
 				} else {
 					Logger.error("Unexpected timeout occurred");
 				}
@@ -165,7 +165,7 @@ public class UdpCommunicationTest {
 			String message = "a message from a client";
 			client.getConnection().send(new Message(message.getBytes(), args -> {
 				if (!args.isTimeout()) {
-					Logger.error("Unexpected response received: %s", new String(args.getResponse().getBytes()));
+					Logger.error("Unexpected response received: %s", new String(args.getResponse()));
 				} else {
 					Logger.debug("Expected timeout occured");
 				}
@@ -195,7 +195,7 @@ public class UdpCommunicationTest {
 			listener.setActionOnNewClientConnected(event -> {
 				Message message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
-						Logger.debug("Server received %s", new String(args.getResponse().getBytes()));
+						Logger.debug("Server received %s", new String(args.getResponse()));
 					} else {
 						Logger.error("Unexpected timeout occurred");
 					}
@@ -241,7 +241,7 @@ public class UdpCommunicationTest {
 			listener.setActionOnNewClientConnected(event -> {
 				Message message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
-						Logger.error("Server received %s", new String(args.getResponse().getBytes()));
+						Logger.error("Server received %s", new String(args.getResponse()));
 					} else {
 						Logger.debug("Server: Expected timeout occurred");
 					}
@@ -482,7 +482,7 @@ public class UdpCommunicationTest {
 
 				Message message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
-						Logger.debug("Server received %s", new String(args.getResponse().getBytes()));
+						Logger.debug("Server received %s", new String(args.getResponse()));
 					} else {
 						Logger.error("Unexpected timeout occurred");
 					}
@@ -533,7 +533,7 @@ public class UdpCommunicationTest {
 
 				Message message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
-						Logger.debug("Server received %s", new String(args.getResponse().getBytes()));
+						Logger.debug("Server received %s", new String(args.getResponse()));
 					} else {
 						Logger.error("Unexpected timeout occurred");
 					}
@@ -584,7 +584,7 @@ public class UdpCommunicationTest {
 
 				Message message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
-						Logger.debug("Server received %s", new String(args.getResponse().getBytes()));
+						Logger.debug("Server received %s", new String(args.getResponse()));
 					} else {
 						Logger.error("Unexpected timeout occurred");
 					}

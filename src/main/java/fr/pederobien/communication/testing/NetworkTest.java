@@ -208,7 +208,7 @@ public class NetworkTest {
 
 			client.getConnection().send(new Message("a message from a client".getBytes(), args -> {
 				if (!args.isTimeout()) {
-					Logger.debug("Client received %s", new String(args.getResponse().getBytes()));
+					Logger.debug("Client received %s", new String(args.getResponse()));
 				} else {
 					Logger.error("Client: Unexpected timeout occurred");
 				}
@@ -250,7 +250,7 @@ public class NetworkTest {
 
 			client.getConnection().send(new Message("a message from a client".getBytes(), args -> {
 				if (!args.isTimeout()) {
-					Logger.error("Unexpected response received: %s", new String(args.getResponse().getBytes()));
+					Logger.error("Unexpected response received: %s", new String(args.getResponse()));
 				} else {
 					Logger.debug("Client: Expected timeout occured");
 				}
@@ -282,7 +282,7 @@ public class NetworkTest {
 			listener.setActionOnNewClientConnected(event -> {
 				Message message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
-						Logger.debug("Server received %s", new String(args.getResponse().getBytes()));
+						Logger.debug("Server received %s", new String(args.getResponse()));
 					} else {
 						Logger.error("Server: Unexpected timeout occurred");
 					}
@@ -329,7 +329,7 @@ public class NetworkTest {
 			listener.setActionOnNewClientConnected(event -> {
 				Message message = new Message("a message from the server".getBytes(), args -> {
 					if (!args.isTimeout()) {
-						Logger.error("Unexpected message received: %s", new String(args.getResponse().getBytes()));
+						Logger.error("Unexpected message received: %s", new String(args.getResponse()));
 					} else {
 						Logger.debug("Server: Expected timeout occurred");
 					}

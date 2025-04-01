@@ -148,13 +148,13 @@ public class CallbackManager {
 		public void dispatch(IHeaderMessage response, boolean isConnectionLost) {
 			// Considering by default that timeout happened
 			int identifier = -1;
-			IMessage resp = null;
+			byte[] resp = null;
 			boolean isTimeout = true;
 
 			// No timeout happened
 			if (response != null) {
 				identifier = response.getIdentifier();
-				resp = new Message(response.getBytes());
+				resp = response.getBytes();
 				isTimeout = false;
 			}
 
