@@ -7,6 +7,7 @@ import fr.pederobien.communication.event.ConnectionDisposedEvent;
 import fr.pederobien.communication.event.ConnectionLostEvent;
 import fr.pederobien.communication.event.ConnectionUnstableEvent;
 import fr.pederobien.communication.event.NewClientEvent;
+import fr.pederobien.communication.event.ServerOpenEvent;
 import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.server.IClientInfo;
@@ -42,6 +43,7 @@ public class Opened<T> extends State<T> implements IEventListener {
 				waiter.setDaemon(true);
 				waiter.start();
 
+				EventManager.callEvent(new ServerOpenEvent(getContext().getServer()));
 				info("Server opened");
 			} catch (Exception e) {
 				e.printStackTrace();
