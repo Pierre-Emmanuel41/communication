@@ -1,17 +1,27 @@
 package fr.pederobien.communication.example.server;
 
+import fr.pederobien.communication.event.ConnectionDisposedEvent;
+import fr.pederobien.communication.event.ConnectionEnableChangedEvent;
+import fr.pederobien.communication.event.ConnectionLostEvent;
+import fr.pederobien.communication.event.ConnectionUnstableEvent;
 import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.interfaces.connection.IConnection;
+import fr.pederobien.utils.event.EventHandler;
+import fr.pederobien.utils.event.EventManager;
+import fr.pederobien.utils.event.IEventListener;
 import fr.pederobien.utils.event.Logger;
 
-public class MyCustomClient {
+public class MyCustomClient implements IEventListener {
 	private IConnection connection;
 
 	public MyCustomClient(IConnection connection) {
 		this.connection = connection;
 
 		connection.setMessageHandler(event -> onMessageReceived(event));
+
+		// Listening for connection events
+		EventManager.registerListener(this);
 	}
 
 	/**
@@ -19,6 +29,44 @@ public class MyCustomClient {
 	 */
 	public IConnection getConnection() {
 		return connection;
+	}
+
+	@EventHandler
+	private void onConnectionDisposed(ConnectionDisposedEvent event) {
+		if (event.getConnection() != connection) {
+			return;
+		}
+
+		// Write here what to do when the connection has been disposed
+
+		EventManager.unregisterListener(this);
+	}
+
+	@EventHandler
+	private void onConnectionEnableChanged(ConnectionEnableChangedEvent event) {
+		if (event.getConnection() != connection) {
+			return;
+		}
+
+		// Write here what to do when the connection enable flag has changed
+	}
+
+	@EventHandler
+	private void onConnectionLost(ConnectionLostEvent event) {
+		if (event.getConnection() != connection) {
+			return;
+		}
+
+		// Write here what to do when the connection with the remote is lost
+	}
+
+	@EventHandler
+	private void onConnectionUnstable(ConnectionUnstableEvent event) {
+		if (event.getConnection() != connection) {
+			return;
+		}
+
+		// Write here what to do when the connection with the remote is unstable
 	}
 
 	/**
