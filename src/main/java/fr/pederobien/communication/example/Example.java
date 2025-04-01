@@ -10,7 +10,7 @@ public class Example {
 
 	public static void main(String[] args) {
 		// Do display events
-		Logger.instance().timeStamp(true).newLine(true).register();
+		Logger.instance().timeStamp(true).newLine(true);
 
 		MyCustomTcpServer server = new MyCustomTcpServer();
 		server.open();
@@ -25,13 +25,17 @@ public class Example {
 		// thrown
 		demoMessageExchange(client);
 
+		sleep(2000);
+
 		server.close();
 		server.dispose();
 
-		sleep(2000);
+		sleep(500);
 
 		client.disconnect();
 		client.dispose();
+
+		sleep(1000);
 	}
 
 	private static void demoMessageExchange(MyCustomTcpClient client) {
