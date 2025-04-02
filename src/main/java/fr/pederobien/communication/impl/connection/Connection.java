@@ -59,17 +59,18 @@ public class Connection<T> implements IConnection {
 		queueManager.setOnReceive(ignored -> receiveMessage(ignored));
 		queueManager.setOnExtract(raw -> extractMessage(raw));
 
-		callbackManager = new CallbackManager();
-		disposable = new Disposable();
-		layerInitializer = config.getLayerInitializer();
-
 		int unstableCounter = config.getConnectionMaxUnstableCounter();
 		int healTime = config.getConnectionHealTime();
-		String counterName = String.format("%s HealedCounter", name);
+		String counterName = String.format("[%s HealedCounter]", name);
 		counter = new HealedCounter(unstableCounter, healTime, () -> onUnstableConnection(), counterName);
-		isEnabled = true;
 
+		callbackManager = new CallbackManager(queueManager, counter);
+		disposable = new Disposable();
 		semaphore = new Semaphore(0);
+
+		layerInitializer = config.getLayerInitializer();
+		name = String.format("[%s]", name);
+		isEnabled = true;
 	}
 
 	@Override
@@ -154,14 +155,14 @@ public class Connection<T> implements IConnection {
 
 	@Override
 	public String toString() {
-		return String.format("[%s]", name);
+		return name;
 	}
 
 	/**
 	 * Throw an unstable connection event.
 	 */
 	private void onUnstableConnection() {
-		Logger.error("[%s] - Unstable connection detected", name);
+		Logger.error("%s - Unstable connection detected", name);
 		EventManager.callEvent(new ConnectionUnstableEvent(this));
 	}
 
@@ -212,6 +213,7 @@ public class Connection<T> implements IConnection {
 					EventManager.callEvent(new ConnectionLostEvent(this));
 				}
 			} else {
+
 				// Adding raw data for asynchronous extraction
 				queueManager.getExtractingQueue().add(raw);
 
@@ -243,7 +245,8 @@ public class Connection<T> implements IConnection {
 						callbackManager.unregisterAndExecute(request);
 					} else {
 						// Dispatching asynchronously a message event.
-						handler.handle(new MessageEvent(this, request.getIdentifier(), request.getBytes()));
+						MessageEvent event = new MessageEvent(this, request.getIdentifier(), request.getBytes());
+						queueManager.getDispatchQueue().add(() -> handler.handle(event));
 					}
 				}
 

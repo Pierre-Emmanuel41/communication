@@ -4,24 +4,34 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import fr.pederobien.communication.interfaces.connection.ICallback.CallbackArgs;
 import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
 import fr.pederobien.communication.interfaces.connection.IMessage;
 import fr.pederobien.utils.Disposable;
+import fr.pederobien.utils.HealedCounter;
 import fr.pederobien.utils.IDisposable;
 
 public class CallbackManager {
 	private Map<Integer, Monitor> monitors;
 	private IDisposable disposable;
+	private QueueManager queueManager;
+	private HealedCounter counter;
 
 	/**
 	 * Creates a manager responsible to monitor registered message if a timeout
 	 * occurs.
 	 * 
-	 * @param connection The connection associated to this manager.
+	 * @param queueManager The manager whose the callback queue is used.
+	 * @param counter      The counter to increment if an exception occurred while
+	 *                     executing the callback
 	 */
-	public CallbackManager() {
+	public CallbackManager(QueueManager queueManager, HealedCounter counter) {
+		this.queueManager = queueManager;
+		this.counter = counter;
+
 		monitors = new HashMap<Integer, Monitor>();
 		disposable = new Disposable();
 	}
@@ -38,7 +48,9 @@ public class CallbackManager {
 
 		// When no timeout defined, no callback defined.
 		if (message.getCallback().getTimeout() > 0) {
-			monitors.put(identifier, new Monitor(identifier, message));
+			synchronized (disposable) {
+				monitors.put(identifier, new Monitor(identifier, message));
+			}
 		}
 	}
 
@@ -63,51 +75,45 @@ public class CallbackManager {
 	public void dispose() {
 		if (disposable.dispose()) {
 			Set<Entry<Integer, Monitor>> set = monitors.entrySet();
-			for (Map.Entry<Integer, Monitor> entry : set) {
-				try {
-					unregisterAndExec(entry.getKey(), null, true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-
-			monitors.clear();
+			set.forEach(entry -> entry.getValue().onConnectionLost());
 		}
 	}
 
 	/**
 	 * Get the callback associated to the requestID of the response. If no pending
 	 * request is registered for the requestID then the method returns null. If a
-	 * pending request is registered for the requestID It is canceled to avoid a
+	 * pending request is registered for the requestID it is cancelled to avoid a
 	 * timeout to occurs.
-	 * 
-	 * @param header The response that has been received from the remote.
 	 */
 	public void unregisterAndExecute(IHeaderMessage header) {
 		disposable.checkDisposed();
-		unregisterAndExec(header.getRequestID(), header, false);
+
+		Monitor monitor = null;
+		synchronized (disposable) {
+			monitor = monitors.get(header.getRequestID());
+		}
+
+		if (monitor != null)
+			monitor.onResponseReceived(header);
 	}
 
 	/**
-	 * Find the monitor associated to the given identifier, and if found, unregister
-	 * it from the pending queue and execute its callback.
+	 * Removes the monitor associated to the given identifier.
 	 * 
-	 * @param identifier       The identifier of the pending request.
-	 * @param header           The response that has been received from the remote.
-	 * @param isConnectionLost True if the connection with the remote has been lost,
-	 *                         false otherwise.
+	 * @param identifier The identifier of the monitored request.
 	 */
-	private void unregisterAndExec(int identifier, IHeaderMessage header, boolean isConnectionLost) {
-		Monitor monitor = monitors.remove(identifier);
-		if (monitor != null) {
-			monitor.stop();
-			monitor.dispatch(header, isConnectionLost);
+	private void unregister(int identifier) {
+		synchronized (disposable) {
+			monitors.remove(identifier);
 		}
 	}
 
 	private class Monitor {
 		private int identifier;
 		private IMessage request;
+		private IHeaderMessage response;
+		private boolean isConnectionLost;
+		private Semaphore semaphore;
 		private Thread monitor;
 
 		/**
@@ -121,6 +127,7 @@ public class CallbackManager {
 			this.request = request;
 
 			monitor = new Thread(() -> monitor(), String.format("[%s Timeout monitor]", identifier));
+			semaphore = new Semaphore(0);
 		}
 
 		/**
@@ -131,21 +138,48 @@ public class CallbackManager {
 		}
 
 		/**
-		 * Interrupt the underlying thread waiting for a timeout to occur.
+		 * Notify this monitor that a response has been received from the remote.
+		 * 
+		 * @param response The message received from the remote.
 		 */
-		public void stop() {
-			monitor.interrupt();
+		public void onResponseReceived(IHeaderMessage response) {
+			this.response = response;
+
+			isConnectionLost = false;
+			semaphore.release();
+		}
+
+		/**
+		 * Notify this monitor that the connection with the remote has been lost.
+		 */
+		public void onConnectionLost() {
+			response = null;
+			isConnectionLost = true;
+
+			semaphore.release();
+		}
+
+		/**
+		 * Block until a timeout occurs or the response has been received.
+		 */
+		private void monitor() {
+			try {
+				semaphore.tryAcquire(request.getCallback().getTimeout(), TimeUnit.MILLISECONDS);
+
+				// Removing this monitor from the monitors map
+				unregister(identifier);
+
+				dispatch();
+			} catch (InterruptedException e) {
+				// Do nothing
+			}
 		}
 
 		/**
 		 * Execute the callback of the underlying request.
-		 * 
-		 * @param response         The response received from the remote, or null if
-		 *                         timeout occurs.
-		 * @param isConnectionLost True if the connection with the remote is lost, false
-		 *                         otherwise.
 		 */
-		public void dispatch(IHeaderMessage response, boolean isConnectionLost) {
+		private void dispatch() {
+
 			// Considering by default that timeout happened
 			int identifier = -1;
 			byte[] resp = null;
@@ -158,21 +192,9 @@ public class CallbackManager {
 				isTimeout = false;
 			}
 
-			request.getCallback().apply(new CallbackArgs(identifier, resp, isTimeout, isConnectionLost));
-		}
-
-		/**
-		 * Block until a timeout occurs or the response has been received.
-		 */
-		private void monitor() {
-			try {
-				Thread.sleep(request.getCallback().getTimeout());
-
-				// Unregister pending request
-				unregisterAndExec(identifier, null, false);
-			} catch (InterruptedException e) {
-				// Do nothing
-			}
+			CallbackArgs args = new CallbackArgs(identifier, resp, isTimeout, isConnectionLost);
+			CallbackResult result = new CallbackResult(counter, request.getCallback(), args);
+			queueManager.getCallbackQueue().add(result);
 		}
 	}
 }

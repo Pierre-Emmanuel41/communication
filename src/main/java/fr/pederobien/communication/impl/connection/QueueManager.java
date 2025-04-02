@@ -12,6 +12,8 @@ public class QueueManager {
 	private Consumer<Object> onReceive;
 	private BlockingQueueTask<byte[]> extractingQueue;
 	private Consumer<byte[]> onExtract;
+	private BlockingQueueTask<Runnable> dispatchQueue;
+	private BlockingQueueTask<CallbackResult> callbackQueue;
 
 	/**
 	 * Creates a manager that contains a sending, receiving and extracting queue.
@@ -27,6 +29,12 @@ public class QueueManager {
 
 		queueName = String.format("[%s extract]", name);
 		extractingQueue = new BlockingQueueTask<byte[]>(queueName, raw -> onExtract(raw));
+
+		queueName = String.format("[%s dispatch]", name);
+		dispatchQueue = new BlockingQueueTask<Runnable>(queueName, runnable -> runnable.run());
+
+		queueName = String.format("[%s callback]", name);
+		callbackQueue = new BlockingQueueTask<CallbackResult>(queueName, callback -> callback.apply());
 	}
 
 	/**
@@ -49,6 +57,12 @@ public class QueueManager {
 
 		// Waiting for data to extract
 		extractingQueue.start();
+
+		// Waiting for data to be dispatched to the client/server
+		dispatchQueue.start();
+
+		// Waiting for callback to be executed
+		callbackQueue.start();
 	}
 
 	/**
@@ -59,6 +73,8 @@ public class QueueManager {
 		sendingQueue.dispose();
 		receivingQueue.dispose();
 		extractingQueue.dispose();
+		dispatchQueue.dispose();
+		callbackQueue.dispose();
 	}
 
 	/**
@@ -107,6 +123,20 @@ public class QueueManager {
 	 */
 	public void setOnExtract(Consumer<byte[]> onExtract) {
 		this.onExtract = onExtract;
+	}
+
+	/**
+	 * @return The queue to dispatch an unexpected message.
+	 */
+	public BlockingQueueTask<Runnable> getDispatchQueue() {
+		return dispatchQueue;
+	}
+
+	/**
+	 * @return The queue to execute a callback.
+	 */
+	public BlockingQueueTask<CallbackResult> getCallbackQueue() {
+		return callbackQueue;
 	}
 
 	private void onSend(IHeaderMessage message) {
