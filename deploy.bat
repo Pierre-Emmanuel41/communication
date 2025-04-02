@@ -2,24 +2,21 @@
 
 @rem Dowloading dependencies
 @if not exist utils (
-    @call git clone https://github.com/Pierre-Emmanuel41/utils
+	@echo Cloning git repo for project utils
+    @call git clone --branch 2.0-SNAPSHOT --single-branch https://github.com/Pierre-Emmanuel41/utils
 	
 	@call cd utils
 ) else ( 
 	@call cd utils
 	
-	@rem Pulling latest changes
+	@echo Pulling latest changes for project utils
 	@call git pull
 )
 
-@echo Building project utils
-
 @rem Building dependencies
+@echo Building project utils
 @call mvn clean package install
 
-@call cd ../communication
-
 @echo Building project communication
-
-@rem Building project
+@call cd ../communication
 @call mvn clean package install
