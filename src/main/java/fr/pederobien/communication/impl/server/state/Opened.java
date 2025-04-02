@@ -103,7 +103,7 @@ public class Opened<T> extends State<T> implements IEventListener {
 
 				if (!initialised || closeRequested) {
 					if (!initialised) {
-						Logger.warning("[%s] - Initialisation failure", getContext().getName());
+						Logger.warning("%s - Initialisation failure", getContext().getName());
 					}
 
 					disposeConnection(connection);

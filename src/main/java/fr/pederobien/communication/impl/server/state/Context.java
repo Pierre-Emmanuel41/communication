@@ -25,17 +25,18 @@ public class Context<T> implements IContext {
 		this.config = config;
 		this.impl = impl;
 
+		name = String.format("%s %s", config.getName(), config.getPoint());
+
 		opened = new Opened<T>(this);
 		closed = new Closed<T>(this);
 		disposed = new Disposed<T>(this);
 
 		int unstableCounter = config.getServerMaxUnstableCounter();
 		int healTime = config.getServerHealTime();
-		String tempName = String.format("%s %s", config.getName(), config.getPoint());
-		String CounterName = String.format("[%s unstable counter]", tempName);
+		String CounterName = String.format("[%s unstable counter]", name);
 		counter = new HealedCounter(unstableCounter, healTime, () -> onServerUnstable(), CounterName);
 
-		name = String.format("[%s]", tempName);
+		name = String.format("[%s]", name);
 
 		state = closed;
 	}
