@@ -1,9 +1,9 @@
 @call cd ..
 
-@rem Dowloading dependencies
+@rem Downloading dependencies
 @if not exist utils (
 	@echo Cloning git repo for project utils
-    @call git clone https://github.com/Pierre-Emmanuel41/utils
+    @call git clone https://github.com/Pierre-Emmanuel41/utils.git
 	
 	@call cd utils
 ) else ( 
