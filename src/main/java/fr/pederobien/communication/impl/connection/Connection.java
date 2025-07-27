@@ -53,6 +53,7 @@ public class Connection<T> implements IConnection {
         queueManager.setOnSend(this::sendMessage);
         queueManager.setOnReceive(this::receiveMessage);
         queueManager.setOnExtract(this::extractMessage);
+        queueManager.setOnDispatch(this::dispatch);
 
         int unstableCounter = config.getConnectionMaxUnstableCounter();
         int healTime = config.getConnectionHealTime();
@@ -239,7 +240,7 @@ public class Connection<T> implements IConnection {
                     } else {
                         // Dispatching asynchronously a message event.
                         MessageEvent event = new MessageEvent(this, request.getIdentifier(), request.getBytes());
-                        queueManager.getDispatchQueue().add(() -> handler.handle(event));
+                        queueManager.getDispatchingQueue().add(event);
                     }
                 }
 
@@ -296,5 +297,18 @@ public class Connection<T> implements IConnection {
      */
     private void doNothing(MessageEvent event) {
 
+    }
+
+    /**
+     * Dispatch asynchronously the given event and increment the unstable counter if an exception occurred.
+     *
+     * @param event The event that contains the unexpected message.
+     */
+    private void dispatch(MessageEvent event) {
+        try {
+            handler.handle(event);
+        } catch (Exception e) {
+            counter.increment();
+        }
     }
 }

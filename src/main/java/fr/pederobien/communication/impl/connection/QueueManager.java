@@ -1,5 +1,6 @@
 package fr.pederobien.communication.impl.connection;
 
+import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
 import fr.pederobien.utils.BlockingQueueTask;
 
@@ -9,11 +10,12 @@ public class QueueManager {
     private final BlockingQueueTask<IHeaderMessage> sendingQueue;
     private final BlockingQueueTask<Object> receivingQueue;
     private final BlockingQueueTask<byte[]> extractingQueue;
-    private final BlockingQueueTask<Runnable> dispatchQueue;
+    private final BlockingQueueTask<MessageEvent> dispatchingQueue;
     private final BlockingQueueTask<CallbackResult> callbackQueue;
     private Consumer<IHeaderMessage> onSend;
     private Consumer<Object> onReceive;
     private Consumer<byte[]> onExtract;
+    private Consumer<MessageEvent> onDispatch;
 
     /**
      * Creates a manager that contains a sending, receiving and extracting queue.
@@ -31,7 +33,7 @@ public class QueueManager {
         extractingQueue = new BlockingQueueTask<byte[]>(queueName, this::onExtract);
 
         queueName = String.format("[%s dispatch]", name);
-        dispatchQueue = new BlockingQueueTask<Runnable>(queueName, Runnable::run);
+        dispatchingQueue = new BlockingQueueTask<MessageEvent>(queueName, this::onDispatch);
 
         queueName = String.format("[%s callback]", name);
         callbackQueue = new BlockingQueueTask<CallbackResult>(queueName, CallbackResult::apply);
@@ -54,7 +56,7 @@ public class QueueManager {
         extractingQueue.start();
 
         // Waiting for data to be dispatched to the client/server
-        dispatchQueue.start();
+        dispatchingQueue.start();
 
         // Waiting for callback to be executed
         callbackQueue.start();
@@ -68,7 +70,7 @@ public class QueueManager {
         sendingQueue.dispose();
         receivingQueue.dispose();
         extractingQueue.dispose();
-        dispatchQueue.dispose();
+        dispatchingQueue.dispose();
         callbackQueue.dispose();
     }
 
@@ -123,8 +125,17 @@ public class QueueManager {
     /**
      * @return The queue to dispatch an unexpected message.
      */
-    public BlockingQueueTask<Runnable> getDispatchQueue() {
-        return dispatchQueue;
+    public BlockingQueueTask<MessageEvent> getDispatchingQueue() {
+        return dispatchingQueue;
+    }
+
+    /**
+     * Set how to dispatch an unexpected message.
+     *
+     * @param onDispatch The code to execute to dispatch an unexpected message.
+     */
+    public void setOnDispatch(Consumer<MessageEvent> onDispatch) {
+        this.onDispatch = onDispatch;
     }
 
     /**
@@ -149,6 +160,12 @@ public class QueueManager {
     private void onExtract(byte[] raw) {
         if (onExtract != null) {
             onExtract.accept(raw);
+        }
+    }
+
+    private void onDispatch(MessageEvent event) {
+        if (onDispatch != null) {
+            onDispatch.accept(event);
         }
     }
 }

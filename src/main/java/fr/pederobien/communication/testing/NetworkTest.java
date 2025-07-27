@@ -595,7 +595,7 @@ public class NetworkTest {
         runTest("testCallbackException", test);
     }
 
-    public void testUnexpectedRequestException() {
+    public void () {
         IExecutable test = () -> {
             Network network = new Network();
 
@@ -679,7 +679,7 @@ public class NetworkTest {
 
             sleep(250);
 
-            Logger.print("Expecting unstable client after receiving 144 unexpected messages");
+            Logger.print("Expecting unstable client after detecting 8 times an unstable connection");
 
             sleep(40000);
 
