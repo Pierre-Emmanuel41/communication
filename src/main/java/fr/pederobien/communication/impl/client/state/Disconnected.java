@@ -7,115 +7,106 @@ import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.event.Logger;
 
 public class Disconnected<T> extends State<T> {
-	private BlockingQueueTask<Object> connectionQueue;
-	private boolean attemptingConnection;
-	private boolean disconnectionRequested;
+    private final BlockingQueueTask<Object> connectionQueue;
+    private boolean attemptingConnection;
+    private boolean disconnectionRequested;
 
-	/**
-	 * Create a state where the client is disconnected from the remote.
-	 * 
-	 * @param context The context of this state.
-	 */
-	public Disconnected(Context<T> context) {
-		super(context);
+    /**
+     * Create a state where the client is disconnected from the remote.
+     *
+     * @param context The context of this state.
+     */
+    public Disconnected(Context<T> context) {
+        super(context);
 
-		String name = String.format("%s[reconnect]", getContext().getClient());
-		connectionQueue = new BlockingQueueTask<Object>(name, ignored -> connect(ignored));
-	}
+        String name = String.format("%s[reconnect]", getContext().getClient());
+        connectionQueue = new BlockingQueueTask<Object>(name, this::connect);
+    }
 
-	@Override
-	public void setEnabled(boolean isEnabled) {
-		if (isEnabled) {
-			info("Client disconnected");
-		}
-	}
+    @Override
+    public void setEnabled(boolean isEnabled) {
+        if (isEnabled) {
+            info("Client disconnected");
+        }
+    }
 
-	@Override
-	public void connect() {
-		info("Connecting client");
+    @Override
+    public void connect() {
+        info("Connecting client");
 
-		attemptingConnection = true;
-		disconnectionRequested = false;
-		connectionQueue.add(new Object());
-		connectionQueue.start();
-	}
+        attemptingConnection = true;
+        disconnectionRequested = false;
+        connectionQueue.add(new Object());
+        connectionQueue.start();
+    }
 
-	@Override
-	public void disconnect() {
-		if (attemptingConnection) {
-			info("Disconnecting client");
-			disconnectionRequested = true;
-			info("Client disconnected");
-		}
-	}
+    @Override
+    public void disconnect() {
+        if (attemptingConnection) {
+            info("Disconnecting client");
+            disconnectionRequested = true;
+            info("Client disconnected");
+        }
+    }
 
-	@Override
-	public void dispose() {
-		info("Disposing client");
+    @Override
+    public void dispose() {
+        info("Disposing client");
 
-		disconnectionRequested = true;
-		connectionQueue.dispose();
-		getContext().getCounter().dispose();
-		getContext().setState(getContext().getDisposed());
-	}
+        disconnectionRequested = true;
+        connectionQueue.dispose();
+        getContext().getCounter().dispose();
+        getContext().setState(getContext().getDisposed());
+    }
 
-	private void connect(Object ignored) {
-		IConnectionImpl impl = null;
+    private void connect(Object ignored) {
+        try {
+            // Attempting connection with the remote
+            String name = getConfig().getName();
+            T endPoint = getConfig().getEndPoint();
+            int timeout = getConfig().getConnectionTimeout();
 
-		try {
+            IConnectionImpl impl = getContext().getImpl().connect(name, endPoint, timeout);
 
-			// Attempting connection with the remote
-			String name = getConfig().getName();
-			T endPoint = getConfig().getEndPoint();
-			int timeout = getConfig().getConnectionTimeout();
-			impl = getContext().getImpl().connect(name, endPoint, timeout);
-		} catch (Exception e) {
-			retry();
-		}
+            if (!disconnectionRequested) {
+                IConnection connection = Communication.createConnection(getConfig(), getConfig().getEndPoint(), impl);
 
-		if (impl != null && !disconnectionRequested) {
-			boolean initialised = false;
-			IConnection connection = null;
+                if (!connection.initialise()) {
+                    Logger.warning("%s - Initialisation failure", getContext().getClient());
+                    connection.setEnabled(false);
+                    connection.dispose();
+                    retry();
+                } else {
+                    if (disconnectionRequested) {
+                        connection.dispose();
+                    } else {
+                        connection.setMessageHandler(getConfig().getMessageHandler());
+                        getContext().setConnection(connection);
+                        getContext().setState(getContext().getConnected());
+                        attemptingConnection = false;
+                    }
+                }
+            }
 
-			try {
-				connection = Communication.createConnection(getConfig(), getConfig().getEndPoint(), impl);
-				initialised = connection.initialise();
-			} catch (Exception e) {
-				// Do nothing
-			}
+        } catch (Exception e) {
+            retry();
+        }
+    }
 
-			if (!initialised) {
-				Logger.warning("%s - Initialisation failure", getContext().getClient());
-				connection.setEnabled(false);
-				connection.dispose();
+    private void retry() {
+        if (getContext().getCounter().increment())
+            return;
 
-				if (!getContext().getCounter().increment()) {
-					retry();
-				}
-			} else {
-				if (disconnectionRequested) {
-					connection.dispose();
-				} else {
-					connection.setMessageHandler(getConfig().getMessageHandler());
-					getContext().setConnection(connection);
-					getContext().setState(getContext().getConnected());
-					attemptingConnection = false;
-				}
-			}
-		}
-	}
+        try {
+            // Wait before trying to reconnect to the remote
+            Thread.sleep(getConfig().getReconnectionDelay());
 
-	private void retry() {
-		try {
-			// Wait before trying to reconnect to the remote
-			Thread.sleep(getConfig().getReconnectionDelay());
-
-			if (!disconnectionRequested && getConfig().isAutomaticReconnection()) {
-				info("Attempted connection aborted, retrying");
-				connectionQueue.add(new Object());
-			}
-		} catch (InterruptedException e) {
-			// Client is disposed
-		}
-	}
+            if (!disconnectionRequested && getConfig().isAutomaticReconnection()) {
+                info("Attempted connection aborted, retrying");
+                connectionQueue.add(new Object());
+            }
+        } catch (InterruptedException e) {
+            // Client is disposed
+        }
+    }
 }

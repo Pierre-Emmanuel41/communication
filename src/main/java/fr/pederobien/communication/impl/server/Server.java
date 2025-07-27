@@ -11,47 +11,47 @@ import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;
 
 public class Server<T> implements IServer, IEventListener {
-	private IContext context;
+    private final IContext context;
 
-	/**
-	 * Creates a server.
-	 * 
-	 * @param config         The object that holds the server configuration.
-	 * @param implementation The server specific implementation to open/close the
-	 *                       server.
-	 */
-	public Server(IServerConfig<T> config, IServerImpl<T> impl) {
-		context = new Context<T>(this, config, impl);
+    /**
+     * Creates a server.
+     *
+     * @param config The object that holds the server configuration.
+     * @param impl   The server specific implementation to open/close the
+     *               server.
+     */
+    public Server(IServerConfig<T> config, IServerImpl<T> impl) {
+        context = new Context<T>(this, config, impl);
 
-		EventManager.registerListener(this);
-	}
+        EventManager.registerListener(this);
+    }
 
-	@Override
-	public boolean open() {
-		return context.open();
-	}
+    @Override
+    public boolean open() {
+        return context.open();
+    }
 
-	@Override
-	public boolean close() {
-		return context.close();
-	}
+    @Override
+    public boolean close() {
+        return context.close();
+    }
 
-	@Override
-	public boolean dispose() {
-		return context.dispose();
-	}
+    @Override
+    public boolean dispose() {
+        return context.dispose();
+    }
 
-	@Override
-	public String toString() {
-		return context.getName();
-	}
+    @Override
+    public String toString() {
+        return context.getName();
+    }
 
-	@EventHandler
-	private void onUnstableServer(ServerUnstableEvent event) {
-		if (event.getServer() != this) {
-			return;
-		}
+    @EventHandler
+    private void onUnstableServer(ServerUnstableEvent event) {
+        if (event.getServer() != this) {
+            return;
+        }
 
-		event.getServer().close();
-	}
+        event.getServer().close();
+    }
 }

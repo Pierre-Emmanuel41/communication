@@ -9,28 +9,28 @@ import fr.pederobien.communication.interfaces.server.IServerConfig;
 import fr.pederobien.communication.interfaces.server.IServerImpl;
 
 public class UdpServerImpl implements IServerImpl<IEthernetEndPoint> {
-	private UdpServerSocket serverSocket;
+    private UdpServerSocket serverSocket;
 
-	@Override
-	public void open(IServerConfig<IEthernetEndPoint> config) throws Exception {
-		serverSocket = new UdpServerSocket(config.getName(), config.getPoint().getPort());
-	}
+    @Override
+    public void open(IServerConfig<IEthernetEndPoint> config) throws Exception {
+        serverSocket = new UdpServerSocket(config.getName(), config.getPoint().getPort());
+    }
 
-	@Override
-	public void close() throws Exception {
-		serverSocket.close();
-	}
+    @Override
+    public void close() throws Exception {
+        serverSocket.close();
+    }
 
-	@Override
-	public IClientInfo<IEthernetEndPoint> waitForClient() throws Exception {
-		IUdpSocket socket = serverSocket.accept();
+    @Override
+    public IClientInfo<IEthernetEndPoint> waitForClient() throws Exception {
+        IUdpSocket socket = serverSocket.accept();
 
-		String address = socket.getInetAddress().getHostName();
-		int port = socket.getInetAddress().getPort();
+        String address = socket.getInetAddress().getHostName();
+        int port = socket.getInetAddress().getPort();
 
-		// Creating remote end point
-		EthernetEndPoint endPoint = new EthernetEndPoint(address, port);
+        // Creating remote end point
+        EthernetEndPoint endPoint = new EthernetEndPoint(address, port);
 
-		return new ClientInfo<IEthernetEndPoint>(endPoint, new UdpConnectionImpl(socket));
-	}
+        return new ClientInfo<IEthernetEndPoint>(endPoint, new UdpConnectionImpl(socket));
+    }
 }
