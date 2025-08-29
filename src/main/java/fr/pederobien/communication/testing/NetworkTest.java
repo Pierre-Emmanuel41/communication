@@ -595,7 +595,7 @@ public class NetworkTest {
         runTest("testCallbackException", test);
     }
 
-    public void () {
+    public void testUnexpectedRequestException() {
         IExecutable test = () -> {
             Network network = new Network();
 
