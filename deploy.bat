@@ -3,7 +3,7 @@
 @rem Downloading dependencies
 @if not exist utils (
 	@echo Cloning git repo for project utils
-    @call git clone https://github.com/Pierre-Emmanuel41/utils.git
+    @call git clone --branch 2.0-SNAPSHOT --single-branch https://github.com/Pierre-Emmanuel41/utils.git
 	
 	@call cd utils
 ) else ( 
