@@ -12,6 +12,7 @@ import fr.pederobien.communication.impl.layer.RsaLayerInitializer;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.client.IClient;
 import fr.pederobien.communication.interfaces.server.IServer;
+import fr.pederobien.communication.interfaces.server.IServerConfig;
 import fr.pederobien.communication.testing.tools.ExceptionLayer;
 import fr.pederobien.communication.testing.tools.ExceptionLayer.LayerExceptionMode;
 import fr.pederobien.communication.testing.tools.ServerListener;
@@ -56,6 +57,70 @@ public class UdpCommunicationTest {
      */
     private static IClient createDefaultUdpClient() {
         return Communication.createDefaultUdpClient(CLIENT_NAME, ADDRESS, PORT);
+    }
+
+    public void testServerWithSpecificAddressAndPort() {
+        IExecutable test = () -> {
+            IServerConfig<IEthernetEndPoint> config = Communication.createServerConfig(SERVER_NAME, new EthernetEndPoint("127.0.0.1", 12345));
+            IServer server = Communication.createUdpServer(config);
+
+            server.open();
+
+            sleep(1000);
+
+            server.close();
+            server.dispose();
+        };
+
+        runTest("testServerWithSpecificAddressAndPort", test);
+    }
+
+    public void testServerWithSpecificAddressButAnyPort() {
+        IExecutable test = () -> {
+            IServerConfig<IEthernetEndPoint> config = Communication.createServerConfig(SERVER_NAME, new EthernetEndPoint("127.0.0.1", 0));
+            IServer server = Communication.createUdpServer(config);
+
+            server.open();
+
+            sleep(1000);
+
+            server.close();
+            server.dispose();
+        };
+
+        runTest("testServerWithSpecificAddressButAnyPort", test);
+    }
+
+    public void testServerWithAnyAddressButSpecificPort() {
+        IExecutable test = () -> {
+            IServerConfig<IEthernetEndPoint> config = Communication.createServerConfig(SERVER_NAME, new EthernetEndPoint("*", 12345));
+            IServer server = Communication.createUdpServer(config);
+
+            server.open();
+
+            sleep(1000);
+
+            server.close();
+            server.dispose();
+        };
+
+        runTest("testServerWithAnyAddressButSpecificPort", test);
+    }
+
+    public void testServerWithAnyAddressAndAnyPort() {
+        IExecutable test = () -> {
+            IServerConfig<IEthernetEndPoint> config = Communication.createServerConfig(SERVER_NAME, new EthernetEndPoint("*", 0));
+            IServer server = Communication.createUdpServer(config);
+
+            server.open();
+
+            sleep(1000);
+
+            server.close();
+            server.dispose();
+        };
+
+        runTest("testServerWithAnyAddressAndAnyPort", test);
     }
 
     public void testClientToServerCommunication() {

@@ -90,6 +90,10 @@ public class CommunicationTestApp {
     private static void runTcpCommunicationTest() {
         TcpCommunicationTest tests = new TcpCommunicationTest();
 
+        tests.testServerWithSpecificAddressAndPort();
+        tests.testServerWithSpecificAddressButAnyPort();
+        tests.testServerWithAnyAddressButSpecificPort();
+        tests.testServerWithAnyAddressAndAnyPort();
         tests.testClientAutomaticReconnection();
         tests.testClientAutomaticReconnectionButWithServerOpenedLater();
         tests.testClientAutomaticReconnectionButServerClosedLater();
@@ -112,6 +116,10 @@ public class CommunicationTestApp {
     private static void runUdpCommunicationTest() {
         UdpCommunicationTest tests = new UdpCommunicationTest();
 
+        tests.testServerWithSpecificAddressAndPort();
+        tests.testServerWithSpecificAddressButAnyPort();
+        tests.testServerWithAnyAddressButSpecificPort();
+        tests.testServerWithAnyAddressAndAnyPort();
         tests.testClientToServerCommunication();
         tests.testServerToClientCommunication();
         tests.testClientToServerWithCallback();

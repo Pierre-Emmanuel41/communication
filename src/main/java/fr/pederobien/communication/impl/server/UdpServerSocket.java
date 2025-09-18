@@ -3,10 +3,7 @@ package fr.pederobien.communication.impl.server;
 import fr.pederobien.communication.interfaces.connection.IUdpSocket;
 import fr.pederobien.utils.BlockingQueueTask;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
+import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
@@ -17,9 +14,29 @@ public class UdpServerSocket {
     private final BlockingQueueTask<DatagramPacket> notifyingQueue;
     private final Thread receivingThread;
     private final NewClientWaiter clientWaiter;
+    private final int localPort;
 
-    public UdpServerSocket(String name, int port) throws Exception {
-        socket = new DatagramSocket(port);
+    /**
+     * Creates a socket to communicate through UDP with the remote.
+     *
+     * @param name    The name of this socket.
+     * @param address The address of this socket.
+     * @param port    The port number of this socket.
+     */
+    public UdpServerSocket(String name, String address, int port) throws Exception {
+        // Note: The port number does not matter, if the value is out of range, the socket will throw an exception
+        // if the value is 0, the host machine will choose an ephemeral (ie first free) port.
+
+        // Case 1: Any address
+        if (address.equals("*")) {
+            socket = new DatagramSocket(port);
+        }
+        // Case 2: Specific hostname
+        else {
+            socket = new DatagramSocket(port, InetAddress.getByName(address));
+        }
+
+        localPort = socket.getLocalPort();
 
         sendingQueue = new BlockingQueueTask<DatagramPacket>(name + "_send", this::sending);
         notifyingQueue = new BlockingQueueTask<DatagramPacket>(name + "_notify", this::notifying);
@@ -37,6 +54,21 @@ public class UdpServerSocket {
         notifyingQueue.start();
     }
 
+    /**
+     * Returns the port number on the local host to which this socket
+     * is bound.
+     *
+     * @return the port number on the local host to which this socket is bound,
+     * {@code -1} if the socket is closed, or
+     * {@code 0} if it is not bound yet.
+     */
+    protected int getLocalPort() {
+        return localPort;
+    }
+
+    /**
+     * Close this socket.
+     */
     public void close() {
         socket.close();
     }

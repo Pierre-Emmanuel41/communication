@@ -13,7 +13,10 @@ public class UdpServerImpl implements IServerImpl<IEthernetEndPoint> {
 
     @Override
     public void open(IServerConfig<IEthernetEndPoint> config) throws Exception {
-        serverSocket = new UdpServerSocket(config.getName(), config.getPoint().getPort());
+        serverSocket = new UdpServerSocket(config.getName(), config.getPoint().getAddress(), config.getPoint().getPort());
+
+        // In case the port number from config is 0, the port number is defined by the host machine
+        config.getPoint().setPort(serverSocket.getLocalPort());
     }
 
     @Override

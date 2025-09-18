@@ -15,35 +15,31 @@ public class Context<T> implements IContext {
     private final IState opened;
     private final IState closed;
     private final IState disposed;
-    private final HealedCounter counter;
+    private HealedCounter counter;
     private IState state;
-    private String name;
-
+    private boolean firstInit;
 
     public Context(IServer server, IServerConfig<T> config, IServerImpl<T> impl) {
         this.server = server;
         this.config = config;
         this.impl = impl;
 
-        name = String.format("%s %s", config.getName(), config.getPoint());
-
         opened = new Opened<T>(this);
         closed = new Closed<T>(this);
         disposed = new Disposed<T>(this);
-
-        int unstableCounter = config.getServerMaxUnstableCounter();
-        int healTime = config.getServerHealTime();
-        String CounterName = String.format("[%s unstable counter]", name);
-        counter = new HealedCounter(unstableCounter, healTime, this::onServerUnstable, CounterName);
-
-        name = String.format("[%s]", name);
-
         state = closed;
+
+        firstInit = true;
     }
 
     @Override
     public boolean open() {
-        return state.open();
+        if (state.open()) {
+            postInitialization();
+            return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -58,7 +54,7 @@ public class Context<T> implements IContext {
 
     @Override
     public String getName() {
-        return name;
+        return String.format("[%s %s]", config.getName(), config.getPoint());
     }
 
     /**
@@ -122,10 +118,26 @@ public class Context<T> implements IContext {
     }
 
     /**
+     * Method called to initialize properties once the server is opened.
+     */
+    private void postInitialization() {
+        if (!firstInit) {
+            // Free resources associated to counter in order to create a new one
+            counter.dispose();
+        }
+
+        int unstableCounter = config.getServerMaxUnstableCounter();
+        int healTime = config.getServerHealTime();
+        String CounterName = String.format("[%s %s unstable counter]", config.getName(), config.getPoint());
+        counter = new HealedCounter(unstableCounter, healTime, this::onServerUnstable, CounterName);
+        firstInit = false;
+    }
+
+    /**
      * Method called when the unstable counter reached its maximum value.
      */
     private void onServerUnstable() {
-        Logger.error(String.format("%s - closing server", name));
+        Logger.error(String.format("%s - closing server", this));
         EventManager.callEvent(new ServerUnstableEvent(server));
     }
 }

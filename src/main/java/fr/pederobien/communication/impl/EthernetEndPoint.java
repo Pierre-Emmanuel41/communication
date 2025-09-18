@@ -3,9 +3,8 @@ package fr.pederobien.communication.impl;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 
 public class EthernetEndPoint implements IEthernetEndPoint {
-    private final String toString;
     private final String address;
-    private final int port;
+    private int port;
 
     /**
      * Create an end point for network communication.
@@ -16,8 +15,6 @@ public class EthernetEndPoint implements IEthernetEndPoint {
     public EthernetEndPoint(String address, int port) {
         this.address = address;
         this.port = port;
-
-        toString = String.format("%s:%s", address, port);
     }
 
     /**
@@ -40,7 +37,13 @@ public class EthernetEndPoint implements IEthernetEndPoint {
     }
 
     @Override
+    public void setPort(int port) {
+        if (this.port == 0)
+            this.port = port;
+    }
+
+    @Override
     public String toString() {
-        return toString;
+        return String.format("%s:%s", address, port);
     }
 }
