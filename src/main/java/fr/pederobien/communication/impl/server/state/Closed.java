@@ -38,6 +38,7 @@ public class Closed<T> extends State<T> {
         info("Disposing server");
 
         EventManager.callEvent(new ServerDisposeEvent(getContext().getServer()));
+        getContext().getCounter().dispose();
         getContext().setState(getContext().getDisposed());
         return true;
     }
