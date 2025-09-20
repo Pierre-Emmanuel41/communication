@@ -65,8 +65,14 @@ public class Disconnected<T> extends State<T> {
             String name = getConfig().getName();
             T endPoint = getConfig().getEndPoint();
             int timeout = getConfig().getConnectionTimeout();
+            IConnectionImpl impl;
 
-            IConnectionImpl impl = getContext().getImpl().connect(name, endPoint, timeout);
+            try {
+                impl = getContext().getImpl().connect(name, endPoint, timeout);
+            } catch (Exception e) {
+                retry(false);
+                return;
+            }
 
             if (!disconnectionRequested) {
                 IConnection connection = Communication.createConnection(getConfig(), getConfig().getEndPoint(), impl);
@@ -75,7 +81,7 @@ public class Disconnected<T> extends State<T> {
                     Logger.warning("%s - Initialisation failure", getContext().getClient());
                     connection.setEnabled(false);
                     connection.dispose();
-                    retry();
+                    retry(false);
                 } else {
                     if (disconnectionRequested) {
                         connection.dispose();
@@ -89,12 +95,12 @@ public class Disconnected<T> extends State<T> {
             }
 
         } catch (Exception e) {
-            retry();
+            retry(true);
         }
     }
 
-    private void retry() {
-        if (getContext().getCounter().increment())
+    private void retry(boolean exception) {
+        if (exception && getContext().getCounter().increment())
             return;
 
         try {
