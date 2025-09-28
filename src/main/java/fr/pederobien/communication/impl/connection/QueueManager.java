@@ -7,165 +7,163 @@ import fr.pederobien.utils.BlockingQueueTask;
 import java.util.function.Consumer;
 
 public class QueueManager {
-    private final BlockingQueueTask<IHeaderMessage> sendingQueue;
-    private final BlockingQueueTask<Object> receivingQueue;
-    private final BlockingQueueTask<byte[]> extractingQueue;
-    private final BlockingQueueTask<MessageEvent> dispatchingQueue;
-    private final BlockingQueueTask<CallbackResult> callbackQueue;
-    private Consumer<IHeaderMessage> onSend;
-    private Consumer<Object> onReceive;
-    private Consumer<byte[]> onExtract;
-    private Consumer<MessageEvent> onDispatch;
+	private final BlockingQueueTask<IHeaderMessage> sendingQueue;
+	private final BlockingQueueTask<Object> receivingQueue;
+	private final BlockingQueueTask<byte[]> extractingQueue;
+	private final BlockingQueueTask<MessageEvent> dispatchingQueue;
+	private final BlockingQueueTask<CallbackResult> callbackQueue;
+	private Consumer<IHeaderMessage> onSend;
+	private Consumer<Object> onReceive;
+	private Consumer<byte[]> onExtract;
+	private Consumer<MessageEvent> onDispatch;
 
-    /**
-     * Creates a manager that contains a sending, receiving and extracting queue.
-     *
-     * @param name The connection name.
-     */
-    public QueueManager(String name) {
-        String queueName = String.format("[%s send]", name);
-        sendingQueue = new BlockingQueueTask<IHeaderMessage>(queueName, this::onSend);
+	/**
+	 * Creates a manager that contains a sending, receiving and extracting queue.
+	 *
+	 * @param name The connection name.
+	 */
+	public QueueManager(String name) {
+		String queueName = String.format("[%s send]", name);
+		sendingQueue = new BlockingQueueTask<IHeaderMessage>(queueName, this::onSend);
 
-        queueName = String.format("[%s receive]", name);
-        receivingQueue = new BlockingQueueTask<Object>(queueName, this::onReceive);
+		queueName = String.format("[%s receive]", name);
+		receivingQueue = new BlockingQueueTask<Object>(queueName, this::onReceive);
 
-        queueName = String.format("[%s extract]", name);
-        extractingQueue = new BlockingQueueTask<byte[]>(queueName, this::onExtract);
+		queueName = String.format("[%s extract]", name);
+		extractingQueue = new BlockingQueueTask<byte[]>(queueName, this::onExtract);
 
-        queueName = String.format("[%s dispatch]", name);
-        dispatchingQueue = new BlockingQueueTask<MessageEvent>(queueName, this::onDispatch);
+		queueName = String.format("[%s dispatch]", name);
+		dispatchingQueue = new BlockingQueueTask<MessageEvent>(queueName, this::onDispatch);
 
-        queueName = String.format("[%s callback]", name);
-        callbackQueue = new BlockingQueueTask<CallbackResult>(queueName, CallbackResult::apply);
-    }
+		queueName = String.format("[%s callback]", name);
+		callbackQueue = new BlockingQueueTask<CallbackResult>(queueName, CallbackResult::apply);
+	}
 
-    /**
-     * Create a sending, receiving and extracting queue in order to send, receive
-     * and extract data asynchronously.
-     */
-    public void initialize() {
+	/**
+	 * Create a sending, receiving and extracting queue in order to send, receive and extract data asynchronously.
+	 */
+	public void initialize() {
 
-        // Waiting for a message to be sent
-        sendingQueue.start();
+		// Waiting for a message to be sent
+		sendingQueue.start();
 
-        // Waiting for receiving message from network
-        receivingQueue.start();
-        receivingQueue.add(new Object());
+		// Waiting for receiving message from network
+		receivingQueue.start();
+		receivingQueue.add(new Object());
 
-        // Waiting for data to extract
-        extractingQueue.start();
+		// Waiting for data to extract
+		extractingQueue.start();
 
-        // Waiting for data to be dispatched to the client/server
-        dispatchingQueue.start();
+		// Waiting for data to be dispatched to the client/server
+		dispatchingQueue.start();
 
-        // Waiting for callback to be executed
-        callbackQueue.start();
-    }
+		// Waiting for callback to be executed
+		callbackQueue.start();
+	}
 
-    /**
-     * Dispose the underlying sending, receiving and extracting queues. The
-     * underlying thread of each queue is interrupted.
-     */
-    public void dispose() {
-        sendingQueue.dispose();
-        receivingQueue.dispose();
-        extractingQueue.dispose();
-        dispatchingQueue.dispose();
-        callbackQueue.dispose();
-    }
+	/**
+	 * Dispose the underlying sending, receiving and extracting queues. The underlying thread of each queue is interrupted.
+	 */
+	public void dispose() {
+		sendingQueue.dispose();
+		receivingQueue.dispose();
+		extractingQueue.dispose();
+		dispatchingQueue.dispose();
+		callbackQueue.dispose();
+	}
 
-    /**
-     * @return The queue to send data to the remote.
-     */
-    public BlockingQueueTask<IHeaderMessage> getSendingQueue() {
-        return sendingQueue;
-    }
+	/**
+	 * @return The queue to send data to the remote.
+	 */
+	public BlockingQueueTask<IHeaderMessage> getSendingQueue() {
+		return sendingQueue;
+	}
 
-    /**
-     * Set the code to execute when data should be sent to the remote.
-     *
-     * @param onSend The code to execute to send data to the remote.
-     */
-    public void setOnSend(Consumer<IHeaderMessage> onSend) {
-        this.onSend = onSend;
-    }
+	/**
+	 * Set the code to execute when data should be sent to the remote.
+	 *
+	 * @param onSend The code to execute to send data to the remote.
+	 */
+	public void setOnSend(Consumer<IHeaderMessage> onSend) {
+		this.onSend = onSend;
+	}
 
-    /**
-     * @return The queue to receive data from the remote.
-     */
-    public BlockingQueueTask<Object> getReceivingQueue() {
-        return receivingQueue;
-    }
+	/**
+	 * @return The queue to receive data from the remote.
+	 */
+	public BlockingQueueTask<Object> getReceivingQueue() {
+		return receivingQueue;
+	}
 
-    /**
-     * Set the code to execute to receive data from the remote.
-     *
-     * @param onReceive The code to execute to send data to the remote.
-     */
-    public void setOnReceive(Consumer<Object> onReceive) {
-        this.onReceive = onReceive;
-    }
+	/**
+	 * Set the code to execute to receive data from the remote.
+	 *
+	 * @param onReceive The code to execute to send data to the remote.
+	 */
+	public void setOnReceive(Consumer<Object> onReceive) {
+		this.onReceive = onReceive;
+	}
 
-    /**
-     * @return The queue to extract data received from the remote.
-     */
-    public BlockingQueueTask<byte[]> getExtractingQueue() {
-        return extractingQueue;
-    }
+	/**
+	 * @return The queue to extract data received from the remote.
+	 */
+	public BlockingQueueTask<byte[]> getExtractingQueue() {
+		return extractingQueue;
+	}
 
-    /**
-     * Set the code to execute to parse data received from the remote.
-     *
-     * @param onExtract The code to execute to send data to the remote.
-     */
-    public void setOnExtract(Consumer<byte[]> onExtract) {
-        this.onExtract = onExtract;
-    }
+	/**
+	 * Set the code to execute to parse data received from the remote.
+	 *
+	 * @param onExtract The code to execute to send data to the remote.
+	 */
+	public void setOnExtract(Consumer<byte[]> onExtract) {
+		this.onExtract = onExtract;
+	}
 
-    /**
-     * @return The queue to dispatch an unexpected message.
-     */
-    public BlockingQueueTask<MessageEvent> getDispatchingQueue() {
-        return dispatchingQueue;
-    }
+	/**
+	 * @return The queue to dispatch an unexpected message.
+	 */
+	public BlockingQueueTask<MessageEvent> getDispatchingQueue() {
+		return dispatchingQueue;
+	}
 
-    /**
-     * Set how to dispatch an unexpected message.
-     *
-     * @param onDispatch The code to execute to dispatch an unexpected message.
-     */
-    public void setOnDispatch(Consumer<MessageEvent> onDispatch) {
-        this.onDispatch = onDispatch;
-    }
+	/**
+	 * Set how to dispatch an unexpected message.
+	 *
+	 * @param onDispatch The code to execute to dispatch an unexpected message.
+	 */
+	public void setOnDispatch(Consumer<MessageEvent> onDispatch) {
+		this.onDispatch = onDispatch;
+	}
 
-    /**
-     * @return The queue to execute a callback.
-     */
-    public BlockingQueueTask<CallbackResult> getCallbackQueue() {
-        return callbackQueue;
-    }
+	/**
+	 * @return The queue to execute a callback.
+	 */
+	public BlockingQueueTask<CallbackResult> getCallbackQueue() {
+		return callbackQueue;
+	}
 
-    private void onSend(IHeaderMessage message) {
-        if (onSend != null) {
-            onSend.accept(message);
-        }
-    }
+	private void onSend(IHeaderMessage message) {
+		if (onSend != null) {
+			onSend.accept(message);
+		}
+	}
 
-    private void onReceive(Object ignored) {
-        if (onReceive != null) {
-            onReceive.accept(ignored);
-        }
-    }
+	private void onReceive(Object ignored) {
+		if (onReceive != null) {
+			onReceive.accept(ignored);
+		}
+	}
 
-    private void onExtract(byte[] raw) {
-        if (onExtract != null) {
-            onExtract.accept(raw);
-        }
-    }
+	private void onExtract(byte[] raw) {
+		if (onExtract != null) {
+			onExtract.accept(raw);
+		}
+	}
 
-    private void onDispatch(MessageEvent event) {
-        if (onDispatch != null) {
-            onDispatch.accept(event);
-        }
-    }
+	private void onDispatch(MessageEvent event) {
+		if (onDispatch != null) {
+			onDispatch.accept(event);
+		}
+	}
 }

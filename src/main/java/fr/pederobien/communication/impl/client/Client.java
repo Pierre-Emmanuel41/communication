@@ -8,48 +8,47 @@ import fr.pederobien.communication.interfaces.client.IClientImpl;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 
 public class Client<T> implements IClient {
-    private final String name;
-    private final IContext context;
+	private final String name;
+	private final IContext context;
 
-    /**
-     * Create a client ready to be connected to a remote.
-     *
-     * @param config The object that holds the client configuration.
-     * @param impl   The client specific implementation to connect/disconnect from
-     *               the server.
-     */
-    public Client(IClientConfig<T> config, IClientImpl<T> impl) {
-        name = String.format("[%s %s]", config.getName(), config.getEndPoint());
-        context = new Context<T>(this, config, impl);
-    }
+	/**
+	 * Create a client ready to be connected to a remote.
+	 *
+	 * @param config The object that holds the client configuration.
+	 * @param impl   The client specific implementation to connect/disconnect from the server.
+	 */
+	public Client(IClientConfig<T> config, IClientImpl<T> impl) {
+		name = String.format("[%s %s]", config.getName(), config.getEndPoint());
+		context = new Context<T>(this, config, impl);
+	}
 
-    @Override
-    public void connect() {
-        context.connect();
-    }
+	@Override
+	public void connect() {
+		context.connect();
+	}
 
-    @Override
-    public void disconnect() {
-        context.disconnect();
-    }
+	@Override
+	public void disconnect() {
+		context.disconnect();
+	}
 
-    @Override
-    public void dispose() {
-        context.dispose();
-    }
+	@Override
+	public void dispose() {
+		context.dispose();
+	}
 
-    @Override
-    public boolean isDisposed() {
-        return context.isDisposed();
-    }
+	@Override
+	public boolean isDisposed() {
+		return context.isDisposed();
+	}
 
-    @Override
-    public IConnection getConnection() {
-        return context.getConnection();
-    }
+	@Override
+	public IConnection getConnection() {
+		return context.getConnection();
+	}
 
-    @Override
-    public String toString() {
-        return name;
-    }
+	@Override
+	public String toString() {
+		return name;
+	}
 }

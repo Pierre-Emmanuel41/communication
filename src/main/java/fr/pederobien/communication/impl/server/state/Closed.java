@@ -6,40 +6,40 @@ import fr.pederobien.utils.event.EventManager;
 
 public class Closed<T> extends State<T> {
 
-    public Closed(Context<T> context) {
-        super(context);
-    }
+	public Closed(Context<T> context) {
+		super(context);
+	}
 
-    @Override
-    public void setEnabled(boolean isEnabled) {
-        if (isEnabled) {
-            try {
+	@Override
+	public void setEnabled(boolean isEnabled) {
+		if (isEnabled) {
+			try {
 
-                // Server specific implementation to close the server
-                getContext().getImpl().close();
+				// Server specific implementation to close the server
+				getContext().getImpl().close();
 
-                EventManager.callEvent(new ServerCloseEvent(getContext().getServer()));
-                info("Server closed");
-            } catch (Exception e) {
-                info("An exception occurred while closing the server: %s", e.getMessage());
-            }
-        }
-    }
+				EventManager.callEvent(new ServerCloseEvent(getContext().getServer()));
+				info("Server closed");
+			} catch (Exception e) {
+				info("An exception occurred while closing the server: %s", e.getMessage());
+			}
+		}
+	}
 
-    @Override
-    public boolean open() {
-        info("Opening server");
-        getContext().setState(getContext().getOpened());
-        return true;
-    }
+	@Override
+	public boolean open() {
+		info("Opening server");
+		getContext().setState(getContext().getOpened());
+		return true;
+	}
 
-    @Override
-    public boolean dispose() {
-        info("Disposing server");
+	@Override
+	public boolean dispose() {
+		info("Disposing server");
 
-        EventManager.callEvent(new ServerDisposeEvent(getContext().getServer()));
-        getContext().getCounter().dispose();
-        getContext().setState(getContext().getDisposed());
-        return true;
-    }
+		EventManager.callEvent(new ServerDisposeEvent(getContext().getServer()));
+		getContext().getCounter().dispose();
+		getContext().setState(getContext().getDisposed());
+		return true;
+	}
 }

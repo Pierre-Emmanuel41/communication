@@ -9,11 +9,11 @@ import java.net.InetSocketAddress;
 
 public class UdpClientImpl implements IClientImpl<IEthernetEndPoint> {
 
-    @Override
-    public IConnectionImpl connect(String name, IEthernetEndPoint endPoint, int timeout) throws Exception {
-        String address = endPoint.getAddress();
-        int port = endPoint.getPort();
+	@Override
+	public IConnectionImpl connect(String name, IEthernetEndPoint endPoint, int timeout) throws Exception {
+		String address = endPoint.getAddress();
+		int port = endPoint.getPort();
 
-        return new UdpConnectionImpl(new UdpSocket(new InetSocketAddress(address, port)));
-    }
+		return new UdpConnectionImpl(new UdpSocket(new InetSocketAddress(address, port)));
+	}
 }

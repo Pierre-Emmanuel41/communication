@@ -8,66 +8,66 @@ import fr.pederobien.utils.event.Logger;
 
 public class Example {
 
-    public static void main(String[] args) {
-        // Do display events
-        Logger.instance().timeStamp(true).newLine(true);
+	public static void main(String[] args) {
+		// Do display events
+		Logger.instance().timeStamp(true).newLine(true);
 
-        MyCustomTcpServer server = new MyCustomTcpServer();
-        server.open();
+		MyCustomTcpServer server = new MyCustomTcpServer();
+		server.open();
 
-        MyCustomTcpClient client = new MyCustomTcpClient();
-        client.connect();
+		MyCustomTcpClient client = new MyCustomTcpClient();
+		client.connect();
 
-        // Waiting for the client to be connected with the server
-        sleep(1000);
+		// Waiting for the client to be connected with the server
+		sleep(1000);
 
-        // The content of this function shall be call when the ClientConnectedEvent is
-        // thrown
-        demoMessageExchange(client);
+		// The content of this function shall be call when the ClientConnectedEvent is
+		// thrown
+		demoMessageExchange(client);
 
-        sleep(2000);
+		sleep(2000);
 
-        server.close();
-        server.dispose();
+		server.close();
+		server.dispose();
 
-        sleep(500);
+		sleep(500);
 
-        client.disconnect();
-        client.dispose();
+		client.disconnect();
+		client.dispose();
 
-        sleep(1000);
-    }
+		sleep(1000);
+	}
 
-    private static void demoMessageExchange(MyCustomTcpClient client) {
-        // Sending a simple message
-        String message = "Hello World !";
-        Logger.info("[Client] Sending %s", message);
-        client.getConnection().send(new Message(message.getBytes()));
+	private static void demoMessageExchange(MyCustomTcpClient client) {
+		// Sending a simple message
+		String message = "Hello World !";
+		Logger.info("[Client] Sending %s", message);
+		client.getConnection().send(new Message(message.getBytes()));
 
-        try {
-            Thread.sleep(1000);
-        } catch (Exception e) {
-            // Do nothing
-        }
+		try {
+			Thread.sleep(1000);
+		} catch (Exception e) {
+			// Do nothing
+		}
 
-        message = "I expect a response";
-        Logger.info("[Client] Sending %s", message);
-        IMessage callback = new Message(message.getBytes(), arguments -> {
-            if (!arguments.isTimeout()) {
-                Logger.info("[Client] Received %s", new String(arguments.response()));
-            } else {
-                Logger.error("Unexpected timeout occurs");
-            }
-        });
-        client.getConnection().send(callback);
-    }
+		message = "I expect a response";
+		Logger.info("[Client] Sending %s", message);
+		IMessage callback = new Message(message.getBytes(), arguments -> {
+			if (!arguments.isTimeout()) {
+				Logger.info("[Client] Received %s", new String(arguments.response()));
+			} else {
+				Logger.error("Unexpected timeout occurs");
+			}
+		});
+		client.getConnection().send(callback);
+	}
 
-    private static void sleep(int millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
+	private static void sleep(int millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

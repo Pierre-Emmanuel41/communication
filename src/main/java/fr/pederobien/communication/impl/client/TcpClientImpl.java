@@ -11,15 +11,15 @@ import java.net.Socket;
 
 public class TcpClientImpl implements IClientImpl<IEthernetEndPoint> {
 
-    @Override
-    public IConnectionImpl connect(String name, IEthernetEndPoint endPoint, int timeout) throws Exception {
-        String address = endPoint.getAddress();
-        int port = endPoint.getPort();
+	@Override
+	public IConnectionImpl connect(String name, IEthernetEndPoint endPoint, int timeout) throws Exception {
+		String address = endPoint.getAddress();
+		int port = endPoint.getPort();
 
-        // Creating a TCP socket to connect with the remote
-        Socket socket = new Socket();
-        socket.connect(new InetSocketAddress(InetAddress.getByName(address), port), timeout);
+		// Creating a TCP socket to connect with the remote
+		Socket socket = new Socket();
+		socket.connect(new InetSocketAddress(InetAddress.getByName(address), port), timeout);
 
-        return new TcpConnectionImpl(socket);
-    }
+		return new TcpConnectionImpl(socket);
+	}
 }

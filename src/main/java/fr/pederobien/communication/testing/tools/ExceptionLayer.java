@@ -10,45 +10,43 @@ import java.util.List;
 
 public class ExceptionLayer implements ILayer {
 
-    private final LayerExceptionMode mode;
+	private final LayerExceptionMode mode;
 
-    /**
-     * Creates a layer that throw an exception when the pack/unpack method is
-     * called.
-     *
-     * @param mode The exception mode of the layer.
-     */
-    public ExceptionLayer(LayerExceptionMode mode) {
-        this.mode = mode;
-    }
+	/**
+	 * Creates a layer that throw an exception when the pack/unpack method is called.
+	 *
+	 * @param mode The exception mode of the layer.
+	 */
+	public ExceptionLayer(LayerExceptionMode mode) {
+		this.mode = mode;
+	}
 
-    /**
-     * Creates a layer that does not throw any exception when the pack/unpack method
-     * is called.
-     */
-    public ExceptionLayer() {
-        this(LayerExceptionMode.NONE);
-    }
+	/**
+	 * Creates a layer that does not throw any exception when the pack/unpack method is called.
+	 */
+	public ExceptionLayer() {
+		this(LayerExceptionMode.NONE);
+	}
 
-    @Override
-    public byte[] pack(IHeaderMessage message) throws Exception {
-        if (mode == LayerExceptionMode.PACK)
-            throw new RuntimeException("Exception to test unstable counter");
+	@Override
+	public byte[] pack(IHeaderMessage message) throws Exception {
+		if (mode == LayerExceptionMode.PACK)
+			throw new RuntimeException("Exception to test unstable counter");
 
-        return message.getBytes();
-    }
+		return message.getBytes();
+	}
 
-    @Override
-    public List<IHeaderMessage> unpack(byte[] raw) throws Exception {
-        if (mode == LayerExceptionMode.UNPACK)
-            throw new RuntimeException("Exception to test unstable counter");
+	@Override
+	public List<IHeaderMessage> unpack(byte[] raw) throws Exception {
+		if (mode == LayerExceptionMode.UNPACK)
+			throw new RuntimeException("Exception to test unstable counter");
 
-        List<IHeaderMessage> messages = new ArrayList<IHeaderMessage>();
-        messages.add(new HeaderMessage(0, new Message(raw)));
-        return messages;
-    }
+		List<IHeaderMessage> messages = new ArrayList<IHeaderMessage>();
+		messages.add(new HeaderMessage(0, new Message(raw)));
+		return messages;
+	}
 
-    public enum LayerExceptionMode {
-        NONE, PACK, UNPACK
-    }
+	public enum LayerExceptionMode {
+		NONE, PACK, UNPACK
+	}
 }

@@ -16,97 +16,95 @@ import fr.pederobien.utils.event.IEventListener;
 import java.util.concurrent.Semaphore;
 
 public class Token implements IToken, IEventListener, IMessageHandler {
-    private final IConnection connection;
-    private final Mode mode;
-    private final IDisposable disposable;
-    private final Semaphore semaphore;
-    private MessageEvent event;
+	private final IConnection connection;
+	private final Mode mode;
+	private final IDisposable disposable;
+	private final Semaphore semaphore;
+	private MessageEvent event;
 
-    /**
-     * Creates a token to perform information exchange before calling
-     * ClientConnectedEvent.
-     *
-     * @param connection The live connection to the remote.
-     */
-    public Token(IConnection connection, Mode mode) {
-        this.connection = connection;
-        this.mode = mode;
+	/**
+	 * Creates a token to perform information exchange before calling ClientConnectedEvent.
+	 *
+	 * @param connection The live connection to the remote.
+	 */
+	public Token(IConnection connection, Mode mode) {
+		this.connection = connection;
+		this.mode = mode;
 
-        disposable = new Disposable();
-        semaphore = new Semaphore(0);
+		disposable = new Disposable();
+		semaphore = new Semaphore(0);
 
-        EventManager.registerListener(this);
-    }
+		EventManager.registerListener(this);
+	}
 
-    @Override
-    public Mode getMode() {
-        return mode;
-    }
+	@Override
+	public Mode getMode() {
+		return mode;
+	}
 
-    @Override
-    public void send(IMessage message) {
-        disposable.checkDisposed();
+	@Override
+	public void send(IMessage message) {
+		disposable.checkDisposed();
 
-        connection.send(message);
-    }
+		connection.send(message);
+	}
 
-    @Override
-    public void answer(int requestID, IMessage message) {
-        disposable.checkDisposed();
+	@Override
+	public void answer(int requestID, IMessage message) {
+		disposable.checkDisposed();
 
-        connection.answer(requestID, message);
-    }
+		connection.answer(requestID, message);
+	}
 
-    @Override
-    public MessageEvent receive() throws InterruptedException {
-        disposable.checkDisposed();
+	@Override
+	public MessageEvent receive() throws InterruptedException {
+		disposable.checkDisposed();
 
-        // Block until an unexpected data has been received.
-        semaphore.acquire();
+		// Block until an unexpected data has been received.
+		semaphore.acquire();
 
-        // To ensure the line above will block.
-        semaphore.drainPermits();
+		// To ensure the line above will block.
+		semaphore.drainPermits();
 
-        return event;
-    }
+		return event;
+	}
 
-    @Override
-    public void dispose() {
-        if (disposable.dispose()) {
+	@Override
+	public void dispose() {
+		if (disposable.dispose()) {
 
-            // Notifying listener
-            notify(new MessageEvent(connection, -1, null));
+			// Notifying listener
+			notify(new MessageEvent(connection, -1, null));
 
-            EventManager.unregisterListener(this);
-        }
-    }
+			EventManager.unregisterListener(this);
+		}
+	}
 
-    @Override
-    public void handle(MessageEvent event) {
-        if (event.getConnection() != connection) {
-            return;
-        }
+	@Override
+	public void handle(MessageEvent event) {
+		if (event.getConnection() != connection) {
+			return;
+		}
 
-        notify(event);
-    }
+		notify(event);
+	}
 
-    @EventHandler
-    private void onConnectionLostEvent(ConnectionLostEvent event) {
-        if (event.getConnection() != connection) {
-            return;
-        }
+	@EventHandler
+	private void onConnectionLostEvent(ConnectionLostEvent event) {
+		if (event.getConnection() != connection) {
+			return;
+		}
 
-        notify(new MessageEvent(connection, -1, null));
-    }
+		notify(new MessageEvent(connection, -1, null));
+	}
 
-    /**
-     * Notify listeners, if any, that an unexpected request has been received from
-     * the remote.
-     *
-     * @param event The event that holds the unexpected request.
-     */
-    private void notify(MessageEvent event) {
-        this.event = event;
-        semaphore.release();
-    }
+	/**
+	 * Notify listeners, if any, that an unexpected request has been received from the remote.
+	 *
+	 * @param event The event that holds the unexpected request.
+	 */
+	private void notify(MessageEvent event) {
+		this.event = event;
+		semaphore.release();
+	}
 }

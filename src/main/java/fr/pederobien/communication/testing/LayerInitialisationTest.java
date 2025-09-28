@@ -19,477 +19,476 @@ import fr.pederobien.utils.IExecutable;
 import fr.pederobien.utils.event.Logger;
 
 public class LayerInitialisationTest {
-    private static final String SERVER_NAME = "Dummy Server";
-    private static final String CLIENT_NAME = "Dummy Client";
-    private static final String ADDRESS = "127.0.01";
-    private static final int PORT = 12345;
+	private static final String SERVER_NAME = "Dummy Server";
+	private static final String CLIENT_NAME = "Dummy Client";
+	private static final String ADDRESS = "127.0.01";
+	private static final int PORT = 12345;
 
-    /**
-     * @return Creates a server configuration with default name and port number.
-     */
-    private static ServerConfig<IEthernetEndPoint> createServerConfig() {
-        return Communication.createServerConfig(SERVER_NAME, new EthernetEndPoint(PORT));
-    }
+	/**
+	 * @return Creates a server configuration with default name and port number.
+	 */
+	private static ServerConfig<IEthernetEndPoint> createServerConfig() {
+		return Communication.createServerConfig(SERVER_NAME, new EthernetEndPoint(PORT));
+	}
 
-    /*
-     * @return Creates a client configuration with default name, address and port
-     * number.
-     */
-    private static ClientConfig<IEthernetEndPoint> createClientConfig() {
-        return Communication.createClientConfig(CLIENT_NAME, new EthernetEndPoint(ADDRESS, PORT));
-    }
+	/*
+	 * @return Creates a client configuration with default name, address and port number.
+	 */
+	private static ClientConfig<IEthernetEndPoint> createClientConfig() {
+		return Communication.createClientConfig(CLIENT_NAME, new EthernetEndPoint(ADDRESS, PORT));
+	}
 
-    public void testRsaLayerInitialization() {
-        IExecutable test = () -> {
-            Network network = new Network();
+	public void testRsaLayerInitialization() {
+		IExecutable test = () -> {
+			Network network = new Network();
 
-            ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-            serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-            IServer server = Communication.createServer(serverConfig, network.getServer());
-            server.open();
+			IServer server = Communication.createServer(serverConfig, network.getServer());
+			server.open();
 
-            ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-            clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-            IClient client = Communication.createClient(clientConfig, network.newClient());
-            client.connect();
+			IClient client = Communication.createClient(clientConfig, network.newClient());
+			client.connect();
 
-            sleep(2000);
+			sleep(2000);
 
-            client.disconnect();
-            client.dispose();
+			client.disconnect();
+			client.dispose();
 
-            sleep(500);
+			sleep(500);
 
-            server.close();
-            server.dispose();
-        };
+			server.close();
+			server.dispose();
+		};
 
-        runTest("testRsaLayerInitialization", test);
-    }
+		runTest("testRsaLayerInitialization", test);
+	}
 
-    public void testRsaLayerInitializationFailureClientToServer() {
-        IExecutable test = () -> {
-            NetworkCorrupter corrupter = new NetworkCorrupter();
+	public void testRsaLayerInitializationFailureClientToServer() {
+		IExecutable test = () -> {
+			NetworkCorrupter corrupter = new NetworkCorrupter();
 
-            // First request: Client public key
-            corrupter.registerClientToServerCorruption(0);
+			// First request: Client public key
+			corrupter.registerClientToServerCorruption(0);
 
-            Network network = new Network(corrupter);
+			Network network = new Network(corrupter);
 
-            ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-            serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-            IServer server = Communication.createServer(serverConfig, network.getServer());
-            server.open();
+			IServer server = Communication.createServer(serverConfig, network.getServer());
+			server.open();
 
-            ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-            clientConfig.setAutomaticReconnection(false);
-            clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setAutomaticReconnection(false);
+			clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-            IClient client = Communication.createClient(clientConfig, network.newClient());
-            client.connect();
+			IClient client = Communication.createClient(clientConfig, network.newClient());
+			client.connect();
 
-            sleep(5000);
+			sleep(5000);
 
-            client.disconnect();
-            client.dispose();
+			client.disconnect();
+			client.dispose();
 
-            sleep(2000);
+			sleep(2000);
 
-            server.close();
-            server.dispose();
-        };
+			server.close();
+			server.dispose();
+		};
 
-        runTest("testRsaLayerInitializationFailureClientToServer", test);
-    }
+		runTest("testRsaLayerInitializationFailureClientToServer", test);
+	}
 
-    public void testRsaLayerInitializationFailureServerAcknowledgement() {
-        IExecutable test = () -> {
-            NetworkCorrupter corrupter = new NetworkCorrupter();
+	public void testRsaLayerInitializationFailureServerAcknowledgement() {
+		IExecutable test = () -> {
+			NetworkCorrupter corrupter = new NetworkCorrupter();
 
-            // First request: server public key
-            // Second request: server acknowledgement
-            corrupter.registerServerToClientCorruption(1);
+			// First request: server public key
+			// Second request: server acknowledgement
+			corrupter.registerServerToClientCorruption(1);
 
-            Network network = new Network(corrupter);
+			Network network = new Network(corrupter);
 
-            ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-            serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-            IServer server = Communication.createServer(serverConfig, network.getServer());
-            server.open();
+			IServer server = Communication.createServer(serverConfig, network.getServer());
+			server.open();
 
-            ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-            clientConfig.setAutomaticReconnection(false);
-            clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setAutomaticReconnection(false);
+			clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-            IClient client = Communication.createClient(clientConfig, network.newClient());
-            client.connect();
+			IClient client = Communication.createClient(clientConfig, network.newClient());
+			client.connect();
 
-            sleep(5000);
+			sleep(5000);
 
-            client.disconnect();
-            client.dispose();
+			client.disconnect();
+			client.dispose();
 
-            sleep(500);
+			sleep(500);
 
-            server.close();
-            server.dispose();
-        };
+			server.close();
+			server.dispose();
+		};
 
-        runTest("testRsaLayerInitializationFailureServerAcknowledgement", test);
-    }
+		runTest("testRsaLayerInitializationFailureServerAcknowledgement", test);
+	}
 
-    public void testRsaLayerInitializationAndTransmission() {
-        IExecutable test = () -> {
-            Network network = new Network();
+	public void testRsaLayerInitializationAndTransmission() {
+		IExecutable test = () -> {
+			Network network = new Network();
 
-            ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-            serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-            IServer server = Communication.createServer(serverConfig, network.getServer());
-            server.open();
+			IServer server = Communication.createServer(serverConfig, network.getServer());
+			server.open();
 
-            ServerListener listener = new ServerListener(server);
-            listener.setMessageHandler(event -> {
-                Logger.debug("Server received %s", new String(event.getData()));
+			ServerListener listener = new ServerListener(server);
+			listener.setMessageHandler(event -> {
+				Logger.debug("Server received %s", new String(event.getData()));
 
-                Message message = new Message("a message from the server".getBytes());
-                event.getConnection().answer(event.getIdentifier(), message);
-            });
+				Message message = new Message("a message from the server".getBytes());
+				event.getConnection().answer(event.getIdentifier(), message);
+			});
 
-            listener.start();
+			listener.start();
 
-            ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-            clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
-            IClient client = Communication.createClient(clientConfig, network.newClient());
-            client.connect();
+			IClient client = Communication.createClient(clientConfig, network.newClient());
+			client.connect();
 
-            sleep(2000);
+			sleep(2000);
 
-            String message = "a message from a client";
-            client.getConnection().send(new Message(message.getBytes(), args -> {
-                if (!args.isTimeout()) {
-                    Logger.debug("Client received %s", new String(args.response()));
-                } else {
-                    Logger.error("Unexpected timeout occurred");
-                }
-            }));
+			String message = "a message from a client";
+			client.getConnection().send(new Message(message.getBytes(), args -> {
+				if (!args.isTimeout()) {
+					Logger.debug("Client received %s", new String(args.response()));
+				} else {
+					Logger.error("Unexpected timeout occurred");
+				}
+			}));
 
-            sleep(2000);
+			sleep(2000);
 
-            client.disconnect();
-            client.dispose();
+			client.disconnect();
+			client.dispose();
 
-            sleep(500);
+			sleep(500);
 
-            listener.stop();
-            server.close();
-            server.dispose();
-        };
+			listener.stop();
+			server.close();
+			server.dispose();
+		};
 
-        runTest("testRsaLayerInitializationAndTransmission", test);
-    }
+		runTest("testRsaLayerInitializationAndTransmission", test);
+	}
 
-    public void testAesLayerInitialization() {
-        IExecutable test = () -> {
-            Network network = new Network();
+	public void testAesLayerInitialization() {
+		IExecutable test = () -> {
+			Network network = new Network();
 
-            ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-            serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-            IServer server = Communication.createServer(serverConfig, network.getServer());
-            server.open();
+			IServer server = Communication.createServer(serverConfig, network.getServer());
+			server.open();
 
-            ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-            clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-            IClient client = Communication.createClient(clientConfig, network.newClient());
-            client.connect();
+			IClient client = Communication.createClient(clientConfig, network.newClient());
+			client.connect();
 
-            sleep(2000);
+			sleep(2000);
 
-            client.disconnect();
-            client.dispose();
+			client.disconnect();
+			client.dispose();
 
-            sleep(500);
+			sleep(500);
 
-            server.close();
-            server.dispose();
-        };
+			server.close();
+			server.dispose();
+		};
 
-        runTest("testAesLayerInitialization", test);
-    }
+		runTest("testAesLayerInitialization", test);
+	}
 
-    public void testAesLayerInitializationFailureClientToServer() {
-        IExecutable test = () -> {
-            NetworkCorrupter corrupter = new NetworkCorrupter();
+	public void testAesLayerInitializationFailureClientToServer() {
+		IExecutable test = () -> {
+			NetworkCorrupter corrupter = new NetworkCorrupter();
 
-            // First request: Client secret key
-            corrupter.registerClientToServerCorruption(0);
+			// First request: Client secret key
+			corrupter.registerClientToServerCorruption(0);
 
-            Network network = new Network(corrupter);
+			Network network = new Network(corrupter);
 
-            ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-            serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-            IServer server = Communication.createServer(serverConfig, network.getServer());
-            server.open();
+			IServer server = Communication.createServer(serverConfig, network.getServer());
+			server.open();
 
-            ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-            clientConfig.setAutomaticReconnection(false);
-            clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setAutomaticReconnection(false);
+			clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-            IClient client = Communication.createClient(clientConfig, network.newClient());
-            client.connect();
+			IClient client = Communication.createClient(clientConfig, network.newClient());
+			client.connect();
 
-            sleep(4000);
+			sleep(4000);
 
-            client.disconnect();
-            client.dispose();
+			client.disconnect();
+			client.dispose();
 
-            sleep(500);
+			sleep(500);
 
-            server.close();
-            server.dispose();
-        };
+			server.close();
+			server.dispose();
+		};
 
-        runTest("testAesLayerInitializationFailureClientToServer", test);
-    }
+		runTest("testAesLayerInitializationFailureClientToServer", test);
+	}
 
-    public void testAesLayerInitializationFailureServerAcknowledgement() {
-        IExecutable test = () -> {
-            NetworkCorrupter corrupter = new NetworkCorrupter();
+	public void testAesLayerInitializationFailureServerAcknowledgement() {
+		IExecutable test = () -> {
+			NetworkCorrupter corrupter = new NetworkCorrupter();
 
-            // First: server public key
-            // Second: server acknowledgement
-            corrupter.registerServerToClientCorruption(1);
+			// First: server public key
+			// Second: server acknowledgement
+			corrupter.registerServerToClientCorruption(1);
 
-            Network network = new Network(corrupter);
+			Network network = new Network(corrupter);
 
-            ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-            serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-            IServer server = Communication.createServer(serverConfig, network.getServer());
-            server.open();
+			IServer server = Communication.createServer(serverConfig, network.getServer());
+			server.open();
 
-            ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-            clientConfig.setAutomaticReconnection(false);
-            clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setAutomaticReconnection(false);
+			clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-            IClient client = Communication.createClient(clientConfig, network.newClient());
-            client.connect();
+			IClient client = Communication.createClient(clientConfig, network.newClient());
+			client.connect();
 
-            sleep(5000);
+			sleep(5000);
 
-            client.disconnect();
-            client.dispose();
+			client.disconnect();
+			client.dispose();
 
-            sleep(500);
+			sleep(500);
 
-            server.close();
-            server.dispose();
-        };
+			server.close();
+			server.dispose();
+		};
 
-        runTest("testAesLayerInitializationFailureServerAcknowledgement", test);
-    }
+		runTest("testAesLayerInitializationFailureServerAcknowledgement", test);
+	}
 
-    public void testAesLayerInitializationFailureIVExchange() {
-        IExecutable test = () -> {
-            NetworkCorrupter corrupter = new NetworkCorrupter();
+	public void testAesLayerInitializationFailureIVExchange() {
+		IExecutable test = () -> {
+			NetworkCorrupter corrupter = new NetworkCorrupter();
 
-            // First: server public key
-            // Second: server acknowledgement
-            // Third: server IV
-            corrupter.registerServerToClientCorruption(2);
+			// First: server public key
+			// Second: server acknowledgement
+			// Third: server IV
+			corrupter.registerServerToClientCorruption(2);
 
-            Network network = new Network(corrupter);
+			Network network = new Network(corrupter);
 
-            ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-            serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-            IServer server = Communication.createServer(serverConfig, network.getServer());
-            server.open();
+			IServer server = Communication.createServer(serverConfig, network.getServer());
+			server.open();
 
-            ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-            clientConfig.setAutomaticReconnection(false);
-            clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setAutomaticReconnection(false);
+			clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-            IClient client = Communication.createClient(clientConfig, network.newClient());
-            client.connect();
+			IClient client = Communication.createClient(clientConfig, network.newClient());
+			client.connect();
 
-            sleep(5000);
+			sleep(5000);
 
-            client.disconnect();
-            client.dispose();
+			client.disconnect();
+			client.dispose();
 
-            sleep(500);
+			sleep(500);
 
-            server.close();
-            server.dispose();
-        };
+			server.close();
+			server.dispose();
+		};
 
-        runTest("testAesLayerInitializationFailureIVExchange", test);
-    }
+		runTest("testAesLayerInitializationFailureIVExchange", test);
+	}
 
-    public void testAesLayerInitializationAndTransmission() {
-        IExecutable test = () -> {
-            Network network = new Network();
+	public void testAesLayerInitializationAndTransmission() {
+		IExecutable test = () -> {
+			Network network = new Network();
 
-            ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-            serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-            IServer server = Communication.createServer(serverConfig, network.getServer());
-            server.open();
+			IServer server = Communication.createServer(serverConfig, network.getServer());
+			server.open();
 
-            ServerListener listener = new ServerListener(server);
-            listener.setMessageHandler(event -> {
-                Logger.debug("Server received %s", new String(event.getData()));
+			ServerListener listener = new ServerListener(server);
+			listener.setMessageHandler(event -> {
+				Logger.debug("Server received %s", new String(event.getData()));
 
-                Message message = new Message("a message from the server".getBytes());
-                event.getConnection().answer(event.getIdentifier(), message);
-            });
+				Message message = new Message("a message from the server".getBytes());
+				event.getConnection().answer(event.getIdentifier(), message);
+			});
 
-            listener.start();
+			listener.start();
 
-            ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-            clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
-            IClient client = Communication.createClient(clientConfig, network.newClient());
-            client.connect();
+			IClient client = Communication.createClient(clientConfig, network.newClient());
+			client.connect();
 
-            sleep(1000);
+			sleep(1000);
 
-            String message = "a message from a client";
-            client.getConnection().send(new Message(message.getBytes(), args -> {
-                if (!args.isTimeout()) {
-                    Logger.debug("Client received %s", new String(args.response()));
-                } else {
-                    Logger.error("Unexpected timeout occurred");
-                }
-            }));
+			String message = "a message from a client";
+			client.getConnection().send(new Message(message.getBytes(), args -> {
+				if (!args.isTimeout()) {
+					Logger.debug("Client received %s", new String(args.response()));
+				} else {
+					Logger.error("Unexpected timeout occurred");
+				}
+			}));
 
-            sleep(2000);
+			sleep(2000);
 
-            client.disconnect();
-            client.dispose();
+			client.disconnect();
+			client.dispose();
 
-            sleep(500);
+			sleep(500);
 
-            listener.stop();
-            server.close();
-            server.dispose();
-        };
+			listener.stop();
+			server.close();
+			server.dispose();
+		};
 
-        runTest("testAesLayerInitializationAndTransmission", test);
-    }
+		runTest("testAesLayerInitializationAndTransmission", test);
+	}
 
-    public void testAesSafeLayerInitializer() {
-        IExecutable test = () -> {
-            Network network = new Network();
+	public void testAesSafeLayerInitializer() {
+		IExecutable test = () -> {
+			Network network = new Network();
 
-            ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-            serverConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 
-            IServer server = Communication.createServer(serverConfig, network.getServer());
-            server.open();
+			IServer server = Communication.createServer(serverConfig, network.getServer());
+			server.open();
 
-            ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-            clientConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 
-            IClient client = Communication.createClient(clientConfig, network.newClient());
-            client.connect();
+			IClient client = Communication.createClient(clientConfig, network.newClient());
+			client.connect();
 
-            sleep(2000);
+			sleep(2000);
 
-            client.disconnect();
-            client.dispose();
+			client.disconnect();
+			client.dispose();
 
-            sleep(500);
+			sleep(500);
 
-            server.close();
-            server.dispose();
-        };
+			server.close();
+			server.dispose();
+		};
 
-        runTest("testAesSafeLayerInitializer", test);
-    }
+		runTest("testAesSafeLayerInitializer", test);
+	}
 
-    public void testAesSafeLayerInitializerAndTransmission() {
-        IExecutable test = () -> {
-            Network network = new Network();
+	public void testAesSafeLayerInitializerAndTransmission() {
+		IExecutable test = () -> {
+			Network network = new Network();
 
-            ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
-            serverConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 
-            IServer server = Communication.createServer(serverConfig, network.getServer());
-            server.open();
+			IServer server = Communication.createServer(serverConfig, network.getServer());
+			server.open();
 
-            ServerListener listener = new ServerListener(server);
-            listener.setMessageHandler(event -> {
-                Logger.debug("Server received %s", new String(event.getData()));
+			ServerListener listener = new ServerListener(server);
+			listener.setMessageHandler(event -> {
+				Logger.debug("Server received %s", new String(event.getData()));
 
-                Message message = new Message("a message from the server".getBytes());
-                event.getConnection().answer(event.getIdentifier(), message);
-            });
+				Message message = new Message("a message from the server".getBytes());
+				event.getConnection().answer(event.getIdentifier(), message);
+			});
 
-            listener.start();
+			listener.start();
 
-            ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-            clientConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 
-            IClient client = Communication.createClient(clientConfig, network.newClient());
-            client.connect();
+			IClient client = Communication.createClient(clientConfig, network.newClient());
+			client.connect();
 
-            sleep(4000);
+			sleep(4000);
 
-            String message = "a message from a client";
-            client.getConnection().send(new Message(message.getBytes(), args -> {
-                if (!args.isTimeout()) {
-                    Logger.debug("Client received %s", new String(args.response()));
-                } else {
-                    Logger.debug("Unexpected timeout occurred");
-                }
-            }));
+			String message = "a message from a client";
+			client.getConnection().send(new Message(message.getBytes(), args -> {
+				if (!args.isTimeout()) {
+					Logger.debug("Client received %s", new String(args.response()));
+				} else {
+					Logger.debug("Unexpected timeout occurred");
+				}
+			}));
 
-            sleep(2000);
+			sleep(2000);
 
-            client.disconnect();
-            client.dispose();
+			client.disconnect();
+			client.dispose();
 
-            sleep(500);
+			sleep(500);
 
-            listener.stop();
-            server.close();
-            server.dispose();
-        };
+			listener.stop();
+			server.close();
+			server.dispose();
+		};
 
-        runTest("testAesSafeLayerInitializerAndTransmission", test);
-    }
+		runTest("testAesSafeLayerInitializerAndTransmission", test);
+	}
 
-    private void runTest(String testName, IExecutable test) {
-        Logger.debug("Begin %s", testName);
-        try {
-            test.exec();
-        } catch (Exception e) {
-            Logger.error("Unexpected error: %s", e.getMessage());
-            for (StackTraceElement trace : e.getStackTrace()) {
-                Logger.error(trace.toString());
-            }
-        }
+	private void runTest(String testName, IExecutable test) {
+		Logger.debug("Begin %s", testName);
+		try {
+			test.exec();
+		} catch (Exception e) {
+			Logger.error("Unexpected error: %s", e.getMessage());
+			for (StackTraceElement trace : e.getStackTrace()) {
+				Logger.error(trace.toString());
+			}
+		}
 
-        Logger.debug("End %s", testName);
+		Logger.debug("End %s", testName);
 
-        sleep(1000);
-    }
+		sleep(1000);
+	}
 
-    private void sleep(int millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
+	private void sleep(int millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 }

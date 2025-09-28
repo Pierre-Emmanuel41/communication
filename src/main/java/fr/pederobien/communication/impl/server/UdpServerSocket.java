@@ -9,268 +9,261 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 public class UdpServerSocket {
-    private final DatagramSocket socket;
-    private final BlockingQueueTask<DatagramPacket> sendingQueue;
-    private final BlockingQueueTask<DatagramPacket> notifyingQueue;
-    private final Thread receivingThread;
-    private final NewClientWaiter clientWaiter;
-    private final int localPort;
+	private final DatagramSocket socket;
+	private final BlockingQueueTask<DatagramPacket> sendingQueue;
+	private final BlockingQueueTask<DatagramPacket> notifyingQueue;
+	private final Thread receivingThread;
+	private final NewClientWaiter clientWaiter;
+	private final int localPort;
 
-    /**
-     * Creates a socket to communicate through UDP with the remote.
-     *
-     * @param name    The name of this socket.
-     * @param address The address of this socket.
-     * @param port    The port number of this socket.
-     */
-    public UdpServerSocket(String name, String address, int port) throws Exception {
-        // Note: The port number does not matter, if the value is out of range, the socket will throw an exception
-        // if the value is 0, the host machine will choose an ephemeral (ie first free) port.
+	/**
+	 * Creates a socket to communicate through UDP with the remote.
+	 *
+	 * @param name    The name of this socket.
+	 * @param address The address of this socket.
+	 * @param port    The port number of this socket.
+	 */
+	public UdpServerSocket(String name, String address, int port) throws Exception {
+		// Note: The port number does not matter, if the value is out of range, the socket will throw an exception
+		// if the value is 0, the host machine will choose an ephemeral (ie first free) port.
 
-        // Case 1: Any address
-        if (address.equals("*")) {
-            socket = new DatagramSocket(port);
-        }
-        // Case 2: Specific hostname
-        else {
-            socket = new DatagramSocket(port, InetAddress.getByName(address));
-        }
+		// Case 1: Any address
+		if (address.equals("*")) {
+			socket = new DatagramSocket(port);
+		}
+		// Case 2: Specific hostname
+		else {
+			socket = new DatagramSocket(port, InetAddress.getByName(address));
+		}
 
-        localPort = socket.getLocalPort();
+		localPort = socket.getLocalPort();
 
-        sendingQueue = new BlockingQueueTask<DatagramPacket>(name + "_send", this::sending);
-        notifyingQueue = new BlockingQueueTask<DatagramPacket>(name + "_notify", this::notifying);
-        receivingThread = new Thread(this::receiving, name + "_receive");
-        clientWaiter = new NewClientWaiter(this);
+		sendingQueue = new BlockingQueueTask<DatagramPacket>(name + "_send", this::sending);
+		notifyingQueue = new BlockingQueueTask<DatagramPacket>(name + "_notify", this::notifying);
+		receivingThread = new Thread(this::receiving, name + "_receive");
+		clientWaiter = new NewClientWaiter(this);
 
-        // Starting thread waiting for sending data to the remote
-        sendingQueue.start();
+		// Starting thread waiting for sending data to the remote
+		sendingQueue.start();
 
-        // Starting thread looping for receiving data from the remote.
-        receivingThread.setDaemon(true);
-        receivingThread.start();
+		// Starting thread looping for receiving data from the remote.
+		receivingThread.setDaemon(true);
+		receivingThread.start();
 
-        // Starting thread waiting for packet reception
-        notifyingQueue.start();
-    }
+		// Starting thread waiting for packet reception
+		notifyingQueue.start();
+	}
 
-    /**
-     * Returns the port number on the local host to which this socket
-     * is bound.
-     *
-     * @return the port number on the local host to which this socket is bound,
-     * {@code -1} if the socket is closed, or
-     * {@code 0} if it is not bound yet.
-     */
-    protected int getLocalPort() {
-        return localPort;
-    }
+	/**
+	 * Returns the port number on the local host to which this socket is bound.
+	 *
+	 * @return the port number on the local host to which this socket is bound, {@code -1} if the socket is closed, or {@code 0} if it
+	 *         is not bound yet.
+	 */
+	protected int getLocalPort() {
+		return localPort;
+	}
 
-    /**
-     * Close this socket.
-     */
-    public void close() {
-        socket.close();
-    }
+	/**
+	 * Close this socket.
+	 */
+	public void close() {
+		socket.close();
+	}
 
-    /**
-     * Blocks until data has been received from an unknown address.
-     *
-     * @return The socket bound to the remote.
-     */
-    public IUdpSocket accept() throws InterruptedException {
-        return clientWaiter.waitForNewClient();
-    }
+	/**
+	 * Blocks until data has been received from an unknown address.
+	 *
+	 * @return The socket bound to the remote.
+	 */
+	public IUdpSocket accept() throws InterruptedException {
+		return clientWaiter.waitForNewClient();
+	}
 
-    /**
-     * Connection specific implementation to send a message to the remote. The bytes
-     * array is the result of the layer that has encapsulated the payload with other
-     * information in order to be received correctly.
-     *
-     * @param data    The byte array to send to the remote.
-     * @param address The socket address that contains the IP address and the port
-     *                number of the remote.
-     */
-    protected void send(byte[] data, InetSocketAddress address) {
-        sendingQueue.add(new DatagramPacket(data, data.length, address));
-    }
+	/**
+	 * Connection specific implementation to send a message to the remote. The bytes array is the result of the layer that has
+	 * encapsulated the payload with other information in order to be received correctly.
+	 *
+	 * @param data    The byte array to send to the remote.
+	 * @param address The socket address that contains the IP address and the port number of the remote.
+	 */
+	protected void send(byte[] data, InetSocketAddress address) {
+		sendingQueue.add(new DatagramPacket(data, data.length, address));
+	}
 
-    /**
-     * Connection specific implementation to receive bytes from the remote.
-     *
-     * @param address The address
-     * @return The packet received from the remote.
-     */
-    protected DatagramPacket receive(InetSocketAddress address) {
-        return clientWaiter.get(address).waitForReception();
-    }
+	/**
+	 * Connection specific implementation to receive bytes from the remote.
+	 *
+	 * @param address The address
+	 * @return The packet received from the remote.
+	 */
+	protected DatagramPacket receive(InetSocketAddress address) {
+		return clientWaiter.get(address).waitForReception();
+	}
 
-    /**
-     * Remove the waiter associated to the given address.
-     *
-     * @param address The remote address of the waiter.
-     */
-    protected void unregister(InetSocketAddress address) {
-        clientWaiter.unregister(address);
-    }
+	/**
+	 * Remove the waiter associated to the given address.
+	 *
+	 * @param address The remote address of the waiter.
+	 */
+	protected void unregister(InetSocketAddress address) {
+		clientWaiter.unregister(address);
+	}
 
-    /**
-     * Send the packet to the remote.
-     *
-     * @param packet The packet to send.
-     */
-    private void sending(DatagramPacket packet) {
-        try {
-            socket.send(packet);
-        } catch (Exception e) {
-            // TODO: unstable counter
-        }
-    }
+	/**
+	 * Send the packet to the remote.
+	 *
+	 * @param packet The packet to send.
+	 */
+	private void sending(DatagramPacket packet) {
+		try {
+			socket.send(packet);
+		} catch (Exception e) {
+			// TODO: unstable counter
+		}
+	}
 
-    /**
-     * Block until data has been received from the remote.
-     */
-    private void receiving() {
-        try {
-            byte[] buffer = new byte[2048];
-            while (true) {
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet);
+	/**
+	 * Block until data has been received from the remote.
+	 */
+	private void receiving() {
+		try {
+			byte[] buffer = new byte[2048];
+			while (true) {
+				DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+				socket.receive(packet);
 
-                // Handling the received in a dedicated task
-                notifyingQueue.add(packet);
-            }
-        } catch (Exception e) {
-            // Server has been closed
-        }
-    }
+				// Handling the received in a dedicated task
+				notifyingQueue.add(packet);
+			}
+		} catch (Exception e) {
+			// Server has been closed
+		}
+	}
 
-    /**
-     * If no waiter is registered for the packet address then a new waiter is
-     * created, else the existing waiter will be notified that data has been
-     * received.
-     *
-     * @param packet The packet received from the network.
-     */
-    private void notifying(DatagramPacket packet) {
-        clientWaiter.onDataReceived(packet);
-    }
+	/**
+	 * If no waiter is registered for the packet address then a new waiter is created, else the existing waiter will be notified that
+	 * data has been received.
+	 *
+	 * @param packet The packet received from the network.
+	 */
+	private void notifying(DatagramPacket packet) {
+		clientWaiter.onDataReceived(packet);
+	}
 
-    private static class Waiter {
-        private final Semaphore semaphore;
-        private DatagramPacket packet;
+	private static class Waiter {
+		private final Semaphore semaphore;
+		private DatagramPacket packet;
 
-        /**
-         * Creates an object that will wait until data has been received
-         */
-        public Waiter() {
-            semaphore = new Semaphore(0);
-        }
+		/**
+		 * Creates an object that will wait until data has been received
+		 */
+		public Waiter() {
+			semaphore = new Semaphore(0);
+		}
 
-        /**
-         * Block until data has been received for this object.
-         *
-         * @return The packet received from the remote.
-         */
-        public DatagramPacket waitForReception() {
-            try {
-                semaphore.acquire();
-            } catch (InterruptedException e) {
-                return null;
-            }
+		/**
+		 * Block until data has been received for this object.
+		 *
+		 * @return The packet received from the remote.
+		 */
+		public DatagramPacket waitForReception() {
+			try {
+				semaphore.acquire();
+			} catch (InterruptedException e) {
+				return null;
+			}
 
-            return packet;
-        }
+			return packet;
+		}
 
-        /**
-         * Set the datagram packet received from the remote and notify for further
-         * processing.
-         *
-         * @param packet The datagram packet received from the remote.
-         */
-        public void notifyForReception(DatagramPacket packet) {
-            this.packet = packet;
-            semaphore.release();
-        }
-    }
+		/**
+		 * Set the datagram packet received from the remote and notify for further processing.
+		 *
+		 * @param packet The datagram packet received from the remote.
+		 */
+		public void notifyForReception(DatagramPacket packet) {
+			this.packet = packet;
+			semaphore.release();
+		}
+	}
 
-    private static class NewClientWaiter {
-        private final UdpServerSocket serverSocket;
-        private final Object lock;
-        private final Map<SocketAddress, Waiter> waiters;
-        private final Semaphore semaphore;
-        private IUdpSocket socket;
+	private static class NewClientWaiter {
+		private final UdpServerSocket serverSocket;
+		private final Object lock;
+		private final Map<SocketAddress, Waiter> waiters;
+		private final Semaphore semaphore;
+		private IUdpSocket socket;
 
-        /**
-         * Creates an object waiting for new UDP client to be connected.
-         *
-         * @param serverSocket The server socket on which UDP will be connected.
-         */
-        public NewClientWaiter(UdpServerSocket serverSocket) {
-            this.serverSocket = serverSocket;
+		/**
+		 * Creates an object waiting for new UDP client to be connected.
+		 *
+		 * @param serverSocket The server socket on which UDP will be connected.
+		 */
+		public NewClientWaiter(UdpServerSocket serverSocket) {
+			this.serverSocket = serverSocket;
 
-            lock = new Object();
-            waiters = new HashMap<SocketAddress, Waiter>();
-            semaphore = new Semaphore(0);
-        }
+			lock = new Object();
+			waiters = new HashMap<SocketAddress, Waiter>();
+			semaphore = new Semaphore(0);
+		}
 
-        /**
-         * Blocks until a new client is connected to the server.
-         *
-         * @return The socket connected with the remote.
-         */
-        public IUdpSocket waitForNewClient() throws InterruptedException {
-            semaphore.acquire();
-            return socket;
-        }
+		/**
+		 * Blocks until a new client is connected to the server.
+		 *
+		 * @return The socket connected with the remote.
+		 */
+		public IUdpSocket waitForNewClient() throws InterruptedException {
+			semaphore.acquire();
+			return socket;
+		}
 
-        /**
-         * If no waiter is registered for the packet address then a new waiter is
-         * created, else the existing waiter will be notified that data has been
-         * received.
-         *
-         * @param packet The packet received from the network.
-         */
-        public void onDataReceived(DatagramPacket packet) {
-            Waiter waiter = null;
-            synchronized (lock) {
-                waiter = waiters.get(packet.getSocketAddress());
-            }
+		/**
+		 * If no waiter is registered for the packet address then a new waiter is created, else the existing waiter will be notified that
+		 * data has been received.
+		 *
+		 * @param packet The packet received from the network.
+		 */
+		public void onDataReceived(DatagramPacket packet) {
+			Waiter waiter = null;
+			synchronized (lock) {
+				waiter = waiters.get(packet.getSocketAddress());
+			}
 
-            if (waiter == null) {
-                waiter = new Waiter();
-                waiters.put(packet.getSocketAddress(), waiter);
-                socket = new UdpSocket(serverSocket, (InetSocketAddress) packet.getSocketAddress());
-                semaphore.release();
-            } else {
-                waiter.notifyForReception(packet);
-            }
-        }
+			if (waiter == null) {
+				waiter = new Waiter();
+				waiters.put(packet.getSocketAddress(), waiter);
+				socket = new UdpSocket(serverSocket, (InetSocketAddress) packet.getSocketAddress());
+				semaphore.release();
+			} else {
+				waiter.notifyForReception(packet);
+			}
+		}
 
-        /**
-         * Get the waiter associated to the given address.
-         *
-         * @param address The address of the remote.
-         * @return The waiter associated to the remote address.
-         */
-        public Waiter get(SocketAddress address) {
-            Waiter waiter = null;
-            synchronized (lock) {
-                waiter = waiters.get(address);
-            }
+		/**
+		 * Get the waiter associated to the given address.
+		 *
+		 * @param address The address of the remote.
+		 * @return The waiter associated to the remote address.
+		 */
+		public Waiter get(SocketAddress address) {
+			Waiter waiter = null;
+			synchronized (lock) {
+				waiter = waiters.get(address);
+			}
 
-            return waiter;
-        }
+			return waiter;
+		}
 
-        /**
-         * Remove the waiter associated to the given address.
-         *
-         * @param address The remote address of the waiter.
-         */
-        public void unregister(SocketAddress address) {
-            synchronized (lock) {
-                waiters.remove(address);
-            }
-        }
-    }
+		/**
+		 * Remove the waiter associated to the given address.
+		 *
+		 * @param address The remote address of the waiter.
+		 */
+		public void unregister(SocketAddress address) {
+			synchronized (lock) {
+				waiters.remove(address);
+			}
+		}
+	}
 }
