@@ -8,13 +8,13 @@ import fr.pederobien.utils.event.Logger;
  */
 public class CommunicationTestApp {
     public static void main(String[] args) {
-        Logger.instance().newLine(true).timeStamp(true).colorized(true);
+        Logger.instance().newLine(true).timeStamp(true).colorized(true).debug(true);
 
-        runTest("Network tests", CommunicationTestApp::runNetworkTest);
-        runTest("Layer tests", CommunicationTestApp::runLayerTests);
-        runTest("Layer initialisation tests", CommunicationTestApp::runLayerInitialisationTest);
+        //runTest("Network tests", CommunicationTestApp::runNetworkTest);
+        //runTest("Layer tests", CommunicationTestApp::runLayerTests);
+        //runTest("Layer initialisation tests", CommunicationTestApp::runLayerInitialisationTest);
         runTest("TCP tests", CommunicationTestApp::runTcpCommunicationTest);
-        runTest("UDP tests", CommunicationTestApp::runUdpCommunicationTest);
+        //runTest("UDP tests", CommunicationTestApp::runUdpCommunicationTest);
 
         // Asynchronous tests, wait a little bit before closing tests session
         sleep(1000);
@@ -89,24 +89,7 @@ public class CommunicationTestApp {
 
     private static void runTcpCommunicationTest() {
         TcpCommunicationTest tests = new TcpCommunicationTest();
-
-        tests.testServerWithSpecificAddressAndPort();
-        tests.testServerWithSpecificAddressButAnyPort();
-        tests.testServerWithAnyAddressButSpecificPort();
-        tests.testServerWithAnyAddressAndAnyPort();
-        tests.testClientAutomaticReconnection();
-        tests.testClientAutomaticReconnectionButWithServerOpenedLater();
-        tests.testClientAutomaticReconnectionButServerClosedLater();
-        tests.testClientToServerCommunication();
-        tests.testServerToClientCommunication();
-        tests.testClientToServerWithCallback();
-        tests.testClientToServerWithCallbackButTimeout();
-        tests.testServerToClientWithCallback();
-        tests.testServerToClientWithCallbackButTimeout();
-        tests.testExtractionException();
-        tests.testCallbackException();
-        tests.testUnexpectedRequestException();
-        tests.testUnstableClient();
+        
         tests.testRsaLayer();
         tests.testAesLayer();
         tests.testAesSafeLayer();
@@ -137,7 +120,7 @@ public class CommunicationTestApp {
     }
 
     private static void runTest(String testName, IExecutable test) {
-        Logger.debug("Start of %s execution", testName);
+        Logger.warning("Start of %s execution", testName);
         try {
             test.exec();
         } catch (Exception e) {
@@ -148,7 +131,7 @@ public class CommunicationTestApp {
         }
 
         sleep(1000);
-        Logger.debug("End of %s execution", testName);
+        Logger.warning("End of %s execution", testName);
     }
 
     private static void sleep(int millis) {

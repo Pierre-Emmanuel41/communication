@@ -21,7 +21,7 @@ public class Closed<T> extends State<T> {
                 EventManager.callEvent(new ServerCloseEvent(getContext().getServer()));
                 info("Server closed");
             } catch (Exception e) {
-                e.printStackTrace();
+                info("An exception occurred while closing the server: %s", e.getMessage());
             }
         }
     }

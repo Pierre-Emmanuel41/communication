@@ -126,7 +126,7 @@ public class CallbackManager {
             this.identifier = identifier;
             this.request = request;
 
-            monitor = new Thread(() -> monitor(), String.format("[%s Timeout monitor]", identifier));
+            monitor = new Thread(this::monitor, String.format("[%s Timeout monitor]", identifier));
             semaphore = new Semaphore(0);
         }
 

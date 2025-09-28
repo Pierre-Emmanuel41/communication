@@ -70,6 +70,7 @@ public class Disconnected<T> extends State<T> {
             try {
                 impl = getContext().getImpl().connect(name, endPoint, timeout);
             } catch (Exception e) {
+                debug("Exception while attempting connection with the remote: %s", e.getMessage());
                 retry(false);
                 return;
             }
@@ -77,6 +78,7 @@ public class Disconnected<T> extends State<T> {
             if (!disconnectionRequested) {
                 IConnection connection = Communication.createConnection(getConfig(), getConfig().getEndPoint(), impl);
 
+                debug("Initializing connection");
                 if (!connection.initialise()) {
                     Logger.warning("%s - Initialisation failure", getContext().getClient());
                     connection.setEnabled(false);
@@ -86,6 +88,7 @@ public class Disconnected<T> extends State<T> {
                     if (disconnectionRequested) {
                         connection.dispose();
                     } else {
+                        debug("Connection initialized successfully");
                         connection.setMessageHandler(getConfig().getMessageHandler());
                         getContext().setConnection(connection);
                         getContext().setState(getContext().getConnected());
@@ -95,6 +98,7 @@ public class Disconnected<T> extends State<T> {
             }
 
         } catch (Exception e) {
+            debug("General Exception while connecting with the remote: %s", e.getMessage());
             retry(true);
         }
     }

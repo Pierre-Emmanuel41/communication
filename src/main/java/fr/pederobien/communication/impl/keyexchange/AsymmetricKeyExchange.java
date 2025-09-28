@@ -4,6 +4,7 @@ import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.interfaces.IToken;
 import fr.pederobien.utils.Watchdog;
 import fr.pederobien.utils.Watchdog.WatchdogStakeholder;
+import fr.pederobien.utils.event.Logger;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -34,11 +35,15 @@ public class AsymmetricKeyExchange extends Exchange {
 
     @Override
     protected boolean doServerToClientExchange() throws Exception {
+        Logger.debug("[Server to Client] Generating key pair and sending public key to the client");
+
         send(keyManager.generatePair().getEncoded(), timeout, args -> {
             if (!args.isTimeout()) {
 
                 // Extracting client public key
                 if (keyManager.parse(args.response()) != null) {
+
+                    Logger.debug("[Server to Client] Client's public key received successfully");
 
                     // Sending positive acknowledgement to the client
                     serverToClient_sendPositiveAcknowledgement(args.identifier());
@@ -60,6 +65,8 @@ public class AsymmetricKeyExchange extends Exchange {
     protected boolean doClientToServerExchange() throws Exception {
         watchdog = Watchdog.create(() -> {
 
+            Logger.debug("[Client to Server] Waiting for server's public key");
+
             // Waiting for server public key
             MessageEvent event = receive();
 
@@ -70,6 +77,8 @@ public class AsymmetricKeyExchange extends Exchange {
 
             // Parsing remote public key
             else if (keyManager.parse(event.getData()) != null) {
+
+                Logger.debug("[Client to Server] Server's public key received successfully");
 
                 // Generating a new key to send
                 clientToServer_sendPublicKey(event.getIdentifier(), keyManager.generatePair().getEncoded());
@@ -94,9 +103,12 @@ public class AsymmetricKeyExchange extends Exchange {
     }
 
     private void serverToClient_sendPositiveAcknowledgement(int identifier) {
+        Logger.debug("[Server to Client] Sending positive acknowledgement to the client");
+
         answer(identifier, SUCCESS_PATTERN, timeout, args -> {
             if (!args.isTimeout()) {
                 if (Arrays.equals(SUCCESS_PATTERN, args.response())) {
+                    Logger.debug("[Server to Client] Positive acknowledgement received from the client");
                     success = true;
                 }
             }
@@ -104,9 +116,13 @@ public class AsymmetricKeyExchange extends Exchange {
     }
 
     private void clientToServer_sendPublicKey(int identifier, byte[] keyToSend) {
+        Logger.debug("[Client to server] Sending public key to the server");
+
         answer(identifier, keyToSend, timeout, args -> {
             if (!args.isTimeout()) {
                 if (Arrays.equals(SUCCESS_PATTERN, args.response())) {
+                    Logger.debug("[Client to Server] Positive acknowledgement received, sending back positive acknowledgement");
+
                     answer(args.identifier(), SUCCESS_PATTERN);
                     success = true;
                 }

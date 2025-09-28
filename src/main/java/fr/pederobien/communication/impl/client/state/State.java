@@ -40,11 +40,22 @@ public abstract class State<T> implements IState {
     }
 
     /**
-     * Print a log using INFO debug level
+     * Print a log using INFO level
      *
-     * @param message The message of the event.
+     * @param message The message to print.
+     * @param args    The arguments of the message.
      */
-    protected void info(String message) {
-        Logger.info("%s - %s", context.getClient(), message);
+    protected void info(String message, Object... args) {
+        Logger.info("%s - %s", context.getClient(), String.format(message, args));
+    }
+
+    /**
+     * Print a log using DEBUG level.
+     *
+     * @param message The message to print.
+     * @param args    The arguments of the message.
+     */
+    protected void debug(String message, Object... args) {
+        Logger.debug("%s - %s", context.getClient(), String.format(message, args));
     }
 }

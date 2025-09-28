@@ -4,6 +4,7 @@ import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.interfaces.IToken;
 import fr.pederobien.utils.Watchdog;
 import fr.pederobien.utils.Watchdog.WatchdogStakeholder;
+import fr.pederobien.utils.event.Logger;
 
 import javax.crypto.spec.IvParameterSpec;
 import java.security.SecureRandom;
@@ -35,6 +36,8 @@ public class IvParameterSpecExchange extends Exchange {
 
     @Override
     protected boolean doServerToClientExchange() throws Exception {
+        Logger.debug("[Server to Client] Sending IV parameter to the client");
+
         // Generating a new parameter specification to send
         byte[] iv = new byte[16];
         SecureRandom random = new SecureRandom();
@@ -45,6 +48,8 @@ public class IvParameterSpecExchange extends Exchange {
 
                 // Step 2: Receiving remote parameter specification
                 if (Arrays.equals(args.response(), iv)) {
+
+                    Logger.debug("[Server to Client] Client's IV parameter identical to server IV parameter");
 
                     // Sending positive acknowledgement to the client
                     serverToClient_sendPositiveAcknowledgement(args.identifier(), iv);
@@ -60,6 +65,8 @@ public class IvParameterSpecExchange extends Exchange {
         watchdog = Watchdog.create(() -> {
             while (!success) {
 
+                Logger.debug("[Client to Server] Waiting for server's IV parameter");
+
                 // Waiting for initialisation to happen successfully
                 MessageEvent event = receive();
 
@@ -67,6 +74,8 @@ public class IvParameterSpecExchange extends Exchange {
                 if (event.getData() == null) {
                     watchdog.cancel();
                 } else {
+
+                    Logger.debug("[Client to Server] Server's IV parameter received successfully");
 
                     // Sending back the remote secret key
                     clientToServer_sendBackSecretKey(event.getIdentifier(), event.getData());
@@ -77,10 +86,14 @@ public class IvParameterSpecExchange extends Exchange {
     }
 
     private void serverToClient_sendPositiveAcknowledgement(int identifier, byte[] iv) {
+        Logger.debug("[Server to Client] Sending positive acknowledgement to the client");
+
         answer(identifier, SUCCESS_PATTERN, 2000, args -> {
             if (!args.isTimeout()) {
 
                 if (Arrays.equals(SUCCESS_PATTERN, args.response())) {
+                    Logger.debug("[Server to Client] Positive acknowledgement received from the client");
+
                     ivParameterSpec = new IvParameterSpec(iv);
                     success = true;
                 }
@@ -89,9 +102,13 @@ public class IvParameterSpecExchange extends Exchange {
     }
 
     private void clientToServer_sendBackSecretKey(int identifier, byte[] iv) {
+        Logger.debug("[Client to server] Sending IV parameter to the server");
+
         answer(identifier, iv, 2000, args -> {
             if (!args.isTimeout()) {
                 if (Arrays.equals(SUCCESS_PATTERN, args.response())) {
+                    Logger.debug("[Client to Server] Positive acknowledgement received, sending back positive acknowledgement");
+
                     answer(args.identifier(), SUCCESS_PATTERN);
                     ivParameterSpec = new IvParameterSpec(iv);
                     success = true;

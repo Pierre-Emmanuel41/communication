@@ -32,6 +32,7 @@ public class Connection<T> implements IConnection {
     private IMessageHandler handler;
     private boolean isEnabled;
     private CallbackArgs argument;
+    private boolean disposeRequested;
 
     /**
      * Create an abstract connection that send asynchronously messages to the
@@ -67,6 +68,7 @@ public class Connection<T> implements IConnection {
         layerInitializer = config.getLayerInitializer();
         name = String.format("[%s]", name);
         isEnabled = true;
+        disposeRequested = false;
     }
 
     @Override
@@ -126,6 +128,8 @@ public class Connection<T> implements IConnection {
     public void dispose() {
         if (disposable.dispose()) {
 
+            disposeRequested = true;
+
             // Disposing connection implementation
             impl.dispose();
 
@@ -156,8 +160,18 @@ public class Connection<T> implements IConnection {
      * Throw an unstable connection event.
      */
     private void onUnstableConnection() {
-        Logger.error("%s - Unstable connection detected", name);
+        Logger.error("%s - Unstable connection detected", this);
         EventManager.callEvent(new ConnectionUnstableEvent(this));
+    }
+
+    /**
+     * Print a log using DEBUG level.
+     *
+     * @param message The message to print.
+     * @param args    The arguments of the message.
+     */
+    private void debug(String message, Object... args) {
+        Logger.debug("%s - %s", this, String.format(message, args));
     }
 
     /**
@@ -173,8 +187,11 @@ public class Connection<T> implements IConnection {
                 callbackManager.start(message.getIdentifier());
                 impl.send(data);
 
-            } catch (Exception exception) {
-                counter.increment();
+            } catch (Exception e) {
+                if (!disposeRequested) {
+                    debug("An exception occurred while sending a message: %s", e.getMessage());
+                    counter.increment();
+                }
             }
         }
     }
@@ -189,9 +206,12 @@ public class Connection<T> implements IConnection {
             try {
                 raw = impl.receive();
             } catch (Exception e) {
-                if (!counter.increment() && !isDisposed()) {
-                    // Waiting again for the reception
-                    queueManager.getReceivingQueue().add(new Object());
+                if (!disposeRequested) {
+                    debug("An exception occurred while receiving a message: %s", e.getMessage());
+
+                    if (!counter.increment())
+                        // Waiting again for the reception
+                        queueManager.getReceivingQueue().add(new Object());
                 }
 
                 // No need to go further
@@ -245,7 +265,10 @@ public class Connection<T> implements IConnection {
                 }
 
             } catch (Exception e) {
-                counter.increment();
+                if (!disposeRequested) {
+                    debug("An exception occurred while extracting a message: %s", e.getMessage());
+                    counter.increment();
+                }
             }
         }
     }
@@ -276,6 +299,7 @@ public class Connection<T> implements IConnection {
                 // Wait until the callback has been executed
                 semaphore.acquire();
             } catch (Exception e) {
+                debug("An exception occurred while waiting for remote's answer: %s", e.getMessage());
                 argument = new CallbackArgs(-1, null, true, false);
             } finally {
                 // Always draining the semaphore to force the synchronous send
@@ -308,6 +332,7 @@ public class Connection<T> implements IConnection {
         try {
             handler.handle(event);
         } catch (Exception e) {
+            debug("An exception occurred while dispatching a message: %s", e.getMessage());
             counter.increment();
         }
     }

@@ -820,7 +820,7 @@ public class TcpCommunicationTest {
     }
 
     private void runTest(String testName, IExecutable test) {
-        Logger.debug("Begin %s", testName);
+        Logger.warning("Begin %s", testName);
         try {
             test.exec();
         } catch (Exception e) {
@@ -829,7 +829,7 @@ public class TcpCommunicationTest {
                 Logger.error(trace.toString());
             }
         }
-        Logger.debug("End %s", testName);
+        Logger.warning("End %s", testName);
     }
 
     private void sleep(int millis) {

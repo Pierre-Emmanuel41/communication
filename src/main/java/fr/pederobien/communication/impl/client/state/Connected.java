@@ -54,6 +54,7 @@ public class Connected<T> extends State<T> implements IEventListener {
             return;
         }
 
+        debug("Connection with the remote has been lost");
         reconnect();
     }
 
@@ -63,6 +64,7 @@ public class Connected<T> extends State<T> implements IEventListener {
             return;
         }
 
+        debug("Connection with the remote detected as unstable");
         reconnect();
     }
 

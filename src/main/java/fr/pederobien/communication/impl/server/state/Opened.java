@@ -42,7 +42,7 @@ public class Opened<T> extends State<T> implements IEventListener {
                 EventManager.callEvent(new ServerOpenEvent(getContext().getServer()));
                 info("Server opened");
             } catch (Exception e) {
-                e.printStackTrace();
+                info("An exception occurred while opening the server: %s", e.getMessage());
             }
         }
     }
@@ -66,36 +66,55 @@ public class Opened<T> extends State<T> implements IEventListener {
 
     private void waitForClient() {
         while (!closeRequested) {
+            // Server implementation specific to wait for a new client
+            IClientInfo<T> info;
+
             try {
-
-                // Server implementation specific to wait for a new client
-                IClientInfo<T> info = getImpl().waitForClient();
-
-                // The client is not allowed to be connected with the server
-                if (closeRequested || !getConfig().getClientValidator().isValid(info.getEndPoint())) {
-                    info.getImpl().dispose();
-                    continue;
-                }
-
-                IConnection connection = Communication.createConnection(getConfig(), info.getEndPoint(), info.getImpl());
-                boolean initialised = connection.initialise();
-
-                if (closeRequested || !connection.initialise()) {
-                    if (!initialised) {
-                        Logger.warning("%s - Initialisation failure", getContext().getName());
-                    }
-
-                    disposeConnection(connection);
-                } else {
-                    connections.add(connection);
-
-                    // Notifying observers that a client is connected
-                    EventManager.callEvent(new NewClientEvent(getContext().getServer(), connection));
-                }
+                info = getImpl().waitForClient();
             } catch (Exception e) {
+                if (!closeRequested)
+                    debug("An exception occurred while waiting for a client: %s", e.getMessage());
+
                 if (getContext().getCounter().increment()) {
                     break;
                 }
+
+                continue;
+            }
+
+            // The client is not allowed to be connected with the server
+            if (closeRequested || !getConfig().getClientValidator().isValid(info.getEndPoint())) {
+                debug("Client is not allowed to connect to the server");
+
+                info.getImpl().dispose();
+                continue;
+            }
+
+            IConnection connection = Communication.createConnection(getConfig(), info.getEndPoint(), info.getImpl());
+            boolean initialised;
+
+            try {
+                initialised = connection.initialise();
+            } catch (Exception e) {
+                debug("An exception occurred while initializing connection with the client: %s", e.getMessage());
+                if (getContext().getCounter().increment()) {
+                    break;
+                }
+
+                continue;
+            }
+
+            if (closeRequested || !initialised) {
+                if (!initialised) {
+                    Logger.warning("%s - Initialisation failure", getContext().getName());
+                }
+
+                disposeConnection(connection);
+            } else {
+                connections.add(connection);
+
+                // Notifying observers that a client is connected
+                EventManager.callEvent(new NewClientEvent(getContext().getServer(), connection));
             }
         }
     }
