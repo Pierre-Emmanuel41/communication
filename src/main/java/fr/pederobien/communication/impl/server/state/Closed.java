@@ -1,7 +1,6 @@
 package fr.pederobien.communication.impl.server.state;
 
 import fr.pederobien.communication.event.ServerCloseEvent;
-import fr.pederobien.communication.event.ServerDisposeEvent;
 import fr.pederobien.utils.event.EventManager;
 
 public class Closed<T> extends State<T> {
@@ -37,7 +36,6 @@ public class Closed<T> extends State<T> {
 	public boolean dispose() {
 		info("Disposing server");
 
-		EventManager.callEvent(new ServerDisposeEvent(getContext().getServer()));
 		getContext().getCounter().dispose();
 		getContext().setState(getContext().getDisposed());
 		return true;
