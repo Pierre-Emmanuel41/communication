@@ -90,6 +90,20 @@ public class CommunicationTestApp {
 	private static void runTcpCommunicationTest() {
 		TcpCommunicationTest tests = new TcpCommunicationTest();
 
+		tests.testServerWithSpecificAddressAndPort();
+		tests.testServerWithSpecificAddressButAnyPort();
+		tests.testServerWithAnyAddressButSpecificPort();
+		tests.testServerWithAnyAddressAndAnyPort();
+		tests.testClientToServerCommunication();
+		tests.testServerToClientCommunication();
+		tests.testClientToServerWithCallback();
+		tests.testClientToServerWithCallbackButTimeout();
+		tests.testServerToClientWithCallback();
+		tests.testServerToClientWithCallbackButTimeout();
+		tests.testExtractionException();
+		tests.testCallbackException();
+		tests.testUnexpectedRequestException();
+		tests.testUnstableClient();
 		tests.testRsaLayer();
 		tests.testAesLayer();
 		tests.testAesSafeLayer();

@@ -1,17 +1,18 @@
 package fr.pederobien.communication.impl.keyexchange;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.Arrays;
+
 import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.interfaces.IToken;
 import fr.pederobien.utils.Watchdog;
 import fr.pederobien.utils.Watchdog.WatchdogStakeholder;
 import fr.pederobien.utils.event.Logger;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.util.Arrays;
-
 public class AsymmetricKeyExchange extends Exchange {
 	private final AsymmetricKeyManager keyManager;
+	private final int delay;
 	private final int timeout;
 	private boolean success;
 	private WatchdogStakeholder watchdog;
@@ -21,11 +22,13 @@ public class AsymmetricKeyExchange extends Exchange {
 	 *
 	 * @param token      The token used to send/receive data from the remote.
 	 * @param keyManager The manager that generates a key-pair and parse remote public key.
+	 * @param delay      The time, in ms, to wait before sending server's public key.
 	 * @param timeout    The maximum time, in ms, to wait for remote response during the key exchange.
 	 */
-	public AsymmetricKeyExchange(IToken token, AsymmetricKeyManager keyManager, int timeout) {
+	public AsymmetricKeyExchange(IToken token, AsymmetricKeyManager keyManager, int delay, int timeout) {
 		super(token);
 		this.keyManager = keyManager;
+		this.delay = delay;
 		this.timeout = timeout;
 
 		success = false;
@@ -33,27 +36,26 @@ public class AsymmetricKeyExchange extends Exchange {
 
 	@Override
 	protected boolean doServerToClientExchange() throws Exception {
-		Logger.debug("[Server to Client] Generating key pair and sending public key to the client");
+		Logger.debug("[Server to Client] Generating key pair and sending public key to the client in %s ms", delay);
 
-		send(keyManager.generatePair().getEncoded(), timeout, args -> {
-			if (!args.isTimeout()) {
-
-				// Extracting client public key
-				if (keyManager.parse(args.response()) != null) {
-
-					Logger.debug("[Server to Client] Client's public key received successfully");
-
-					// Sending positive acknowledgement to the client
-					serverToClient_sendPositiveAcknowledgement(args.identifier());
-				}
-			}
-		});
-
-		// Adding delay to let the client be ready for next initialisation step
 		try {
-			Thread.sleep(500);
+			Thread.sleep(delay);
+
+			send(keyManager.generatePair().getEncoded(), timeout, args -> {
+				if (!args.isTimeout()) {
+
+					// Extracting client public key
+					if (keyManager.parse(args.response()) != null) {
+
+						Logger.debug("[Server to Client] Client's public key received successfully");
+
+						// Sending positive acknowledgement to the client
+						serverToClient_sendPositiveAcknowledgement(args.identifier());
+					}
+				}
+			});
 		} catch (Exception e) {
-			// Do nothing
+			Logger.error("[Server to Client] - An exception has occurred: %s", e.getMessage());
 		}
 
 		return success;

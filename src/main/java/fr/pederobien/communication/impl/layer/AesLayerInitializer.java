@@ -11,10 +11,11 @@ public class AesLayerInitializer extends LayerInitializer {
 	 * @param certificate The certificate used to sign/authenticate the secret key received from the remote as well as the data to
 	 *                    send to the remote.
 	 * @param keySize     The size, in bits, of the AES key.
+	 * @param delay       The time, in ms, to wait before sending server's secret key and server's IV.
 	 * @param timeout     The maximum time, in ms, to wait for remote response during the key exchange.
 	 */
-	public AesLayerInitializer(ICertificate certificate, int keySize, int timeout) {
-		super(new CertifiedLayer(certificate), token -> new AesKeyExchange(token, certificate, keySize, timeout).exchange());
+	public AesLayerInitializer(ICertificate certificate, int keySize, int delay, int timeout) {
+		super(new CertifiedLayer(certificate), token -> new AesKeyExchange(token, certificate, keySize, delay, timeout).exchange());
 	}
 
 	/**
@@ -22,10 +23,22 @@ public class AesLayerInitializer extends LayerInitializer {
 	 *
 	 * @param certificate The certificate used to sign/authenticate the secret key received from the remote as well as the data to
 	 *                    send to the remote.
+	 * @param delay       The time, in ms, to wait before sending server's secret key and the time to wait before sending server's IV.
 	 * @param timeout     The maximum time, in ms, to wait for remote response during the key exchange.
 	 */
-	public AesLayerInitializer(ICertificate certificate, int timeout) {
-		this(certificate, 128, timeout);
+	public AesLayerInitializer(ICertificate certificate, int delay, int timeout) {
+		this(certificate, 128, delay, timeout);
+	}
+
+	/**
+	 * Creates a layer initializer in order to perform secret key exchange (128 bits) before using an AES layer.
+	 *
+	 * @param certificate The certificate used to sign/authenticate the secret key received from the remote as well as the data to
+	 *                    send to the remote.
+	 * @param delay       The time, in ms, to wait before sending server's secret key and the time to wait before sending server's IV.
+	 */
+	public AesLayerInitializer(ICertificate certificate, int delay) {
+		this(certificate, delay, 2000);
 	}
 
 	/**
@@ -35,6 +48,6 @@ public class AesLayerInitializer extends LayerInitializer {
 	 *                    send to the remote.
 	 */
 	public AesLayerInitializer(ICertificate certificate) {
-		this(certificate, 2000);
+		this(certificate, 500);
 	}
 }

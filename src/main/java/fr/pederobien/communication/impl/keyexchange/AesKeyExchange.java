@@ -16,12 +16,13 @@ public class AesKeyExchange {
 	 * @param token       The token to send/receive data from the remote.
 	 * @param certificate To sign the data before AES encryption.
 	 * @param keySize     This is an algorithm-specific metric, specified in number of bits.
+	 * @param delay       The time, in ms, to wait before sending server's secret key and server's IV.
 	 * @param timeout     The maximum time, in ms, to wait for remote response during the key exchange.
 	 */
-	public AesKeyExchange(IToken token, ICertificate certificate, int keySize, int timeout) {
+	public AesKeyExchange(IToken token, ICertificate certificate, int keySize, int delay, int timeout) {
 		this.certificate = certificate;
-		keyExchange = new SymmetricKeyExchange(token, new AesKeyManager(keySize), timeout);
-		ivExchange = new IvParameterSpecExchange(token);
+		keyExchange = new SymmetricKeyExchange(token, new AesKeyManager(keySize), delay, timeout);
+		ivExchange = new IvParameterSpecExchange(token, delay);
 	}
 
 	/**

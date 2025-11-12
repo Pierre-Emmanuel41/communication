@@ -1,16 +1,18 @@
 package fr.pederobien.communication.impl.keyexchange;
 
+import java.util.Arrays;
+
+import javax.crypto.SecretKey;
+
 import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.interfaces.IToken;
 import fr.pederobien.utils.Watchdog;
 import fr.pederobien.utils.Watchdog.WatchdogStakeholder;
 import fr.pederobien.utils.event.Logger;
 
-import javax.crypto.SecretKey;
-import java.util.Arrays;
-
 public class SymmetricKeyExchange extends Exchange {
 	private final SymmetricKeyManager keyManager;
+	private final int delay;
 	private final int timeout;
 	private boolean success;
 	private WatchdogStakeholder watchdog;
@@ -20,11 +22,13 @@ public class SymmetricKeyExchange extends Exchange {
 	 *
 	 * @param token      The token used to send/receive data from the remote.
 	 * @param keyManager The manager that generates a secret key and parse remote secret key.
+	 * @param delay      The time, in ms, to wait before sending server's secret key.
 	 * @param timeout    The maximum time, in ms, to wait for remote response during the key exchange.
 	 */
-	public SymmetricKeyExchange(IToken token, SymmetricKeyManager keyManager, int timeout) {
+	public SymmetricKeyExchange(IToken token, SymmetricKeyManager keyManager, int delay, int timeout) {
 		super(token);
 		this.keyManager = keyManager;
+		this.delay = delay;
 		this.timeout = timeout;
 
 		success = false;
@@ -39,27 +43,26 @@ public class SymmetricKeyExchange extends Exchange {
 
 	@Override
 	protected boolean doServerToClientExchange() throws Exception {
-		Logger.debug("[Server to Client] Generating private key and sending it to the cleint");
+		Logger.debug("[Server to Client] Generating private key and sending it to the client in %s ms", delay);
 
-		send(keyManager.generateKey().getEncoded(), timeout, args -> {
-			if (!args.isTimeout()) {
-
-				// Extracting client secret key
-				if (keyManager.parse(args.response())) {
-
-					Logger.debug("[Server to Client] Client's private key received successfully");
-
-					// Sending positive acknowledgement to the client
-					serverToClient_sendPositiveAcknowledgement(args.identifier());
-				}
-			}
-		});
-
-		// Adding delay to let the client be ready for next initialisation step
 		try {
-			Thread.sleep(500);
+			Thread.sleep(delay);
+
+			send(keyManager.generateKey().getEncoded(), timeout, args -> {
+				if (!args.isTimeout()) {
+
+					// Extracting client secret key
+					if (keyManager.parse(args.response())) {
+
+						Logger.debug("[Server to Client] Client's private key received successfully");
+
+						// Sending positive acknowledgement to the client
+						serverToClient_sendPositiveAcknowledgement(args.identifier());
+					}
+				}
+			});
 		} catch (Exception e) {
-			// Do nothing
+			Logger.error("[Server to Client] - An exception has occurred: %s", e.getMessage());
 		}
 
 		return success;

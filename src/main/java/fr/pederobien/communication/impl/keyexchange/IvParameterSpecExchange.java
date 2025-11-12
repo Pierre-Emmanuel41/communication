@@ -1,17 +1,19 @@
 package fr.pederobien.communication.impl.keyexchange;
 
+import java.security.SecureRandom;
+import java.security.spec.AlgorithmParameterSpec;
+import java.util.Arrays;
+
+import javax.crypto.spec.IvParameterSpec;
+
 import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.interfaces.IToken;
 import fr.pederobien.utils.Watchdog;
 import fr.pederobien.utils.Watchdog.WatchdogStakeholder;
 import fr.pederobien.utils.event.Logger;
 
-import javax.crypto.spec.IvParameterSpec;
-import java.security.SecureRandom;
-import java.security.spec.AlgorithmParameterSpec;
-import java.util.Arrays;
-
 public class IvParameterSpecExchange extends Exchange {
+	private final int delay;
 	private AlgorithmParameterSpec ivParameterSpec;
 	private boolean success;
 	private WatchdogStakeholder watchdog;
@@ -20,10 +22,12 @@ public class IvParameterSpecExchange extends Exchange {
 	 * Creates an IV exchange for symmetric encoding/decoding.
 	 *
 	 * @param token The token used to send/receive data from the remote.
+	 * @param delay The time, in ms, to wait before sending server's Initial Vector.
 	 */
-	public IvParameterSpecExchange(IToken token) {
+	public IvParameterSpecExchange(IToken token, int delay) {
 		super(token);
 
+		this.delay = delay;
 		success = false;
 	}
 
@@ -36,26 +40,32 @@ public class IvParameterSpecExchange extends Exchange {
 
 	@Override
 	protected boolean doServerToClientExchange() throws Exception {
-		Logger.debug("[Server to Client] Sending IV parameter to the client");
+		Logger.debug("[Server to Client] Sending IV parameter to the client in %s ms", delay);
 
-		// Generating a new parameter specification to send
-		byte[] iv = new byte[16];
-		SecureRandom random = new SecureRandom();
-		random.nextBytes(iv);
+		try {
+			Thread.sleep(delay);
 
-		send(iv, 2000, args -> {
-			if (!args.isTimeout()) {
+			// Generating a new parameter specification to send
+			byte[] iv = new byte[16];
+			SecureRandom random = new SecureRandom();
+			random.nextBytes(iv);
 
-				// Step 2: Receiving remote parameter specification
-				if (Arrays.equals(args.response(), iv)) {
+			send(iv, 2000, args -> {
+				if (!args.isTimeout()) {
 
-					Logger.debug("[Server to Client] Client's IV parameter identical to server IV parameter");
+					// Step 2: Receiving remote parameter specification
+					if (Arrays.equals(args.response(), iv)) {
 
-					// Sending positive acknowledgement to the client
-					serverToClient_sendPositiveAcknowledgement(args.identifier(), iv);
+						Logger.debug("[Server to Client] Client's IV parameter identical to server IV parameter");
+
+						// Sending positive acknowledgement to the client
+						serverToClient_sendPositiveAcknowledgement(args.identifier(), iv);
+					}
 				}
-			}
-		});
+			});
+		} catch (Exception e) {
+			Logger.error("[Server to Client] - An exception has occurred: %s", e.getMessage());
+		}
 
 		return success;
 	}
