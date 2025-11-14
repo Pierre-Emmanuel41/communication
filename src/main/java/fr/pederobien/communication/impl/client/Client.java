@@ -8,7 +8,6 @@ import fr.pederobien.communication.interfaces.client.IClientImpl;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 
 public class Client<T> implements IClient {
-	private final String name;
 	private final IContext context;
 
 	/**
@@ -18,7 +17,6 @@ public class Client<T> implements IClient {
 	 * @param impl   The client specific implementation to connect/disconnect from the server.
 	 */
 	public Client(IClientConfig<T> config, IClientImpl<T> impl) {
-		name = String.format("[%s %s]", config.getName(), config.getEndPoint());
 		context = new Context<T>(this, config, impl);
 	}
 
@@ -49,6 +47,6 @@ public class Client<T> implements IClient {
 
 	@Override
 	public String toString() {
-		return name;
+		return context.toString();
 	}
 }

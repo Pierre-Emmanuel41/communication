@@ -19,8 +19,7 @@ public class Disconnected<T> extends State<T> {
 	public Disconnected(Context<T> context) {
 		super(context);
 
-		String name = String.format("%s[reconnect]", getContext().getClient());
-		connectionQueue = new BlockingQueueTask<Object>(name, this::connect);
+		connectionQueue = new BlockingQueueTask<Object>("ReconnectThread", this::connect);
 	}
 
 	@Override

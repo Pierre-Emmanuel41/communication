@@ -5,8 +5,8 @@ import fr.pederobien.communication.interfaces.server.IClientValidator;
 import fr.pederobien.communication.interfaces.server.IServerConfig;
 
 public class ServerConfig<T> extends Configuration implements IServerConfig<T> {
-	private final String name;
 	private final T point;
+	private String name;
 	private IClientValidator<T> clientValidator;
 	private int serverMaxUnstableCounter;
 	private int serverHealTime;
@@ -31,6 +31,15 @@ public class ServerConfig<T> extends Configuration implements IServerConfig<T> {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	/**
+	 * Set the name of the server.
+	 * 
+	 * @param name The new server's name.
+	 */
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	@Override

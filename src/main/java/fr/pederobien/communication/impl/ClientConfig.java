@@ -6,8 +6,8 @@ import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 
 public class ClientConfig<T> extends Configuration implements IClientConfig<T> {
-	private final String name;
 	private final T endPoint;
+	private String name;
 	private IMessageHandler messageHandler;
 	private int connectionTimeout;
 	private boolean automaticReconnection;
@@ -38,6 +38,15 @@ public class ClientConfig<T> extends Configuration implements IClientConfig<T> {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	/**
+	 * Set the name of this client.
+	 * 
+	 * @param name The new client's name.
+	 */
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	@Override

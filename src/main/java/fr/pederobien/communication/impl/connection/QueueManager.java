@@ -1,10 +1,10 @@
 package fr.pederobien.communication.impl.connection;
 
+import java.util.function.Consumer;
+
 import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
 import fr.pederobien.utils.BlockingQueueTask;
-
-import java.util.function.Consumer;
 
 public class QueueManager {
 	private final BlockingQueueTask<IHeaderMessage> sendingQueue;
@@ -19,24 +19,13 @@ public class QueueManager {
 
 	/**
 	 * Creates a manager that contains a sending, receiving and extracting queue.
-	 *
-	 * @param name The connection name.
 	 */
-	public QueueManager(String name) {
-		String queueName = String.format("[%s send]", name);
-		sendingQueue = new BlockingQueueTask<IHeaderMessage>(queueName, this::onSend);
-
-		queueName = String.format("[%s receive]", name);
-		receivingQueue = new BlockingQueueTask<Object>(queueName, this::onReceive);
-
-		queueName = String.format("[%s extract]", name);
-		extractingQueue = new BlockingQueueTask<byte[]>(queueName, this::onExtract);
-
-		queueName = String.format("[%s dispatch]", name);
-		dispatchingQueue = new BlockingQueueTask<MessageEvent>(queueName, this::onDispatch);
-
-		queueName = String.format("[%s callback]", name);
-		callbackQueue = new BlockingQueueTask<CallbackResult>(queueName, CallbackResult::apply);
+	public QueueManager() {
+		sendingQueue = new BlockingQueueTask<IHeaderMessage>("[Client send]", this::onSend);
+		receivingQueue = new BlockingQueueTask<Object>("[Client receive]", this::onReceive);
+		extractingQueue = new BlockingQueueTask<byte[]>("[Client extract]", this::onExtract);
+		dispatchingQueue = new BlockingQueueTask<MessageEvent>("[Client dispatch]", this::onDispatch);
+		callbackQueue = new BlockingQueueTask<CallbackResult>("[Client callback]", CallbackResult::apply);
 	}
 
 	/**

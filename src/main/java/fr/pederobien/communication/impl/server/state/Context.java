@@ -136,10 +136,7 @@ public class Context<T> implements IContext {
 			counter.dispose();
 		}
 
-		int unstableCounter = config.getServerMaxUnstableCounter();
-		int healTime = config.getServerHealTime();
-		String CounterName = String.format("[%s %s unstable counter]", config.getName(), config.getPoint());
-		counter = new HealedCounter(unstableCounter, healTime, this::onServerUnstable, CounterName);
+		counter = new HealedCounter(config.getServerMaxUnstableCounter(), config.getServerHealTime(), this::onServerUnstable);
 		firstInit = false;
 	}
 

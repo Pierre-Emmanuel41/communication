@@ -31,13 +31,9 @@ public class Context<T> implements IContext {
 		disconnected = new Disconnected<T>(this);
 		connected = new Connected<T>(this);
 		disposed = new Disposed<T>(this);
-
 		state = disconnected;
 
-		int unstableCounter = config.getClientMaxUnstableCounter();
-		int healTime = config.getClientHealTime();
-		String counterName = String.format("%s unstable counter", client);
-		counter = new HealedCounter(unstableCounter, healTime, this::onClientUnstable, counterName);
+		counter = new HealedCounter(config.getClientMaxUnstableCounter(), config.getClientHealTime(), this::onClientUnstable);
 	}
 
 	@Override
@@ -63,6 +59,11 @@ public class Context<T> implements IContext {
 	@Override
 	public IConnection getConnection() {
 		return connection;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("[%s %s]", config.getName(), config.getEndPoint());
 	}
 
 	/**

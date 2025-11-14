@@ -1,6 +1,13 @@
 package fr.pederobien.communication.impl.connection;
 
-import fr.pederobien.communication.event.*;
+import java.util.List;
+import java.util.concurrent.Semaphore;
+
+import fr.pederobien.communication.event.ConnectionDisposedEvent;
+import fr.pederobien.communication.event.ConnectionEnableChangedEvent;
+import fr.pederobien.communication.event.ConnectionLostEvent;
+import fr.pederobien.communication.event.ConnectionUnstableEvent;
+import fr.pederobien.communication.event.MessageEvent;
 import fr.pederobien.communication.interfaces.IConfiguration;
 import fr.pederobien.communication.interfaces.IMessageHandler;
 import fr.pederobien.communication.interfaces.connection.ICallback.CallbackArgs;
@@ -15,11 +22,9 @@ import fr.pederobien.utils.IDisposable;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.Logger;
 
-import java.util.List;
-import java.util.concurrent.Semaphore;
-
 public class Connection<T> implements IConnection {
 	private final IConfiguration config;
+	private final T endPoint;
 	private final IConnectionImpl impl;
 	private final QueueManager queueManager;
 	private final CallbackManager callbackManager;
@@ -28,7 +33,6 @@ public class Connection<T> implements IConnection {
 	private final HealedCounter counter;
 	// When the synchronous send has been called
 	private final Semaphore semaphore;
-	private String name;
 	private IMessageHandler handler;
 	private boolean isEnabled;
 	private CallbackArgs argument;
@@ -43,28 +47,23 @@ public class Connection<T> implements IConnection {
 	 */
 	public Connection(IConfiguration config, T endPoint, IConnectionImpl impl) {
 		this.config = config;
+		this.endPoint = endPoint;
 		this.impl = impl;
 
-		String remote = config.getMode() == Mode.CLIENT_TO_SERVER ? "Server" : "Client";
-		name = String.format("%s %s", remote, endPoint);
-
-		queueManager = new QueueManager(name);
+		queueManager = new QueueManager();
 		queueManager.setOnSend(this::sendMessage);
 		queueManager.setOnReceive(this::receiveMessage);
 		queueManager.setOnExtract(this::extractMessage);
 		queueManager.setOnDispatch(this::dispatch);
 
-		int unstableCounter = config.getConnectionMaxUnstableCounter();
-		int healTime = config.getConnectionHealTime();
-		String counterName = String.format("[%s HealedCounter]", name);
-		counter = new HealedCounter(unstableCounter, healTime, this::onUnstableConnection, counterName);
+		counter = new HealedCounter(config.getConnectionMaxUnstableCounter(), config.getConnectionHealTime(), this::onUnstableConnection);
 
 		callbackManager = new CallbackManager(queueManager, counter);
 		disposable = new Disposable();
 		semaphore = new Semaphore(0);
 
 		layerInitializer = config.getLayerInitializer();
-		name = String.format("[%s]", name);
+
 		isEnabled = true;
 		disposeRequested = false;
 	}
@@ -151,7 +150,7 @@ public class Connection<T> implements IConnection {
 
 	@Override
 	public String toString() {
-		return name;
+		return String.format("[%s %s]", config.getMode() == Mode.CLIENT_TO_SERVER ? "Server" : "Client", endPoint);
 	}
 
 	/**

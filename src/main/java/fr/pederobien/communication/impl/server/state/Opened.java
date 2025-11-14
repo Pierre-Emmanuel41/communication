@@ -1,6 +1,13 @@
 package fr.pederobien.communication.impl.server.state;
 
-import fr.pederobien.communication.event.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import fr.pederobien.communication.event.ConnectionDisposedEvent;
+import fr.pederobien.communication.event.ConnectionLostEvent;
+import fr.pederobien.communication.event.ConnectionUnstableEvent;
+import fr.pederobien.communication.event.NewClientEvent;
+import fr.pederobien.communication.event.ServerOpenEvent;
 import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.server.IClientInfo;
@@ -8,9 +15,6 @@ import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;
 import fr.pederobien.utils.event.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class Opened<T> extends State<T> implements IEventListener {
 	private final List<IConnection> connections;
@@ -34,8 +38,7 @@ public class Opened<T> extends State<T> implements IEventListener {
 
 				closeRequested = false;
 
-				String name = String.format("[%s %s - waitForClient]", getConfig().getName(), getConfig().getPoint());
-				waiter = new Thread(this::waitForClient, name);
+				waiter = new Thread(this::waitForClient, "[Server - waitForClient]");
 				waiter.setDaemon(true);
 				waiter.start();
 
