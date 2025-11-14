@@ -216,6 +216,11 @@ public class NetworkTest {
 
 			sleep(1000);
 
+			Logger.info("Renaming client as \"Client Renamed\"");
+			clientConfig.setName("Client Renamed");
+
+			sleep(500);
+
 			client.disconnect();
 			client.dispose();
 
