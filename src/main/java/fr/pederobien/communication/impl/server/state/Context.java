@@ -53,6 +53,16 @@ public class Context<T> implements IContext {
 	}
 
 	@Override
+	public boolean isOpened() {
+		return state == opened;
+	}
+
+	@Override
+	public boolean isDisposed() {
+		return state == disposed;
+	}
+
+	@Override
 	public String getName() {
 		return String.format("[%s %s]", config.getName(), config.getPoint());
 	}

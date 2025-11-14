@@ -41,6 +41,16 @@ public class Server<T> implements IServer, IEventListener {
 	}
 
 	@Override
+	public boolean isOpened() {
+		return context.isOpened();
+	}
+
+	@Override
+	public boolean isDisposed() {
+		return context.isDisposed();
+	}
+
+	@Override
 	public String toString() {
 		return context.getName();
 	}

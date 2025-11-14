@@ -22,4 +22,14 @@ public interface IServer {
 	 * @return true if the has been disposed, false otherwise.
 	 */
 	boolean dispose();
+
+	/**
+	 * @return True if the server is opened, false otherwise.
+	 */
+	boolean isOpened();
+
+	/**
+	 * @return True if this server is disposed, false otherwise.
+	 */
+	boolean isDisposed();
 }

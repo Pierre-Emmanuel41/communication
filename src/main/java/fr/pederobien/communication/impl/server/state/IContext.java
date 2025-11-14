@@ -17,6 +17,16 @@ public interface IContext {
 	boolean close();
 
 	/**
+	 * @return True if the server is opened, false otherwise.
+	 */
+	boolean isOpened();
+
+	/**
+	 * @return True if this server is disposed, false otherwise.
+	 */
+	boolean isDisposed();
+
+	/**
 	 * Dispose this server. It cannot be used anymore.
 	 *
 	 * @return true if the has been disposed, false otherwise.
