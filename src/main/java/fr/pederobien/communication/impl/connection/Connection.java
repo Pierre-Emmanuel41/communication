@@ -150,7 +150,7 @@ public class Connection<T> implements IConnection {
 
 	@Override
 	public String toString() {
-		return String.format("[%s %s]", config.getMode() == Mode.CLIENT_TO_SERVER ? "Server" : "Client", endPoint);
+		return String.format("[%s %s]", config.getConnectionName(), endPoint);
 	}
 
 	/**

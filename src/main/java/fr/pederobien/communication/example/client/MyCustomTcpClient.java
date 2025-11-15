@@ -24,6 +24,9 @@ public class MyCustomTcpClient {
 		// A new layer is defined each time a new client is connected
 		config.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
+		// The name to use when the connection logs an error
+		config.setConnectionName("ClientToServer");
+
 		// If the connection unstable counter reach 10, the connection will be
 		// closed automatically
 		config.setConnectionMaxUnstableCounter(10);

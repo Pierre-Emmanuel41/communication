@@ -1,14 +1,15 @@
 package fr.pederobien.communication.impl;
 
+import java.util.function.Supplier;
+
 import fr.pederobien.communication.impl.layer.LayerInitializer;
 import fr.pederobien.communication.interfaces.IConfiguration;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
 
-import java.util.function.Supplier;
-
 public abstract class Configuration implements IConfiguration {
 	private final Mode mode;
+	private String name;
 	private Supplier<ILayerInitializer> layerInitializer;
 	private int connectionMaxUnstableCounter;
 	private int connectionHealTime;
@@ -21,8 +22,8 @@ public abstract class Configuration implements IConfiguration {
 	public Configuration(Mode mode) {
 		this.mode = mode;
 
+		name = mode == Mode.CLIENT_TO_SERVER ? "Server" : "Client";
 		layerInitializer = LayerInitializer::new;
-
 		connectionMaxUnstableCounter = 10;
 		connectionHealTime = 1000;
 	}
@@ -30,6 +31,20 @@ public abstract class Configuration implements IConfiguration {
 	@Override
 	public Mode getMode() {
 		return mode;
+	}
+
+	@Override
+	public String getConnectionName() {
+		return name;
+	}
+
+	/**
+	 * Set the name of the connection with the remote. Essentially used for logging.
+	 * 
+	 * @param name The connection name.
+	 */
+	public void setConnectionName(String name) {
+		this.name = name;
 	}
 
 	@Override

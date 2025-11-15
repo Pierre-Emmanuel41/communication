@@ -11,9 +11,9 @@ public interface IConfiguration {
 	Mode getMode();
 
 	/**
-	 * @return An object that specify how a layer must be initialized.
+	 * @return The name of the connection. Essentially used for logging.
 	 */
-	ILayerInitializer getLayerInitializer();
+	String getConnectionName();
 
 	/**
 	 * The connection to the remote is monitored so that if an error is happening, a counter is incremented automatically. The
@@ -32,4 +32,9 @@ public interface IConfiguration {
 	 * @return The time, in ms, after which the connection's error counter is decremented.
 	 */
 	int getConnectionHealTime();
+
+	/**
+	 * @return An object that specify how a layer must be initialized.
+	 */
+	ILayerInitializer getLayerInitializer();
 }

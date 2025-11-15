@@ -1,5 +1,8 @@
 package fr.pederobien.communication.example.server;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import fr.pederobien.communication.event.NewClientEvent;
 import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.EthernetEndPoint;
@@ -13,9 +16,6 @@ import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class MyCustomTcpServer implements IEventListener {
 	private IServer server;
 	private Object lock;
@@ -28,6 +28,9 @@ public class MyCustomTcpServer implements IEventListener {
 		// Setting the layer to use to pack/unpack data.
 		// A new layer is defined each time a new client is connected
 		config.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
+
+		// The name to use when the connection logs an error
+		config.setConnectionName("ServerToClient");
 
 		// If the unstable counter reach 10, the connection will be automatically closed
 		config.setConnectionMaxUnstableCounter(10);

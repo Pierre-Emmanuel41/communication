@@ -10,7 +10,7 @@ public class Example {
 
 	public static void main(String[] args) {
 		// Do display events
-		Logger.instance().timeStamp(true).newLine(true);
+		Logger.instance().debug(true).colorized(true);
 
 		MyCustomTcpServer server = new MyCustomTcpServer();
 		server.open();
@@ -19,7 +19,7 @@ public class Example {
 		client.connect();
 
 		// Waiting for the client to be connected with the server
-		sleep(1000);
+		sleep(3000);
 
 		// The content of this function shall be call when the ClientConnectedEvent is
 		// thrown
