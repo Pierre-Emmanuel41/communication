@@ -8,7 +8,7 @@ import fr.pederobien.utils.event.Logger;
  */
 public class CommunicationTestApp {
 	public static void main(String[] args) {
-		Logger.instance().newLine(true).timeStamp(true).colorized(true).debug(true);
+		Logger.instance().colorized(true).debug(true).register();
 
 		runTest("Network tests", CommunicationTestApp::runNetworkTest);
 		runTest("Layer tests", CommunicationTestApp::runLayerTests);
@@ -117,6 +117,8 @@ public class CommunicationTestApp {
 		tests.testServerWithSpecificAddressButAnyPort();
 		tests.testServerWithAnyAddressButSpecificPort();
 		tests.testServerWithAnyAddressAndAnyPort();
+		tests.testServerCloseClientConnection();
+		tests.testClientCloseConnection();
 		tests.testClientToServerCommunication();
 		tests.testServerToClientCommunication();
 		tests.testClientToServerWithCallback();

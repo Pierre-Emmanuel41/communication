@@ -1,14 +1,14 @@
 package fr.pederobien.communication.impl.client;
 
-import fr.pederobien.communication.interfaces.connection.IUdpSocket;
-import fr.pederobien.utils.Disposable;
-import fr.pederobien.utils.IDisposable;
-
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.util.Arrays;
+
+import fr.pederobien.communication.interfaces.connection.IUdpSocket;
+import fr.pederobien.utils.Disposable;
+import fr.pederobien.utils.IDisposable;
 
 public class UdpSocket implements IUdpSocket {
 	/**
@@ -86,12 +86,14 @@ public class UdpSocket implements IUdpSocket {
 		private final DatagramSocket socket;
 		private final InetSocketAddress address;
 		private final IDisposable disposable;
+		private boolean closeRequestReceived;
 
 		public ConnectedSocket(DatagramSocket socket, InetSocketAddress address) {
 			this.socket = socket;
 			this.address = address;
 
 			disposable = new Disposable();
+			closeRequestReceived = false;
 		}
 
 		@Override
@@ -116,6 +118,7 @@ public class UdpSocket implements IUdpSocket {
 					System.arraycopy(packet.getData(), 0, data, 0, CLOSE.length);
 
 					if (Arrays.equals(data, CLOSE)) {
+						closeRequestReceived = true;
 						packet = null;
 					}
 				}
@@ -131,8 +134,9 @@ public class UdpSocket implements IUdpSocket {
 		public void close() {
 			if (disposable.dispose()) {
 				try {
-					// Notifying remote the connection has been closed.
-					socket.send(new DatagramPacket(CLOSE, CLOSE.length, address));
+					if (!closeRequestReceived)
+						// Notifying remote the connection has been closed.
+						socket.send(new DatagramPacket(CLOSE, CLOSE.length, address));
 				} catch (Exception e) {
 					e.printStackTrace();
 				} finally {

@@ -1,12 +1,12 @@
 package fr.pederobien.communication.impl.server;
 
-import fr.pederobien.communication.interfaces.connection.IUdpSocket;
-import fr.pederobien.utils.Disposable;
-import fr.pederobien.utils.IDisposable;
-
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
+
+import fr.pederobien.communication.interfaces.connection.IUdpSocket;
+import fr.pederobien.utils.Disposable;
+import fr.pederobien.utils.IDisposable;
 
 public class UdpSocket implements IUdpSocket {
 	/**
@@ -17,6 +17,7 @@ public class UdpSocket implements IUdpSocket {
 	private final UdpServerSocket socket;
 	private final InetSocketAddress address;
 	private final IDisposable disposable;
+	private boolean closeRequestReceived;
 
 	/**
 	 * Creates a server socket for UDP protocol.
@@ -29,6 +30,7 @@ public class UdpSocket implements IUdpSocket {
 		this.address = address;
 
 		disposable = new Disposable();
+		closeRequestReceived = false;
 	}
 
 	@Override
@@ -49,6 +51,7 @@ public class UdpSocket implements IUdpSocket {
 			System.arraycopy(packet.getData(), 0, data, 0, CLOSE.length);
 
 			if (Arrays.equals(data, CLOSE)) {
+				closeRequestReceived = true;
 				packet = null;
 			}
 		}
@@ -60,7 +63,9 @@ public class UdpSocket implements IUdpSocket {
 	public void close() {
 		if (disposable.dispose()) {
 			try {
-				socket.send(CLOSE, address);
+				if (!closeRequestReceived)
+					// Notifying remote the connection has been closed.
+					socket.send(CLOSE, address);
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {

@@ -122,6 +122,60 @@ public class UdpCommunicationTest {
 		runTest("testServerWithAnyAddressAndAnyPort", test);
 	}
 
+	public void testServerCloseClientConnection() {
+		IExecutable test = () -> {
+			IServer server = createDefaultUdpServer();
+			server.open();
+
+			ServerListener listener = new ServerListener(server);
+			listener.setActionOnNewClientConnected(event -> {
+				sleep(500);
+				event.getConnection().setEnabled(false);
+				event.getConnection().dispose();
+			});
+
+			listener.start();
+
+			sleep(500);
+
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setAutomaticReconnection(false);
+			IClient client = Communication.createUdpClient(clientConfig);
+
+			client.connect();
+
+			sleep(2000);
+
+			server.close();
+			server.dispose();
+		};
+
+		runTest("testServerCloseClientConnection", test);
+	}
+
+	public void testClientCloseConnection() {
+		IExecutable test = () -> {
+			IServer server = createDefaultUdpServer();
+			server.open();
+
+			sleep(500);
+
+			IClient client = createDefaultUdpClient();
+			client.connect();
+
+			sleep(2000);
+
+			client.disconnect();
+
+			sleep(2000);
+
+			server.close();
+			server.dispose();
+		};
+
+		runTest("testClientCloseConnection", test);
+	}
+
 	public void testClientToServerCommunication() {
 		IExecutable test = () -> {
 			IServer server = createDefaultUdpServer();
