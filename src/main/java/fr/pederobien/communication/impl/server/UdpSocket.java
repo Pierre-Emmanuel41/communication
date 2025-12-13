@@ -9,11 +9,6 @@ import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
 
 public class UdpSocket implements IUdpSocket {
-	/**
-	 * Key word to send to the remote in order to close the connection
-	 */
-	private static final byte[] CLOSE = ".CLOSE".getBytes();
-
 	private final UdpServerSocket socket;
 	private final InetSocketAddress address;
 	private final IDisposable disposable;
@@ -46,11 +41,11 @@ public class UdpSocket implements IUdpSocket {
 		DatagramPacket packet = socket.receive(address);
 
 		// Checking if connection has to be closed
-		if (packet.getLength() == CLOSE.length) {
-			byte[] data = new byte[CLOSE.length];
-			System.arraycopy(packet.getData(), 0, data, 0, CLOSE.length);
+		if (packet.getLength() == UdpServerSocket.CLOSE.length) {
+			byte[] data = new byte[UdpServerSocket.CLOSE.length];
+			System.arraycopy(packet.getData(), 0, data, 0, UdpServerSocket.CLOSE.length);
 
-			if (Arrays.equals(data, CLOSE)) {
+			if (Arrays.equals(data, UdpServerSocket.CLOSE)) {
 				closeRequestReceived = true;
 				packet = null;
 			}
@@ -65,7 +60,7 @@ public class UdpSocket implements IUdpSocket {
 			try {
 				if (!closeRequestReceived)
 					// Notifying remote the connection has been closed.
-					socket.send(CLOSE, address);
+					socket.send(UdpServerSocket.CLOSE, address);
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {

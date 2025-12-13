@@ -1,14 +1,25 @@
 package fr.pederobien.communication.impl.server;
 
-import fr.pederobien.communication.interfaces.connection.IUdpSocket;
-import fr.pederobien.utils.BlockingQueueTask;
-
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
+import fr.pederobien.communication.interfaces.connection.IUdpSocket;
+import fr.pederobien.utils.BlockingQueueTask;
+
 public class UdpServerSocket {
+
+	/**
+	 * Key word to send to the remote in order to close the connection
+	 */
+	protected static final byte[] CLOSE = ".CLOSE".getBytes();
+
 	private final DatagramSocket socket;
 	private final BlockingQueueTask<DatagramPacket> sendingQueue;
 	private final BlockingQueueTask<DatagramPacket> notifyingQueue;
@@ -231,6 +242,16 @@ public class UdpServerSocket {
 			}
 
 			if (waiter == null) {
+
+				// If the server receives a close request from an unknown client, then ignore
+				if (packet.getLength() == CLOSE.length) {
+					byte[] data = new byte[UdpServerSocket.CLOSE.length];
+					System.arraycopy(packet.getData(), 0, data, 0, UdpServerSocket.CLOSE.length);
+
+					if (Arrays.equals(data, UdpServerSocket.CLOSE))
+						return;
+				}
+
 				waiter = new Waiter();
 				waiters.put(packet.getSocketAddress(), waiter);
 				socket = new UdpSocket(serverSocket, (InetSocketAddress) packet.getSocketAddress());
