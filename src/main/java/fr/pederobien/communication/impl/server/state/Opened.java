@@ -38,7 +38,8 @@ public class Opened<T> extends State<T> implements IEventListener {
 
 				closeRequested = false;
 
-				waiter = new Thread(this::waitForClient, "[Server - waitForClient]");
+				String name = String.format("[%s - waitForClient]", getConfig().getName());
+				waiter = new Thread(this::waitForClient, name);
 				waiter.setDaemon(true);
 				waiter.start();
 
@@ -75,8 +76,9 @@ public class Opened<T> extends State<T> implements IEventListener {
 			try {
 				info = getImpl().waitForClient();
 			} catch (Exception e) {
-				if (!closeRequested)
+				if (!closeRequested) {
 					debug("An exception occurred while waiting for a client: %s", e.getMessage());
+				}
 
 				if (getContext().getCounter().increment()) {
 					break;
