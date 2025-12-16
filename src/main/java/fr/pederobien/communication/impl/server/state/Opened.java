@@ -38,8 +38,7 @@ public class Opened<T> extends State<T> implements IEventListener {
 
 				closeRequested = false;
 
-				String name = String.format("[%s - waitForClient]", getConfig().getName());
-				waiter = new Thread(this::waitForClient, name);
+				waiter = new Thread(this::waitForClient, "[waitForClient]");
 				waiter.setDaemon(true);
 				waiter.start();
 
