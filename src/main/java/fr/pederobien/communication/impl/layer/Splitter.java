@@ -1,12 +1,12 @@
 package fr.pederobien.communication.impl.layer;
 
-import fr.pederobien.utils.ByteWrapper;
-import fr.pederobien.utils.ReadableByteWrapper;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import fr.pederobien.utils.ByteWrapper;
+import fr.pederobien.utils.ReadableByteWrapper;
 
 public class Splitter {
 	private final int maximum;
@@ -127,7 +127,7 @@ public class Splitter {
 
 			// Request received entirely
 			if (current == total - 1) {
-				return wrapper.getAsReadableWrapper();
+				return ReadableByteWrapper.wrap(wrapper.get());
 			}
 		}
 
