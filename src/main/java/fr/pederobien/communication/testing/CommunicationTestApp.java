@@ -10,10 +10,10 @@ public class CommunicationTestApp {
 	public static void main(String[] args) {
 		Logger.instance().colorized(true).debug(true).register();
 
-//		runTest("Network tests", CommunicationTestApp::runNetworkTest);
-//		runTest("Layer tests", CommunicationTestApp::runLayerTests);
-//		runTest("Layer initialization tests", CommunicationTestApp::runLayerInitialisationTest);
-//		runTest("TCP tests", CommunicationTestApp::runTcpCommunicationTest);
+		runTest("Network tests", CommunicationTestApp::runNetworkTest);
+		runTest("Layer tests", CommunicationTestApp::runLayerTests);
+		runTest("Layer initialization tests", CommunicationTestApp::runLayerInitialisationTest);
+		runTest("TCP tests", CommunicationTestApp::runTcpCommunicationTest);
 		runTest("UDP tests", CommunicationTestApp::runUdpCommunicationTest);
 
 		// Asynchronous tests, wait a little bit before closing tests session
@@ -113,27 +113,27 @@ public class CommunicationTestApp {
 	private static void runUdpCommunicationTest() {
 		UdpCommunicationTest tests = new UdpCommunicationTest();
 
-		// tests.testServerWithSpecificAddressAndPort();
-//		tests.testServerWithSpecificAddressButAnyPort();
-//		tests.testServerWithAnyAddressButSpecificPort();
-//		tests.testServerWithAnyAddressAndAnyPort();
-//		tests.testServerCloseClientConnection();
-//		tests.testClientCloseConnection();
-//		tests.testClientToServerCommunication();
-//		tests.testServerToClientCommunication();
-//		tests.testClientToServerWithCallback();
-//		tests.testClientToServerWithCallbackButTimeout();
-//		tests.testServerToClientWithCallback();
-//		tests.testServerToClientWithCallbackButTimeout();
-//		tests.testExtractionException();
-//		tests.testCallbackException();
-//		tests.testUnexpectedRequestException();
-//		tests.testUnstableClient();
-//		tests.testRsaLayer();
-//		tests.testAesLayer();
-//		tests.testAesSafeLayer();
+		tests.testServerWithSpecificAddressAndPort();
+		tests.testServerWithSpecificAddressButAnyPort();
+		tests.testServerWithAnyAddressButSpecificPort();
+		tests.testServerWithAnyAddressAndAnyPort();
+		tests.testServerCloseClientConnection();
+		tests.testClientCloseConnection();
+		tests.testClientToServerCommunication();
+		tests.testServerToClientCommunication();
+		tests.testClientToServerWithCallback();
+		tests.testClientToServerWithCallbackButTimeout();
+		tests.testServerToClientWithCallback();
+		tests.testServerToClientWithCallbackButTimeout();
+		tests.testExtractionException();
+		tests.testCallbackException();
+		tests.testUnexpectedRequestException();
+		tests.testUnstableClient();
+		tests.testRsaLayer();
+		tests.testAesLayer();
+		tests.testAesSafeLayer();
 		tests.testBigRequest();
-		// tests.testTwoClientsOneServer();
+		tests.testTwoClientsOneServer();
 	}
 
 	private static void runTest(String testName, IExecutable test) {
