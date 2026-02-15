@@ -8,23 +8,34 @@ import java.net.SocketAddress;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
 import fr.pederobien.communication.interfaces.connection.IUdpSocket;
 import fr.pederobien.utils.BlockingQueueTask;
+import fr.pederobien.utils.ByteWrapper;
 
 public class UdpServerSocket {
+	/**
+	 * Key word to send to the remote in order to create a client
+	 */
+	private static final byte[] INIT = ".INIT".getBytes();
 
 	/**
 	 * Key word to send to the remote in order to close the connection
 	 */
 	protected static final byte[] CLOSE = ".CLOSE".getBytes();
 
+	/**
+	 * The size of the buffer used to receive data from the remote.
+	 */
+	private static final int BUFFER_SIZE = 1500;
+
 	private final DatagramSocket socket;
 	private final BlockingQueueTask<DatagramPacket> sendingQueue;
-	private final BlockingQueueTask<DatagramPacket> notifyingQueue;
 	private final Thread receivingThread;
-	private final NewClientWaiter clientWaiter;
+	private final SocketManager socketManager;
 	private final int localPort;
 
 	/**
@@ -50,9 +61,8 @@ public class UdpServerSocket {
 		localPort = socket.getLocalPort();
 
 		sendingQueue = new BlockingQueueTask<DatagramPacket>(name + "_send", this::sending);
-		notifyingQueue = new BlockingQueueTask<DatagramPacket>(name + "_notify", this::notifying);
 		receivingThread = new Thread(this::receiving, name + "_receive");
-		clientWaiter = new NewClientWaiter(this);
+		socketManager = new SocketManager(this);
 
 		// Starting thread waiting for sending data to the remote
 		sendingQueue.start();
@@ -60,9 +70,6 @@ public class UdpServerSocket {
 		// Starting thread looping for receiving data from the remote.
 		receivingThread.setDaemon(true);
 		receivingThread.start();
-
-		// Starting thread waiting for packet reception
-		notifyingQueue.start();
 	}
 
 	/**
@@ -88,7 +95,7 @@ public class UdpServerSocket {
 	 * @return The socket bound to the remote.
 	 */
 	public IUdpSocket accept() throws InterruptedException {
-		return clientWaiter.waitForNewClient();
+		return socketManager.waitForNewClient();
 	}
 
 	/**
@@ -99,7 +106,18 @@ public class UdpServerSocket {
 	 * @param address The socket address that contains the IP address and the port number of the remote.
 	 */
 	protected void send(byte[] data, InetSocketAddress address) {
-		sendingQueue.add(new DatagramPacket(data, data.length, address));
+		if (data.length < BUFFER_SIZE)
+			sendingQueue.add(new DatagramPacket(data, data.length, address));
+		else {
+			int quotient = data.length / BUFFER_SIZE;
+			int remainder = data.length % BUFFER_SIZE;
+			ByteWrapper wrapper = ByteWrapper.wrap(data);
+
+			for (int i = 0; i < quotient; i++)
+				sendingQueue.add(new DatagramPacket(wrapper.extract(i * BUFFER_SIZE, BUFFER_SIZE), BUFFER_SIZE, address));
+
+			sendingQueue.add(new DatagramPacket(wrapper.extract(quotient * BUFFER_SIZE, remainder), remainder, address));
+		}
 	}
 
 	/**
@@ -109,7 +127,12 @@ public class UdpServerSocket {
 	 * @return The packet received from the remote.
 	 */
 	protected DatagramPacket receive(InetSocketAddress address) {
-		return clientWaiter.get(address).waitForReception();
+		try {
+			return socketManager.get(address).take();
+		} catch (Exception e) {
+			// Connection being closed
+			return null;
+		}
 	}
 
 	/**
@@ -118,7 +141,7 @@ public class UdpServerSocket {
 	 * @param address The remote address of the waiter.
 	 */
 	protected void unregister(InetSocketAddress address) {
-		clientWaiter.unregister(address);
+		socketManager.unregister(address);
 	}
 
 	/**
@@ -139,70 +162,23 @@ public class UdpServerSocket {
 	 */
 	private void receiving() {
 		try {
-			byte[] buffer = new byte[2048];
 			while (true) {
+				byte[] buffer = new byte[BUFFER_SIZE];
 				DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 				socket.receive(packet);
 
-				// Handling the received in a dedicated task
-				notifyingQueue.add(packet);
+				// Dispatching the packet to the correct client
+				socketManager.onDataReceived(packet);
 			}
 		} catch (Exception e) {
 			// Server has been closed
 		}
 	}
 
-	/**
-	 * If no waiter is registered for the packet address then a new waiter is created, else the existing waiter will be notified that
-	 * data has been received.
-	 *
-	 * @param packet The packet received from the network.
-	 */
-	private void notifying(DatagramPacket packet) {
-		clientWaiter.onDataReceived(packet);
-	}
-
-	private static class Waiter {
-		private final Semaphore semaphore;
-		private DatagramPacket packet;
-
-		/**
-		 * Creates an object that will wait until data has been received
-		 */
-		public Waiter() {
-			semaphore = new Semaphore(0);
-		}
-
-		/**
-		 * Block until data has been received for this object.
-		 *
-		 * @return The packet received from the remote.
-		 */
-		public DatagramPacket waitForReception() {
-			try {
-				semaphore.acquire();
-			} catch (InterruptedException e) {
-				return null;
-			}
-
-			return packet;
-		}
-
-		/**
-		 * Set the datagram packet received from the remote and notify for further processing.
-		 *
-		 * @param packet The datagram packet received from the remote.
-		 */
-		public void notifyForReception(DatagramPacket packet) {
-			this.packet = packet;
-			semaphore.release();
-		}
-	}
-
-	private static class NewClientWaiter {
+	private static class SocketManager {
 		private final UdpServerSocket serverSocket;
 		private final Object lock;
-		private final Map<SocketAddress, Waiter> waiters;
+		private final Map<SocketAddress, BlockingQueue<DatagramPacket>> waiters;
 		private final Semaphore semaphore;
 		private IUdpSocket socket;
 
@@ -211,11 +187,11 @@ public class UdpServerSocket {
 		 *
 		 * @param serverSocket The server socket on which UDP will be connected.
 		 */
-		public NewClientWaiter(UdpServerSocket serverSocket) {
+		public SocketManager(UdpServerSocket serverSocket) {
 			this.serverSocket = serverSocket;
 
 			lock = new Object();
-			waiters = new HashMap<SocketAddress, Waiter>();
+			waiters = new HashMap<SocketAddress, BlockingQueue<DatagramPacket>>();
 			semaphore = new Semaphore(0);
 		}
 
@@ -236,28 +212,44 @@ public class UdpServerSocket {
 		 * @param packet The packet received from the network.
 		 */
 		public void onDataReceived(DatagramPacket packet) {
-			Waiter waiter = null;
+			BlockingQueue<DatagramPacket> queue = null;
 			synchronized (lock) {
-				waiter = waiters.get(packet.getSocketAddress());
+				queue = waiters.get(packet.getSocketAddress());
 			}
 
-			if (waiter == null) {
+			if (queue == null) {
 
 				// If the server receives a close request from an unknown client, then ignore
 				if (packet.getLength() == CLOSE.length) {
-					byte[] data = new byte[UdpServerSocket.CLOSE.length];
-					System.arraycopy(packet.getData(), 0, data, 0, UdpServerSocket.CLOSE.length);
+					byte[] data = new byte[CLOSE.length];
+					System.arraycopy(packet.getData(), 0, data, 0, CLOSE.length);
 
-					if (Arrays.equals(data, UdpServerSocket.CLOSE))
+					if (Arrays.equals(data, CLOSE))
 						return;
 				}
 
-				waiter = new Waiter();
-				waiters.put(packet.getSocketAddress(), waiter);
+				queue = new LinkedBlockingQueue<DatagramPacket>(100);
+				waiters.put(packet.getSocketAddress(), queue);
 				socket = new UdpSocket(serverSocket, (InetSocketAddress) packet.getSocketAddress());
+
+				// If the packet contains something different from INIT then transmitting to the application
+				if (packet.getLength() != INIT.length)
+					queue.add(packet);
+				else if (packet.getLength() == INIT.length) {
+					byte[] data = new byte[INIT.length];
+					System.arraycopy(packet.getData(), 0, data, 0, INIT.length);
+
+					if (!Arrays.equals(data, INIT))
+						queue.add(packet);
+				}
+
 				semaphore.release();
 			} else {
-				waiter.notifyForReception(packet);
+				try {
+					queue.offer(packet);
+				} catch (Exception e) {
+					// Do nothing
+				}
 			}
 		}
 
@@ -267,13 +259,13 @@ public class UdpServerSocket {
 		 * @param address The address of the remote.
 		 * @return The waiter associated to the remote address.
 		 */
-		public Waiter get(SocketAddress address) {
-			Waiter waiter = null;
+		public BlockingQueue<DatagramPacket> get(SocketAddress address) {
+			BlockingQueue<DatagramPacket> queue = null;
 			synchronized (lock) {
-				waiter = waiters.get(address);
+				queue = waiters.get(address);
 			}
 
-			return waiter;
+			return queue;
 		}
 
 		/**
