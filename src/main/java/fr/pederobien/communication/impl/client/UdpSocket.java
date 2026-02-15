@@ -7,6 +7,7 @@ import java.net.SocketException;
 import java.util.Arrays;
 
 import fr.pederobien.communication.interfaces.connection.IUdpSocket;
+import fr.pederobien.utils.ByteWrapper;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.IDisposable;
 
@@ -20,6 +21,11 @@ public class UdpSocket implements IUdpSocket {
 	 * Key word to send to the remote in order to close the connection
 	 */
 	private static final byte[] CLOSE = ".CLOSE".getBytes();
+
+	/**
+	 * The size of the buffer used to receive data from the remote.
+	 */
+	private static final int BUFFER_SIZE = 1500;
 
 	private IUdpSocket impl;
 
@@ -99,14 +105,27 @@ public class UdpSocket implements IUdpSocket {
 		@Override
 		public void send(byte[] data) throws Exception {
 			disposable.checkDisposed();
-			socket.send(new DatagramPacket(data, data.length, address));
+
+			// Data can be sent with one packet
+			if (data.length < BUFFER_SIZE)
+				socket.send(new DatagramPacket(data, data.length, address));
+			else {
+				int quotient = data.length / BUFFER_SIZE;
+				int remainder = data.length % BUFFER_SIZE;
+				ByteWrapper wrapper = ByteWrapper.wrap(data);
+
+				for (int i = 0; i < quotient; i++)
+					socket.send(new DatagramPacket(wrapper.extract(i * BUFFER_SIZE, BUFFER_SIZE), BUFFER_SIZE, address));
+
+				socket.send(new DatagramPacket(wrapper.extract(quotient * BUFFER_SIZE, remainder), remainder, address));
+			}
 		}
 
 		@Override
 		public DatagramPacket receive() throws Exception {
 			disposable.checkDisposed();
 
-			byte[] buffer = new byte[2048];
+			byte[] buffer = new byte[BUFFER_SIZE];
 			DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 
 			try {

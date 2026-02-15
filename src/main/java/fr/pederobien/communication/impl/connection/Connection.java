@@ -16,6 +16,7 @@ import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
 import fr.pederobien.communication.interfaces.connection.IMessage;
 import fr.pederobien.communication.interfaces.layer.ILayerInitializer;
+import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.HealedCounter;
 import fr.pederobien.utils.IDisposable;
@@ -26,7 +27,9 @@ public class Connection<T> implements IConnection {
 	private final IConfiguration config;
 	private final T endPoint;
 	private final IConnectionImpl impl;
-	private final QueueManager queueManager;
+	private final BlockingQueueTask<IHeaderMessage> sendingQueue;
+	private final BlockingQueueTask<Object> receivingQueue;
+	private final BlockingQueueTask<byte[]> extractingQueue;
 	private final CallbackManager callbackManager;
 	private final IDisposable disposable;
 	private final ILayerInitializer layerInitializer;
@@ -50,15 +53,11 @@ public class Connection<T> implements IConnection {
 		this.endPoint = endPoint;
 		this.impl = impl;
 
-		queueManager = new QueueManager();
-		queueManager.setOnSend(this::sendMessage);
-		queueManager.setOnReceive(this::receiveMessage);
-		queueManager.setOnExtract(this::extractMessage);
-		queueManager.setOnDispatch(this::dispatch);
-
+		sendingQueue = new BlockingQueueTask<IHeaderMessage>("[Client send]", this::sendMessage);
+		receivingQueue = new BlockingQueueTask<Object>("[Client - receive]", this::receiveMessage);
+		extractingQueue = new BlockingQueueTask<byte[]>("[Client - extract]", this::extractMessage);
 		counter = new HealedCounter(config.getConnectionMaxUnstableCounter(), config.getConnectionHealTime(), this::onUnstableConnection);
-
-		callbackManager = new CallbackManager(queueManager, counter);
+		callbackManager = new CallbackManager(counter);
 		disposable = new Disposable();
 		semaphore = new Semaphore(0);
 
@@ -70,7 +69,10 @@ public class Connection<T> implements IConnection {
 
 	@Override
 	public boolean initialise() throws Exception {
-		queueManager.initialize();
+		sendingQueue.start();
+		receivingQueue.start();
+		receivingQueue.add(new Object());
+		extractingQueue.start();
 
 		// Initializing layer
 		Token token = new Token(this, config.getMode());
@@ -134,7 +136,9 @@ public class Connection<T> implements IConnection {
 			callbackManager.dispose();
 
 			// Disposing sending, receiving and extracting queue
-			queueManager.dispose();
+			sendingQueue.dispose();
+			receivingQueue.dispose();
+			extractingQueue.dispose();
 
 			// Disposing unstable counter
 			counter.dispose();
@@ -196,7 +200,7 @@ public class Connection<T> implements IConnection {
 	/**
 	 * Wait asynchronously for receiving data from the remote.
 	 */
-	private void receiveMessage(Object object) {
+	private void receiveMessage(Object again) {
 		if (isEnabled()) {
 			byte[] raw = null;
 
@@ -208,7 +212,7 @@ public class Connection<T> implements IConnection {
 
 					if (!counter.increment())
 						// Waiting again for the reception
-						queueManager.getReceivingQueue().add(new Object());
+						receivingQueue.add(again);
 				}
 
 				// No need to go further
@@ -225,11 +229,11 @@ public class Connection<T> implements IConnection {
 				}
 			} else {
 
-				// Adding raw data for asynchronous extraction
-				queueManager.getExtractingQueue().add(raw);
+				// Adding raw data for asynchronous extraction and dispatch
+				extractingQueue.add(raw);
 
 				// Waiting again for the reception
-				queueManager.getReceivingQueue().add(new Object());
+				receivingQueue.add(again);
 			}
 		}
 	}
@@ -241,7 +245,6 @@ public class Connection<T> implements IConnection {
 	 */
 	private void extractMessage(byte[] raw) {
 		if (isEnabled()) {
-
 			try {
 				// Extracting requests from the raw bytes array received from the network
 				List<IHeaderMessage> requests = layerInitializer.getLayer().unpack(raw);
@@ -255,9 +258,13 @@ public class Connection<T> implements IConnection {
 						// Execute the callback of the original request
 						callbackManager.unregisterAndExecute(request);
 					} else {
-						// Dispatching asynchronously a message event.
-						MessageEvent event = new MessageEvent(this, request.getIdentifier(), request.getBytes());
-						queueManager.getDispatchingQueue().add(event);
+						// Dispatching a message event.
+						try {
+							handler.handle(new MessageEvent(this, request.getIdentifier(), request.getBytes()));
+						} catch (Exception e) {
+							debug("An exception occurred while dispatching a message: %s", e.getMessage());
+							counter.increment();
+						}
 					}
 				}
 
@@ -289,7 +296,7 @@ public class Connection<T> implements IConnection {
 
 		IHeaderMessage header = new HeaderMessage(requestID, toSend);
 		callbackManager.register(header.getIdentifier(), toSend);
-		queueManager.getSendingQueue().add(header);
+		sendingQueue.add(header);
 
 		if (message.isSync()) {
 			try {
@@ -317,19 +324,5 @@ public class Connection<T> implements IConnection {
 	 */
 	private void doNothing(MessageEvent event) {
 
-	}
-
-	/**
-	 * Dispatch asynchronously the given event and increment the unstable counter if an exception occurred.
-	 *
-	 * @param event The event that contains the unexpected message.
-	 */
-	private void dispatch(MessageEvent event) {
-		try {
-			handler.handle(event);
-		} catch (Exception e) {
-			debug("An exception occurred while dispatching a message: %s", e.getMessage());
-			counter.increment();
-		}
 	}
 }

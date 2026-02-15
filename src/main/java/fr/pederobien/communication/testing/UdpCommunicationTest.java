@@ -772,6 +772,78 @@ public class UdpCommunicationTest {
 		runTest("testAesSafeLayer", test);
 	}
 
+	public void testBigRequest() {
+		IExecutable test = () -> {
+			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			serverConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
+
+			IServer server = Communication.createUdpServer(serverConfig);
+			server.open();
+
+			ServerListener listener = new ServerListener(server);
+			listener.setActionOnNewClientConnected(event -> {
+				sleep(500);
+
+				byte[] data = new byte[10000];
+				byte counter = Byte.MIN_VALUE;
+				for (int i = 0; i < data.length; i++) {
+					data[i] = counter;
+
+					if (counter == Byte.MAX_VALUE)
+						counter = Byte.MIN_VALUE;
+					else
+						counter++;
+				}
+
+				Message message = new Message(data, args -> {
+					if (!args.isTimeout()) {
+						Logger.debug("Server received %s bytes", args.response().length);
+					} else {
+						Logger.error("Unexpected timeout occurred");
+					}
+				});
+				event.getConnection().send(message);
+			});
+
+			listener.start();
+
+			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			clientConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
+			clientConfig.setMessageHandler(event -> {
+				Logger.debug("Client received %s bytes", event.getData().length);
+
+				byte[] data = new byte[10000];
+				byte counter = Byte.MIN_VALUE;
+				for (int i = 0; i < data.length; i++) {
+					data[i] = counter;
+
+					if (counter == Byte.MAX_VALUE)
+						counter = Byte.MIN_VALUE;
+					else
+						counter++;
+				}
+
+				event.getConnection().answer(event.getIdentifier(), new Message(data));
+			});
+
+			IClient client = Communication.createUdpClient(clientConfig);
+			client.connect();
+
+			sleep(3000);
+
+			client.disconnect();
+			client.dispose();
+
+			sleep(500);
+
+			listener.stop();
+			server.close();
+			server.dispose();
+		};
+
+		runTest("testBigRequest", test);
+	}
+
 	public void testTwoClientsOneServer() {
 		IExecutable tests = () -> {
 			IServer server = createDefaultUdpServer();

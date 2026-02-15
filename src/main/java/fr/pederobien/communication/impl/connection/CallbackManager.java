@@ -1,12 +1,5 @@
 package fr.pederobien.communication.impl.connection;
 
-import fr.pederobien.communication.interfaces.connection.ICallback.CallbackArgs;
-import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
-import fr.pederobien.communication.interfaces.connection.IMessage;
-import fr.pederobien.utils.Disposable;
-import fr.pederobien.utils.HealedCounter;
-import fr.pederobien.utils.IDisposable;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -14,20 +7,25 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import fr.pederobien.communication.interfaces.connection.ICallback.CallbackArgs;
+import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
+import fr.pederobien.communication.interfaces.connection.IMessage;
+import fr.pederobien.utils.Disposable;
+import fr.pederobien.utils.HealedCounter;
+import fr.pederobien.utils.IDisposable;
+import fr.pederobien.utils.event.Logger;
+
 public class CallbackManager {
+	private final HealedCounter counter;
 	private final Map<Integer, Monitor> monitors;
 	private final IDisposable disposable;
-	private final QueueManager queueManager;
-	private final HealedCounter counter;
 
 	/**
 	 * Creates a manager responsible to monitor registered message if a timeout occurs.
 	 *
-	 * @param queueManager The manager whose the callback queue is used.
-	 * @param counter      The counter to increment if an exception occurred while executing the callback
+	 * @param counter The counter to increment if an exception occurred while executing the callback
 	 */
-	public CallbackManager(QueueManager queueManager, HealedCounter counter) {
-		this.queueManager = queueManager;
+	public CallbackManager(HealedCounter counter) {
 		this.counter = counter;
 
 		monitors = new HashMap<Integer, Monitor>();
@@ -164,32 +162,28 @@ public class CallbackManager {
 				// Removing this monitor from the monitors map
 				unregister(identifier);
 
-				dispatch();
+				// Considering by default that timeout happened
+				int identifier = -1;
+				byte[] resp = null;
+				boolean isTimeout = true;
+
+				// No timeout happened
+				if (response != null) {
+					identifier = response.getIdentifier();
+					resp = response.getBytes();
+					isTimeout = false;
+				}
+
+				// Dispatching the request response
+				try {
+					Logger.debug("Dispatching request response");
+					request.getCallback().apply(new CallbackArgs(identifier, resp, isTimeout, isConnectionLost));
+				} catch (Exception e) {
+					counter.increment();
+				}
 			} catch (InterruptedException e) {
 				// Do nothing
 			}
-		}
-
-		/**
-		 * Execute the callback of the underlying request.
-		 */
-		private void dispatch() {
-
-			// Considering by default that timeout happened
-			int identifier = -1;
-			byte[] resp = null;
-			boolean isTimeout = true;
-
-			// No timeout happened
-			if (response != null) {
-				identifier = response.getIdentifier();
-				resp = response.getBytes();
-				isTimeout = false;
-			}
-
-			CallbackArgs args = new CallbackArgs(identifier, resp, isTimeout, isConnectionLost);
-			CallbackResult result = new CallbackResult(counter, request.getCallback(), args);
-			queueManager.getCallbackQueue().add(result);
 		}
 	}
 }
