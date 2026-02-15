@@ -1,10 +1,10 @@
 package fr.pederobien.communication.impl.connection;
 
+import java.net.DatagramPacket;
+
 import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 import fr.pederobien.communication.interfaces.connection.IUdpSocket;
 import fr.pederobien.utils.ByteWrapper;
-
-import java.net.DatagramPacket;
 
 public class UdpConnectionImpl implements IConnectionImpl {
 	private final IUdpSocket socket;
@@ -32,7 +32,12 @@ public class UdpConnectionImpl implements IConnectionImpl {
 			return null;
 		}
 
-		return ByteWrapper.wrap(packet.getData()).extract(0, packet.getLength());
+		byte[] data = packet.getData();
+
+		if (packet.getLength() < data.length)
+			return ByteWrapper.wrap(data).extract(0, packet.getLength());
+
+		return data;
 	}
 
 	@Override
