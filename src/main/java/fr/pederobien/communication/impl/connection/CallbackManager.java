@@ -13,7 +13,6 @@ import fr.pederobien.communication.interfaces.connection.IMessage;
 import fr.pederobien.utils.Disposable;
 import fr.pederobien.utils.HealedCounter;
 import fr.pederobien.utils.IDisposable;
-import fr.pederobien.utils.event.Logger;
 
 public class CallbackManager {
 	private final HealedCounter counter;
@@ -176,7 +175,6 @@ public class CallbackManager {
 
 				// Dispatching the request response
 				try {
-					Logger.debug("Dispatching request response");
 					request.getCallback().apply(new CallbackArgs(identifier, resp, isTimeout, isConnectionLost));
 				} catch (Exception e) {
 					counter.increment();
