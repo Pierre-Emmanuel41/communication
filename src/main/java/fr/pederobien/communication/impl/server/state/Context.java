@@ -17,7 +17,6 @@ public class Context<T> implements IContext {
 	private final IState disposed;
 	private HealedCounter counter;
 	private IState state;
-	private boolean firstInit;
 
 	public Context(IServer server, IServerConfig<T> config, IServerImpl<T> impl) {
 		this.server = server;
@@ -29,17 +28,12 @@ public class Context<T> implements IContext {
 		disposed = new Disposed<T>(this);
 		state = closed;
 
-		firstInit = true;
+		counter = new HealedCounter(config.getServerMaxUnstableCounter(), config.getServerHealTime(), this::onServerUnstable);
 	}
 
 	@Override
 	public boolean open() {
-		if (state.open()) {
-			postInitialization();
-			return true;
-		}
-
-		return false;
+		return state.open();
 	}
 
 	@Override
@@ -125,19 +119,6 @@ public class Context<T> implements IContext {
 		this.state.setEnabled(false);
 		this.state = state;
 		this.state.setEnabled(true);
-	}
-
-	/**
-	 * Method called to initialize properties once the server is opened.
-	 */
-	private void postInitialization() {
-		if (!firstInit) {
-			// Free resources associated to counter in order to create a new one
-			counter.dispose();
-		}
-
-		counter = new HealedCounter(config.getServerMaxUnstableCounter(), config.getServerHealTime(), this::onServerUnstable);
-		firstInit = false;
 	}
 
 	/**
