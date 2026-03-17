@@ -1,14 +1,15 @@
 package fr.pederobien.communication.impl.layer;
 
-import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
-import fr.pederobien.communication.interfaces.layer.ICertificate;
-import fr.pederobien.communication.interfaces.layer.ILayer;
-
-import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Base64;
 import java.util.List;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+
+import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
+import fr.pederobien.communication.interfaces.layer.ICertificate;
+import fr.pederobien.communication.interfaces.layer.ILayer;
 
 public class AesLayer implements ILayer {
 	private final CertifiedLayer certifiedLayer;
@@ -52,7 +53,7 @@ public class AesLayer implements ILayer {
 			encrypt.init(Cipher.ENCRYPT_MODE, secretKey, parameterSpec);
 			return Base64.getEncoder().encode(encrypt.doFinal(data));
 		} catch (Exception e) {
-			throw new IllegalArgumentException("Invalid data to be ciphered");
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 
@@ -68,7 +69,7 @@ public class AesLayer implements ILayer {
 			cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec);
 			return cipher.doFinal(Base64.getDecoder().decode(data));
 		} catch (Exception e) {
-			throw new IllegalArgumentException("Invalid data to be deciphered");
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 }
