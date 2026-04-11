@@ -25,7 +25,7 @@ public class UdpSocket implements IUdpSocket {
 	/**
 	 * The size of the buffer used to receive data from the remote.
 	 */
-	private static final int BUFFER_SIZE = 1500;
+	private static final int BUFFER_SIZE = 1400;
 
 	private IUdpSocket impl;
 
