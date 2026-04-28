@@ -2,6 +2,7 @@ package fr.pederobien.communication.impl.server.state;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import fr.pederobien.communication.event.ConnectionDisposedEvent;
 import fr.pederobien.communication.event.ConnectionLostEvent;
@@ -68,20 +69,20 @@ public class Opened<T> extends State<T> implements IEventListener {
 	}
 
 	private void waitForClient() {
-		while (!closeRequested) {
+		AtomicBoolean unstable = new AtomicBoolean(false);
+
+		while (!closeRequested && !unstable.get()) {
 			// Server implementation specific to wait for a new client
 			IClientInfo<T> info;
 
 			try {
 				info = getImpl().waitForClient();
 			} catch (Exception e) {
-				if (!closeRequested) {
+				if (!closeRequested)
 					debug("An exception occurred while waiting for a client: %s", e.getMessage());
-				}
 
-				if (getContext().getCounter().increment()) {
+				if (getContext().getCounter().increment())
 					break;
-				}
 
 				continue;
 			}
@@ -95,31 +96,31 @@ public class Opened<T> extends State<T> implements IEventListener {
 			}
 
 			IConnection connection = Communication.createConnection(getConfig(), info.getEndPoint(), info.getImpl());
-			boolean initialised;
 
-			try {
-				initialised = connection.initialise();
-			} catch (Exception e) {
-				debug("An exception occurred while initializing connection with the client: %s", e.getMessage());
-				if (getContext().getCounter().increment()) {
-					break;
+			Thread initializer = new Thread(() -> {
+				try {
+					boolean initialised = connection.initialise();
+
+					if (closeRequested || !initialised) {
+						if (!initialised)
+							Logger.warning("%s - Initialisation failure", getContext().getName());
+
+						disposeConnection(connection);
+					} else {
+						connections.add(connection);
+
+						// Notifying observers that a client is connected
+						EventManager.callEvent(new NewClientEvent(getContext().getServer(), connection));
+					}
+				} catch (Exception e) {
+					debug("An exception occurred while initializing connection with the client: %s", e.getMessage());
+					if (getContext().getCounter().increment())
+						unstable.compareAndSet(false, true);
+
+					return;
 				}
-
-				continue;
-			}
-
-			if (closeRequested || !initialised) {
-				if (!initialised) {
-					Logger.warning("%s - Initialisation failure", getContext().getName());
-				}
-
-				disposeConnection(connection);
-			} else {
-				connections.add(connection);
-
-				// Notifying observers that a client is connected
-				EventManager.callEvent(new NewClientEvent(getContext().getServer(), connection));
-			}
+			}, "ConnectionInitializer");
+			initializer.start();
 		}
 	}
 
