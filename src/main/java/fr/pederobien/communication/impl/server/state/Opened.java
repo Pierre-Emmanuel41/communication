@@ -21,11 +21,13 @@ public class Opened<T> extends State<T> implements IEventListener {
 	private final List<IConnection> connections;
 	private Thread waiter;
 	private boolean closeRequested;
+	private final Object lock;
 
 	public Opened(Context<T> context) {
 		super(context);
 
 		connections = new ArrayList<IConnection>();
+		lock = new Object();
 	}
 
 	@Override
@@ -107,7 +109,10 @@ public class Opened<T> extends State<T> implements IEventListener {
 
 						disposeConnection(connection);
 					} else {
-						connections.add(connection);
+
+						synchronized (lock) {
+							connections.add(connection);
+						}
 
 						// Notifying observers that a client is connected
 						EventManager.callEvent(new NewClientEvent(getContext().getServer(), connection));
@@ -120,6 +125,7 @@ public class Opened<T> extends State<T> implements IEventListener {
 					return;
 				}
 			}, "ConnectionInitializer");
+
 			initializer.start();
 		}
 	}
