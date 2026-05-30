@@ -8,7 +8,8 @@ import fr.pederobien.utils.event.Logger;
  */
 public class CommunicationTestApp {
 	public static void main(String[] args) {
-		Logger.instance().colorized(true).debug(true).register();
+		Logger.setPrintInColor(true);
+		Logger.setPrintEvent(true);
 
 		runTest("Network tests", CommunicationTestApp::runNetworkTest);
 		runTest("Layer tests", CommunicationTestApp::runLayerTests);

@@ -10,7 +10,7 @@ public class Example {
 
 	public static void main(String[] args) {
 		// Do display events
-		Logger.instance().debug(true).colorized(true);
+		Logger.setPrintInColor(true);
 
 		MyCustomTcpServer server = new MyCustomTcpServer();
 		server.open();
