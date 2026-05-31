@@ -13,13 +13,14 @@ import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
 import fr.pederobien.communication.interfaces.server.IClientInfo;
 import fr.pederobien.communication.interfaces.server.IServerConfig;
+import fr.pederobien.communication.interfaces.server.IServerEthernetEndPoint;
 import fr.pederobien.communication.interfaces.server.IServerImpl;
 import fr.pederobien.utils.Watchdog;
 import fr.pederobien.utils.event.Logger;
 
 public class Network {
 	private final NetworkStakeholder network;
-	private final IServerImpl<IEthernetEndPoint> server;
+	private final IServerImpl<IServerEthernetEndPoint, IEthernetEndPoint> server;
 
 	/**
 	 * Create a network to simulate data transmission.
@@ -41,7 +42,7 @@ public class Network {
 	/**
 	 * @return The server of this network.
 	 */
-	public IServerImpl<IEthernetEndPoint> getServer() {
+	public IServerImpl<IServerEthernetEndPoint, IEthernetEndPoint> getServer() {
 		return server;
 	}
 
@@ -443,7 +444,7 @@ public class Network {
 		}
 	}
 
-	private class ServerImpl implements IServerImpl<IEthernetEndPoint> {
+	private class ServerImpl implements IServerImpl<IServerEthernetEndPoint, IEthernetEndPoint> {
 		private final NetworkStakeholder network;
 		private NetworkServerSocket server;
 
@@ -452,7 +453,7 @@ public class Network {
 		}
 
 		@Override
-		public void open(IServerConfig<IEthernetEndPoint> config) throws Exception {
+		public void open(IServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> config) throws Exception {
 			server = new NetworkServerSocket(network, config.getPoint().getPort());
 		}
 

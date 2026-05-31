@@ -1,19 +1,20 @@
-package fr.pederobien.communication.impl.server;
+package fr.pederobien.communication.impl.server.ethernet;
 
 import fr.pederobien.communication.impl.EthernetEndPoint;
 import fr.pederobien.communication.impl.connection.UdpConnectionImpl;
+import fr.pederobien.communication.impl.server.ClientInfo;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.connection.IUdpSocket;
 import fr.pederobien.communication.interfaces.server.IClientInfo;
 import fr.pederobien.communication.interfaces.server.IServerConfig;
-import fr.pederobien.communication.interfaces.server.IServerImpl;
+import fr.pederobien.communication.interfaces.server.IServerEthernetEndPoint;
 
-public class UdpServerImpl implements IServerImpl<IEthernetEndPoint> {
+public class UdpServerImpl extends EthernetServerImpl {
 	private UdpServerSocket serverSocket;
 
 	@Override
-	public void open(IServerConfig<IEthernetEndPoint> config) throws Exception {
-		serverSocket = new UdpServerSocket(config.getName(), config.getPoint().getAddress(), config.getPoint().getPort());
+	public void open(IServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> config) throws Exception {
+		serverSocket = new UdpServerSocket(config.getName(), config.getPoint());
 
 		// In case the port number from config is 0, the port number is defined by the host machine
 		config.getPoint().setPort(serverSocket.getLocalPort());

@@ -8,24 +8,24 @@ import fr.pederobien.utils.HealedCounter;
 import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.Logger;
 
-public class Context<T> implements IContext {
+public class Context<T, U> implements IContext {
 	private final IServer server;
-	private final IServerConfig<T> config;
-	private final IServerImpl<T> impl;
+	private final IServerConfig<T, U> config;
+	private final IServerImpl<T, U> impl;
 	private final IState opened;
 	private final IState closed;
 	private final IState disposed;
 	private HealedCounter counter;
 	private IState state;
 
-	public Context(IServer server, IServerConfig<T> config, IServerImpl<T> impl) {
+	public Context(IServer server, IServerConfig<T, U> config, IServerImpl<T, U> impl) {
 		this.server = server;
 		this.config = config;
 		this.impl = impl;
 
-		opened = new Opened<T>(this);
-		closed = new Closed<T>(this);
-		disposed = new Disposed<T>(this);
+		opened = new Opened<T, U>(this);
+		closed = new Closed<T, U>(this);
+		disposed = new Disposed<T, U>(this);
 		state = closed;
 
 		counter = new HealedCounter(config.getServerMaxUnstableCounter(), config.getServerHealTime(), this::onServerUnstable);
@@ -71,14 +71,14 @@ public class Context<T> implements IContext {
 	/**
 	 * @return The server configuration.
 	 */
-	public IServerConfig<T> getConfig() {
+	public IServerConfig<T, U> getConfig() {
 		return config;
 	}
 
 	/**
 	 * @return The server implementation.
 	 */
-	public IServerImpl<T> getImpl() {
+	public IServerImpl<T, U> getImpl() {
 		return impl;
 	}
 

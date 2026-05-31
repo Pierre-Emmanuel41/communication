@@ -1,8 +1,8 @@
-package fr.pederobien.communication.impl.server;
+package fr.pederobien.communication.impl.server.ethernet;
 
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Arrays;
@@ -13,8 +13,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
 import fr.pederobien.communication.interfaces.connection.IUdpSocket;
+import fr.pederobien.communication.interfaces.server.IServerEthernetEndPoint;
 import fr.pederobien.utils.BlockingQueueTask;
 import fr.pederobien.utils.ByteWrapper;
+import fr.pederobien.utils.event.Logger;
 
 public class UdpServerSocket {
 	/**
@@ -45,18 +47,11 @@ public class UdpServerSocket {
 	 * @param address The address of this socket.
 	 * @param port    The port number of this socket.
 	 */
-	public UdpServerSocket(String name, String address, int port) throws Exception {
-		// Note: The port number does not matter, if the value is out of range, the socket will throw an exception
-		// if the value is 0, the host machine will choose an ephemeral (ie first free) port.
+	public UdpServerSocket(String name, IServerEthernetEndPoint endPoint) throws Exception {
+		socket = createDatagramSocket(endPoint);
 
-		// Case 1: Any address
-		if (address.equals("*")) {
-			socket = new DatagramSocket(port);
-		}
-		// Case 2: Specific hostname
-		else {
-			socket = new DatagramSocket(port, InetAddress.getByName(address));
-		}
+		if (socket == null)
+			throw new Exception("Cannot create a UDP server, please check if the IP address and port number are already in use");
 
 		localPort = socket.getLocalPort();
 
@@ -172,6 +167,66 @@ public class UdpServerSocket {
 			}
 		} catch (Exception e) {
 			// Server has been closed
+		}
+	}
+
+	/**
+	 * Create a datagram socket associated to the properties of the given end-point.
+	 * 
+	 * @param endPoint The end-point that contains the port number to use or the range to use to create a server socket.
+	 * @return The server socket if it was possible
+	 * @throws IOException
+	 */
+	private DatagramSocket createDatagramSocket(IServerEthernetEndPoint endPoint) throws IOException {
+
+		// A port number is specified
+		if (0 <= endPoint.getPort()) {
+			// Note: The port number does not matter, if the value is out of range, the socket will throw an exception
+			// if the value is 0, the host machine will choose an ephemeral (ie first free) port.
+
+			return new DatagramSocket(createAddress(endPoint.getAddress(), endPoint.getPort()));
+		}
+
+		// If a port range is defined
+		if (endPoint.getMin() > 0 && endPoint.getMax() > 0) {
+			for (int port = endPoint.getMin(); port <= endPoint.getMax(); port++) {
+				DatagramSocket socket = tryBindToAddress(createAddress(endPoint.getAddress(), port));
+				if (socket != null)
+					return socket;
+			}
+
+			Logger.error("Could not bind to any port in range [%s-%s]", endPoint.getMin(), endPoint.getMax());
+		}
+
+		return null;
+	}
+
+	/**
+	 * Creates a socket address from the given IP address and port number.
+	 * 
+	 * @param address The IP address to use.
+	 * @param port    The port number to use.
+	 * 
+	 * @return The created SocketAddress.
+	 */
+	private SocketAddress createAddress(String address, int port) {
+		if (address.equals("*"))
+			return new InetSocketAddress(port);
+		else
+			return new InetSocketAddress(address, port);
+	}
+
+	/**
+	 * Check if a datagram socket can be bound to the given address.
+	 * 
+	 * @param address The address to use for binding.
+	 * @return A non null datagram if the address is available, null otherwise.
+	 */
+	private DatagramSocket tryBindToAddress(SocketAddress address) {
+		try {
+			return new DatagramSocket(address);
+		} catch (Exception e) {
+			return null;
 		}
 	}
 

@@ -1,10 +1,11 @@
 package fr.pederobien.communication.testing;
 
-import fr.pederobien.communication.impl.ClientConfig;
-import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.EthernetEndPoint;
+import fr.pederobien.communication.impl.client.ClientConfig;
+import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.layer.LayerInitializer;
+import fr.pederobien.communication.impl.server.ethernet.ServerEthernetEndPoint;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.client.IClient;
 import fr.pederobien.communication.interfaces.server.IServer;
@@ -30,7 +31,7 @@ public class NetworkTest {
 	 * @return The created server.
 	 */
 	private static IServer createDefaultCustomServer(Network network) {
-		return Communication.createDefaultServer(SERVER_NAME, new EthernetEndPoint(PORT), network.getServer());
+		return Communication.createDefaultServer(SERVER_NAME, new ServerEthernetEndPoint(PORT), network.getServer());
 	}
 
 	/**

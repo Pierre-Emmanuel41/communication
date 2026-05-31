@@ -17,13 +17,13 @@ import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;
 import fr.pederobien.utils.event.Logger;
 
-public class Opened<T> extends State<T> implements IEventListener {
+public class Opened<T, U> extends State<T, U> implements IEventListener {
 	private final List<IConnection> connections;
 	private Thread waiter;
 	private boolean closeRequested;
 	private final Object lock;
 
-	public Opened(Context<T> context) {
+	public Opened(Context<T, U> context) {
 		super(context);
 
 		connections = new ArrayList<IConnection>();
@@ -48,7 +48,7 @@ public class Opened<T> extends State<T> implements IEventListener {
 				EventManager.callEvent(new ServerOpenEvent(getContext().getServer()));
 				info("Server opened");
 			} catch (Exception e) {
-				info("An exception occurred while opening the server: %s", e.getMessage());
+				error("An exception occurred while opening the server: %s", e.getMessage());
 			}
 		}
 	}
@@ -75,13 +75,13 @@ public class Opened<T> extends State<T> implements IEventListener {
 
 		while (!closeRequested && !unstable.get()) {
 			// Server implementation specific to wait for a new client
-			IClientInfo<T> info;
+			IClientInfo<U> info;
 
 			try {
 				info = getImpl().waitForClient();
 			} catch (Exception e) {
 				if (!closeRequested)
-					debug("An exception occurred while waiting for a client: %s", e.getMessage());
+					error("An exception occurred while waiting for a client: %s", e.getMessage());
 
 				if (getContext().getCounter().increment())
 					break;
@@ -118,7 +118,7 @@ public class Opened<T> extends State<T> implements IEventListener {
 						EventManager.callEvent(new NewClientEvent(getContext().getServer(), connection));
 					}
 				} catch (Exception e) {
-					debug("An exception occurred while initializing connection with the client: %s", e.getMessage());
+					error("An exception occurred while initializing connection with the client: %s", e.getMessage());
 					if (getContext().getCounter().increment())
 						unstable.compareAndSet(false, true);
 

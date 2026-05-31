@@ -1,16 +1,18 @@
 package fr.pederobien.communication.testing;
 
-import fr.pederobien.communication.impl.ClientConfig;
-import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.EthernetEndPoint;
-import fr.pederobien.communication.impl.ServerConfig;
+import fr.pederobien.communication.impl.client.ClientConfig;
+import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.layer.AesLayerInitializer;
 import fr.pederobien.communication.impl.layer.AesSafeLayerInitializer;
 import fr.pederobien.communication.impl.layer.RsaLayerInitializer;
+import fr.pederobien.communication.impl.server.ServerConfig;
+import fr.pederobien.communication.impl.server.ethernet.ServerEthernetEndPoint;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.client.IClient;
 import fr.pederobien.communication.interfaces.server.IServer;
+import fr.pederobien.communication.interfaces.server.IServerEthernetEndPoint;
 import fr.pederobien.communication.testing.tools.Network;
 import fr.pederobien.communication.testing.tools.NetworkCorrupter;
 import fr.pederobien.communication.testing.tools.ServerListener;
@@ -27,8 +29,8 @@ public class LayerInitialisationTest {
 	/**
 	 * @return Creates a server configuration with default name and port number.
 	 */
-	private static ServerConfig<IEthernetEndPoint> createServerConfig() {
-		return Communication.createServerConfig(SERVER_NAME, new EthernetEndPoint(PORT));
+	private static ServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> createServerConfig() {
+		return Communication.createServerConfig(SERVER_NAME, new ServerEthernetEndPoint(PORT));
 	}
 
 	/*
@@ -42,7 +44,7 @@ public class LayerInitialisationTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			ServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createServer(serverConfig, network.getServer());
@@ -77,7 +79,7 @@ public class LayerInitialisationTest {
 
 			Network network = new Network(corrupter);
 
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			ServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createServer(serverConfig, network.getServer());
@@ -114,7 +116,7 @@ public class LayerInitialisationTest {
 
 			Network network = new Network(corrupter);
 
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			ServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createServer(serverConfig, network.getServer());
@@ -145,7 +147,7 @@ public class LayerInitialisationTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			ServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createServer(serverConfig, network.getServer());
@@ -197,7 +199,7 @@ public class LayerInitialisationTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			ServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createServer(serverConfig, network.getServer());
@@ -232,7 +234,7 @@ public class LayerInitialisationTest {
 
 			Network network = new Network(corrupter);
 
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			ServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createServer(serverConfig, network.getServer());
@@ -269,7 +271,7 @@ public class LayerInitialisationTest {
 
 			Network network = new Network(corrupter);
 
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			ServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createServer(serverConfig, network.getServer());
@@ -307,7 +309,7 @@ public class LayerInitialisationTest {
 
 			Network network = new Network(corrupter);
 
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			ServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createServer(serverConfig, network.getServer());
@@ -338,7 +340,7 @@ public class LayerInitialisationTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			ServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createServer(serverConfig, network.getServer());
@@ -390,7 +392,7 @@ public class LayerInitialisationTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			ServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createServer(serverConfig, network.getServer());
@@ -420,7 +422,7 @@ public class LayerInitialisationTest {
 		IExecutable test = () -> {
 			Network network = new Network();
 
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			ServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createServer(serverConfig, network.getServer());

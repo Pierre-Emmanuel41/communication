@@ -1,18 +1,20 @@
 package fr.pederobien.communication.testing;
 
-import fr.pederobien.communication.impl.ClientConfig;
-import fr.pederobien.communication.impl.Communication;
+import java.net.DatagramSocket;
+
 import fr.pederobien.communication.impl.EthernetEndPoint;
-import fr.pederobien.communication.impl.ServerConfig;
+import fr.pederobien.communication.impl.client.ethernet.EthernetClientConfig;
+import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.layer.AesLayerInitializer;
 import fr.pederobien.communication.impl.layer.AesSafeLayerInitializer;
 import fr.pederobien.communication.impl.layer.LayerInitializer;
 import fr.pederobien.communication.impl.layer.RsaLayerInitializer;
-import fr.pederobien.communication.interfaces.IEthernetEndPoint;
+import fr.pederobien.communication.impl.server.ethernet.EthernetServerConfig;
+import fr.pederobien.communication.impl.server.ethernet.ServerEthernetEndPoint;
 import fr.pederobien.communication.interfaces.client.IClient;
+import fr.pederobien.communication.interfaces.server.IEthernetServerConfig;
 import fr.pederobien.communication.interfaces.server.IServer;
-import fr.pederobien.communication.interfaces.server.IServerConfig;
 import fr.pederobien.communication.testing.tools.ExceptionLayer;
 import fr.pederobien.communication.testing.tools.ExceptionLayer.LayerExceptionMode;
 import fr.pederobien.communication.testing.tools.ServerListener;
@@ -27,10 +29,35 @@ public class UdpCommunicationTest {
 	private static final int PORT = 12345;
 
 	/**
+	 * Creates a server configuration associated to the given server name, address and port number.
+	 * 
+	 * @param name    The name of the server.
+	 * @param address The IP address of the server.
+	 * @param port    The port number of the server.
+	 * @return The created server config.
+	 */
+	private static EthernetServerConfig createServerConfig(String name, String address, int port) {
+		return Communication.createEthernetServerConfig(name, new ServerEthernetEndPoint(address, port));
+	}
+
+	/**
+	 * Creates a server configuration associated to the given server name, address and port number.
+	 * 
+	 * @param name    The name of the server.
+	 * @param address The IP address of the server.
+	 * @param min     The minimum value of the port number of the server.
+	 * @param max     The maximum value of the port number of the server.
+	 * @return The created server config.
+	 */
+	private static EthernetServerConfig createServerConfig(String name, String address, int min, int max) {
+		return Communication.createEthernetServerConfig(name, new ServerEthernetEndPoint(address, min, max));
+	}
+
+	/**
 	 * @return Creates a server configuration with default name and port number.
 	 */
-	private static ServerConfig<IEthernetEndPoint> createServerConfig() {
-		return Communication.createServerConfig(SERVER_NAME, new EthernetEndPoint(PORT));
+	private static EthernetServerConfig createServerConfig() {
+		return createServerConfig(SERVER_NAME, "*", PORT);
 	}
 
 	/**
@@ -45,8 +72,8 @@ public class UdpCommunicationTest {
 	/**
 	 * @return Creates a client configuration with default name, address and port number.
 	 */
-	private static ClientConfig<IEthernetEndPoint> createClientConfig() {
-		return Communication.createClientConfig(CLIENT_NAME, new EthernetEndPoint(ADDRESS, PORT));
+	private static EthernetClientConfig createClientConfig() {
+		return Communication.createEthernetClientConfig(CLIENT_NAME, new EthernetEndPoint(ADDRESS, PORT));
 	}
 
 	/**
@@ -60,7 +87,7 @@ public class UdpCommunicationTest {
 
 	public void testServerWithSpecificAddressAndPort() {
 		IExecutable test = () -> {
-			IServerConfig<IEthernetEndPoint> config = Communication.createServerConfig(SERVER_NAME, new EthernetEndPoint("127.0.0.1", 12345));
+			IEthernetServerConfig config = createServerConfig(SERVER_NAME, "127.0.0.1", 12345);
 			IServer server = Communication.createUdpServer(config);
 
 			server.open();
@@ -76,7 +103,7 @@ public class UdpCommunicationTest {
 
 	public void testServerWithSpecificAddressButAnyPort() {
 		IExecutable test = () -> {
-			IServerConfig<IEthernetEndPoint> config = Communication.createServerConfig(SERVER_NAME, new EthernetEndPoint("127.0.0.1", 0));
+			IEthernetServerConfig config = createServerConfig(SERVER_NAME, "127.0.0.1", 0);
 			IServer server = Communication.createUdpServer(config);
 
 			server.open();
@@ -92,7 +119,7 @@ public class UdpCommunicationTest {
 
 	public void testServerWithAnyAddressButSpecificPort() {
 		IExecutable test = () -> {
-			IServerConfig<IEthernetEndPoint> config = Communication.createServerConfig(SERVER_NAME, new EthernetEndPoint("*", 12345));
+			IEthernetServerConfig config = createServerConfig(SERVER_NAME, "*", 12345);
 			IServer server = Communication.createUdpServer(config);
 
 			server.open();
@@ -108,7 +135,7 @@ public class UdpCommunicationTest {
 
 	public void testServerWithAnyAddressAndAnyPort() {
 		IExecutable test = () -> {
-			IServerConfig<IEthernetEndPoint> config = Communication.createServerConfig(SERVER_NAME, new EthernetEndPoint("*", 0));
+			IEthernetServerConfig config = createServerConfig(SERVER_NAME, "*", 0);
 			IServer server = Communication.createUdpServer(config);
 
 			server.open();
@@ -120,6 +147,86 @@ public class UdpCommunicationTest {
 		};
 
 		runTest("testServerWithAnyAddressAndAnyPort", test);
+	}
+
+	public void testServerWithSpecificAddressAndPortRange() {
+		IExecutable test = () -> {
+			IEthernetServerConfig config = createServerConfig(SERVER_NAME, "127.0.0.1", 50000, 60000);
+			IServer server = Communication.createUdpServer(config);
+
+			server.open();
+
+			sleep(1000);
+
+			server.close();
+			server.dispose();
+		};
+
+		runTest("testServerWithSpecificAddressAndPortRange", test);
+	}
+
+	public void testServerWithSpecificAddressAndPortRangeWithFirstThreeAlreadyUsed() {
+		IExecutable test = () -> {
+			IEthernetServerConfig config = createServerConfig(SERVER_NAME, "127.0.0.1", 50000, 60000);
+			IServer server = Communication.createUdpServer(config);
+
+			DatagramSocket server1 = new DatagramSocket(50000);
+			DatagramSocket server2 = new DatagramSocket(50001);
+			DatagramSocket server3 = new DatagramSocket(50002);
+
+			server.open();
+
+			sleep(1000);
+
+			server.close();
+			server.dispose();
+
+			server1.close();
+			server2.close();
+			server3.close();
+		};
+
+		runTest("testServerWithSpecificAddressAndPortRangeWithFirstThreeAlreadyUsed", test);
+	}
+
+	public void testServerWithAnyAddressButSpecificPortRange() {
+		IExecutable test = () -> {
+			IEthernetServerConfig config = createServerConfig(SERVER_NAME, "*", 50000, 60000);
+			IServer server = Communication.createUdpServer(config);
+
+			server.open();
+
+			sleep(1000);
+
+			server.close();
+			server.dispose();
+		};
+
+		runTest("testServerWithSpecificAddressAndPortRange", test);
+	}
+
+	public void testServerWithAnyAddressButSpecificPortRangeWithFirstThreeAlreadyUsed() {
+		IExecutable test = () -> {
+			IEthernetServerConfig config = createServerConfig(SERVER_NAME, "*", 50000, 60000);
+			IServer server = Communication.createUdpServer(config);
+
+			DatagramSocket server1 = new DatagramSocket(50000);
+			DatagramSocket server2 = new DatagramSocket(50001);
+			DatagramSocket server3 = new DatagramSocket(50002);
+
+			server.open();
+
+			sleep(1000);
+
+			server.close();
+			server.dispose();
+
+			server1.close();
+			server2.close();
+			server3.close();
+		};
+
+		runTest("testServerWithSpecificAddressAndPortRangeWithFirstThreeAlreadyUsed", test);
 	}
 
 	public void testServerCloseClientConnection() {
@@ -138,7 +245,7 @@ public class UdpCommunicationTest {
 
 			sleep(500);
 
-			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			EthernetClientConfig clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
 			IClient client = Communication.createUdpClient(clientConfig);
 
@@ -226,7 +333,7 @@ public class UdpCommunicationTest {
 
 			listener.start();
 
-			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			EthernetClientConfig clientConfig = createClientConfig();
 			clientConfig.setMessageHandler(event -> {
 				Logger.debug("Client received %s", new String(event.getData()));
 
@@ -357,7 +464,7 @@ public class UdpCommunicationTest {
 
 			listener.start();
 
-			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			EthernetClientConfig clientConfig = createClientConfig();
 			clientConfig.setMessageHandler(event -> {
 				Logger.debug("Client received %s", new String(event.getData()));
 
@@ -403,7 +510,7 @@ public class UdpCommunicationTest {
 
 			listener.start();
 
-			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			EthernetClientConfig clientConfig = createClientConfig();
 			clientConfig.setMessageHandler(event -> {
 				Logger.debug("Client received %s, but will not respond to it", new String(event.getData()));
 			});
@@ -446,7 +553,7 @@ public class UdpCommunicationTest {
 
 			listener.start();
 
-			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			EthernetClientConfig clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
 			clientConfig.setLayerInitializer(() -> new LayerInitializer(new ExceptionLayer(LayerExceptionMode.UNPACK)));
 
@@ -485,7 +592,7 @@ public class UdpCommunicationTest {
 
 			listener.start();
 
-			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			EthernetClientConfig clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
 
 			IClient client = Communication.createUdpClient(clientConfig);
@@ -546,7 +653,7 @@ public class UdpCommunicationTest {
 
 			listener.start();
 
-			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			EthernetClientConfig clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
 			clientConfig.setMessageHandler(_ -> {
 				throw new RuntimeException("Exception to test unstable counter");
@@ -589,7 +696,7 @@ public class UdpCommunicationTest {
 
 			listener.start();
 
-			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			EthernetClientConfig clientConfig = createClientConfig();
 			clientConfig.setClientMaxUnstableCounter(5);
 			clientConfig.setClientHealTime(9000);
 			clientConfig.setConnectionHealTime(500);
@@ -621,7 +728,7 @@ public class UdpCommunicationTest {
 
 	public void testRsaLayer() {
 		IExecutable test = () -> {
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			EthernetServerConfig serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createUdpServer(serverConfig);
@@ -644,7 +751,7 @@ public class UdpCommunicationTest {
 
 			listener.start();
 
-			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			EthernetClientConfig clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new RsaLayerInitializer(new SimpleCertificate()));
 			clientConfig.setMessageHandler(event -> {
 				Logger.debug("Client received %s", new String(event.getData()));
@@ -672,7 +779,7 @@ public class UdpCommunicationTest {
 
 	public void testAesLayer() {
 		IExecutable test = () -> {
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			EthernetServerConfig serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createUdpServer(serverConfig);
@@ -695,7 +802,7 @@ public class UdpCommunicationTest {
 
 			listener.start();
 
-			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			EthernetClientConfig clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new AesLayerInitializer(new SimpleCertificate()));
 			clientConfig.setMessageHandler(event -> {
 				Logger.debug("Client received %s", new String(event.getData()));
@@ -723,7 +830,7 @@ public class UdpCommunicationTest {
 
 	public void testAesSafeLayer() {
 		IExecutable test = () -> {
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			EthernetServerConfig serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createUdpServer(serverConfig);
@@ -746,7 +853,7 @@ public class UdpCommunicationTest {
 
 			listener.start();
 
-			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			EthernetClientConfig clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 			clientConfig.setMessageHandler(event -> {
 				Logger.debug("Client received %s", new String(event.getData()));
@@ -774,7 +881,7 @@ public class UdpCommunicationTest {
 
 	public void testBigRequest() {
 		IExecutable test = () -> {
-			ServerConfig<IEthernetEndPoint> serverConfig = createServerConfig();
+			EthernetServerConfig serverConfig = createServerConfig();
 			serverConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 
 			IServer server = Communication.createUdpServer(serverConfig);
@@ -807,7 +914,7 @@ public class UdpCommunicationTest {
 
 			listener.start();
 
-			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
+			EthernetClientConfig clientConfig = createClientConfig();
 			clientConfig.setLayerInitializer(() -> new AesSafeLayerInitializer(new SimpleCertificate()));
 			clientConfig.setMessageHandler(event -> {
 				Logger.debug("Client received %s bytes", event.getData().length);

@@ -1,6 +1,7 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.client;
 
 import fr.pederobien.communication.event.MessageEvent;
+import fr.pederobien.communication.impl.Configuration;
 import fr.pederobien.communication.interfaces.IMessageHandler;
 import fr.pederobien.communication.interfaces.client.IClientConfig;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
@@ -21,7 +22,7 @@ public class ClientConfig<T> extends Configuration implements IClientConfig<T> {
 	 * @param name     The client's name. Essentially used for logging.
 	 * @param endPoint The properties of the end point.
 	 */
-	protected ClientConfig(String name, T endPoint) {
+	public ClientConfig(String name, T endPoint) {
 		super(Mode.CLIENT_TO_SERVER);
 
 		this.name = name;

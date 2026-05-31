@@ -1,4 +1,4 @@
-package fr.pederobien.communication.impl.server;
+package fr.pederobien.communication.impl.server.ethernet;
 
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;

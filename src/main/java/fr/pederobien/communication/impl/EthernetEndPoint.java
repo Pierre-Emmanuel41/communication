@@ -17,15 +17,6 @@ public class EthernetEndPoint implements IEthernetEndPoint {
 		this.port = port;
 	}
 
-	/**
-	 * Create an end point for ethernet communication.
-	 *
-	 * @param port The port number of the point
-	 */
-	public EthernetEndPoint(int port) {
-		this("*", port);
-	}
-
 	@Override
 	public String getAddress() {
 		return address;
@@ -34,12 +25,6 @@ public class EthernetEndPoint implements IEthernetEndPoint {
 	@Override
 	public int getPort() {
 		return port;
-	}
-
-	@Override
-	public void setPort(int port) {
-		if (this.port == 0)
-			this.port = port;
 	}
 
 	@Override

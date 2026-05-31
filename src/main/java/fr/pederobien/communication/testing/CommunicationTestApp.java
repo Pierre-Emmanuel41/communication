@@ -95,6 +95,13 @@ public class CommunicationTestApp {
 		tests.testServerWithSpecificAddressButAnyPort();
 		tests.testServerWithAnyAddressButSpecificPort();
 		tests.testServerWithAnyAddressAndAnyPort();
+		tests.testServerWithSpecificAddressAndPortRange();
+		tests.testServerWithSpecificAddressAndPortRangeWithFirstThreeAlreadyUsed();
+		tests.testServerWithAnyAddressButSpecificPortRange();
+		tests.testServerWithAnyAddressButSpecificPortRangeWithFirstThreeAlreadyUsed();
+		tests.testClientAutomaticReconnection();
+		tests.testClientAutomaticReconnectionButWithServerOpenedLater();
+		tests.testClientAutomaticReconnectionButServerClosedLater();
 		tests.testClientToServerCommunication();
 		tests.testServerToClientCommunication();
 		tests.testClientToServerWithCallback();
@@ -118,6 +125,10 @@ public class CommunicationTestApp {
 		tests.testServerWithSpecificAddressButAnyPort();
 		tests.testServerWithAnyAddressButSpecificPort();
 		tests.testServerWithAnyAddressAndAnyPort();
+		tests.testServerWithSpecificAddressAndPortRange();
+		tests.testServerWithSpecificAddressAndPortRangeWithFirstThreeAlreadyUsed();
+		tests.testServerWithAnyAddressButSpecificPortRange();
+		tests.testServerWithAnyAddressButSpecificPortRangeWithFirstThreeAlreadyUsed();
 		tests.testServerCloseClientConnection();
 		tests.testClientCloseConnection();
 		tests.testClientToServerCommunication();

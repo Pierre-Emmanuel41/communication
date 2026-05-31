@@ -16,8 +16,8 @@ public interface IClientConfig<T> extends IConfiguration {
 	String getName();
 
 	/**
-	 * @return The handler to execute when an unexpected request has been received from the remote. The default handler do nothing, it
-	 *         is highly recommended to override it.
+	 * @return The handler to execute when an unexpected request has been received from the remote. The default handler does nothing,
+	 *         it is highly recommended to override it.
 	 */
 	IMessageHandler getMessageHandler();
 

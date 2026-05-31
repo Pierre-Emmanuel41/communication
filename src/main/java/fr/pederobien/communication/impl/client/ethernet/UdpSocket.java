@@ -1,4 +1,4 @@
-package fr.pederobien.communication.impl.client;
+package fr.pederobien.communication.impl.client.ethernet;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;

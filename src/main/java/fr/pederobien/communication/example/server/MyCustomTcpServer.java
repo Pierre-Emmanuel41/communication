@@ -5,12 +5,13 @@ import java.util.Map;
 
 import fr.pederobien.communication.event.NewClientEvent;
 import fr.pederobien.communication.impl.Communication;
-import fr.pederobien.communication.impl.EthernetEndPoint;
-import fr.pederobien.communication.impl.ServerConfig;
 import fr.pederobien.communication.impl.layer.AesLayerInitializer;
+import fr.pederobien.communication.impl.server.ethernet.EthernetServerConfig;
+import fr.pederobien.communication.impl.server.ethernet.ServerEthernetEndPoint;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.server.IServer;
+import fr.pederobien.communication.interfaces.server.IServerEthernetEndPoint;
 import fr.pederobien.communication.testing.tools.SimpleCertificate;
 import fr.pederobien.utils.event.EventHandler;
 import fr.pederobien.utils.event.EventManager;
@@ -22,8 +23,8 @@ public class MyCustomTcpServer implements IEventListener {
 	private Map<IConnection, MyCustomClient> clients;
 
 	public MyCustomTcpServer() {
-		IEthernetEndPoint endPoint = new EthernetEndPoint(12345);
-		ServerConfig<IEthernetEndPoint> config = Communication.createServerConfig("My TCP server", endPoint);
+		IServerEthernetEndPoint endPoint = new ServerEthernetEndPoint("*", 12345);
+		EthernetServerConfig config = Communication.createEthernetServerConfig("My TCP server", endPoint);
 
 		// Setting the layer to use to pack/unpack data.
 		// A new layer is defined each time a new client is connected

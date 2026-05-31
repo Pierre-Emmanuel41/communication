@@ -3,9 +3,9 @@ package fr.pederobien.communication.impl.server.state;
 import fr.pederobien.communication.event.ServerCloseEvent;
 import fr.pederobien.utils.event.EventManager;
 
-public class Closed<T> extends State<T> {
+public class Closed<T, U> extends State<T, U> {
 
-	public Closed(Context<T> context) {
+	public Closed(Context<T, U> context) {
 		super(context);
 	}
 
@@ -20,7 +20,7 @@ public class Closed<T> extends State<T> {
 				EventManager.callEvent(new ServerCloseEvent(getContext().getServer()));
 				info("Server closed");
 			} catch (Exception e) {
-				info("An exception occurred while closing the server: %s", e.getMessage());
+				error("An exception occurred while closing the server: %s", e.getMessage());
 			}
 		}
 	}

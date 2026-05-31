@@ -2,7 +2,7 @@ package fr.pederobien.communication.interfaces.server;
 
 import fr.pederobien.communication.interfaces.IConfiguration;
 
-public interface IServerConfig<T> extends IConfiguration {
+public interface IServerConfig<T, U> extends IConfiguration {
 
 	/**
 	 * @return The name of the server.
@@ -17,7 +17,7 @@ public interface IServerConfig<T> extends IConfiguration {
 	/**
 	 * @return The validator to authorize or not the client to be connected to the server.
 	 */
-	IClientValidator<T> getClientValidator();
+	IClientValidator<U> getClientValidator();
 
 	/**
 	 * The server is monitored when waiting for a new client, validating client end-point and initialising the connection with the

@@ -1,9 +1,9 @@
 package fr.pederobien.communication.example.client;
 
 import fr.pederobien.communication.event.MessageEvent;
-import fr.pederobien.communication.impl.ClientConfig;
-import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.EthernetEndPoint;
+import fr.pederobien.communication.impl.client.ethernet.EthernetClientConfig;
+import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.layer.AesLayerInitializer;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.client.IClient;
@@ -15,7 +15,7 @@ public class MyCustomTcpClient {
 
 	public MyCustomTcpClient() {
 		IEthernetEndPoint endPoint = new EthernetEndPoint("127.0.0.1", 12345);
-		ClientConfig<IEthernetEndPoint> config = Communication.createClientConfig("My TCP client", endPoint);
+		EthernetClientConfig config = Communication.createEthernetClientConfig("My TCP client", endPoint);
 
 		// Set the code to execute when a message has been received
 		config.setMessageHandler(this::onMessageReceived);

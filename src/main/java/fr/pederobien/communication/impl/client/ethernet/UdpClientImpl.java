@@ -1,13 +1,12 @@
-package fr.pederobien.communication.impl.client;
-
-import fr.pederobien.communication.impl.connection.UdpConnectionImpl;
-import fr.pederobien.communication.interfaces.IEthernetEndPoint;
-import fr.pederobien.communication.interfaces.client.IClientImpl;
-import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
+package fr.pederobien.communication.impl.client.ethernet;
 
 import java.net.InetSocketAddress;
 
-public class UdpClientImpl implements IClientImpl<IEthernetEndPoint> {
+import fr.pederobien.communication.impl.connection.UdpConnectionImpl;
+import fr.pederobien.communication.interfaces.IEthernetEndPoint;
+import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
+
+public class UdpClientImpl extends EthernetClientImpl {
 
 	@Override
 	public IConnectionImpl connect(String name, IEthernetEndPoint endPoint, int timeout) throws Exception {

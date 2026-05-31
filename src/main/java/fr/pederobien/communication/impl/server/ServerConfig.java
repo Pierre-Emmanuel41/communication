@@ -1,13 +1,14 @@
-package fr.pederobien.communication.impl;
+package fr.pederobien.communication.impl.server;
 
+import fr.pederobien.communication.impl.Configuration;
 import fr.pederobien.communication.interfaces.connection.IConnection.Mode;
 import fr.pederobien.communication.interfaces.server.IClientValidator;
 import fr.pederobien.communication.interfaces.server.IServerConfig;
 
-public class ServerConfig<T> extends Configuration implements IServerConfig<T> {
+public class ServerConfig<T, U> extends Configuration implements IServerConfig<T, U> {
 	private final T point;
 	private String name;
-	private IClientValidator<T> clientValidator;
+	private IClientValidator<U> clientValidator;
 	private int serverMaxUnstableCounter;
 	private int serverHealTime;
 
@@ -17,7 +18,7 @@ public class ServerConfig<T> extends Configuration implements IServerConfig<T> {
 	 * @param name  The server's name.
 	 * @param point The properties of the server communication point.
 	 */
-	protected ServerConfig(String name, T point) {
+	public ServerConfig(String name, T point) {
 		super(Mode.SERVER_TO_CLIENT);
 
 		this.name = name;
@@ -48,7 +49,7 @@ public class ServerConfig<T> extends Configuration implements IServerConfig<T> {
 	}
 
 	@Override
-	public IClientValidator<T> getClientValidator() {
+	public IClientValidator<U> getClientValidator() {
 		return clientValidator;
 	}
 
@@ -57,7 +58,7 @@ public class ServerConfig<T> extends Configuration implements IServerConfig<T> {
 	 *
 	 * @param clientValidator The validator to authorize a client to be connected to the server.
 	 */
-	public void setClientValidator(IClientValidator<T> clientValidator) {
+	public void setClientValidator(IClientValidator<U> clientValidator) {
 		this.clientValidator = clientValidator;
 	}
 
