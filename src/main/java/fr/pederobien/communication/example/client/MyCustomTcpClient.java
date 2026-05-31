@@ -5,10 +5,10 @@ import fr.pederobien.communication.impl.EthernetEndPoint;
 import fr.pederobien.communication.impl.client.ethernet.EthernetClientConfig;
 import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.layer.AesLayerInitializer;
+import fr.pederobien.communication.impl.layer.SimpleCertificate;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.client.IClient;
 import fr.pederobien.communication.interfaces.connection.IConnection;
-import fr.pederobien.communication.testing.tools.SimpleCertificate;
 
 public class MyCustomTcpClient {
 	private final IClient tcpClient;

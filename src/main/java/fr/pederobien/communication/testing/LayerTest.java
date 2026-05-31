@@ -6,7 +6,6 @@ import fr.pederobien.communication.impl.layer.*;
 import fr.pederobien.communication.interfaces.connection.IHeaderMessage;
 import fr.pederobien.communication.interfaces.layer.ICertificate;
 import fr.pederobien.communication.interfaces.layer.ILayer;
-import fr.pederobien.communication.testing.tools.SimpleCertificate;
 import fr.pederobien.utils.IExecutable;
 import fr.pederobien.utils.event.Logger;
 

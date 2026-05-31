@@ -10,6 +10,7 @@ import fr.pederobien.communication.impl.layer.AesLayerInitializer;
 import fr.pederobien.communication.impl.layer.AesSafeLayerInitializer;
 import fr.pederobien.communication.impl.layer.LayerInitializer;
 import fr.pederobien.communication.impl.layer.RsaLayerInitializer;
+import fr.pederobien.communication.impl.layer.SimpleCertificate;
 import fr.pederobien.communication.impl.server.ethernet.EthernetServerConfig;
 import fr.pederobien.communication.impl.server.ethernet.ServerEthernetEndPoint;
 import fr.pederobien.communication.interfaces.client.IClient;
@@ -18,7 +19,6 @@ import fr.pederobien.communication.interfaces.server.IServer;
 import fr.pederobien.communication.testing.tools.ExceptionLayer;
 import fr.pederobien.communication.testing.tools.ExceptionLayer.LayerExceptionMode;
 import fr.pederobien.communication.testing.tools.ServerListener;
-import fr.pederobien.communication.testing.tools.SimpleCertificate;
 import fr.pederobien.utils.IExecutable;
 import fr.pederobien.utils.event.Logger;
 

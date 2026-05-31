@@ -7,6 +7,7 @@ import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.layer.AesLayerInitializer;
 import fr.pederobien.communication.impl.layer.AesSafeLayerInitializer;
 import fr.pederobien.communication.impl.layer.RsaLayerInitializer;
+import fr.pederobien.communication.impl.layer.SimpleCertificate;
 import fr.pederobien.communication.impl.server.ServerConfig;
 import fr.pederobien.communication.impl.server.ethernet.ServerEthernetEndPoint;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
@@ -16,7 +17,6 @@ import fr.pederobien.communication.interfaces.server.IServerEthernetEndPoint;
 import fr.pederobien.communication.testing.tools.Network;
 import fr.pederobien.communication.testing.tools.NetworkCorrupter;
 import fr.pederobien.communication.testing.tools.ServerListener;
-import fr.pederobien.communication.testing.tools.SimpleCertificate;
 import fr.pederobien.utils.IExecutable;
 import fr.pederobien.utils.event.Logger;
 
