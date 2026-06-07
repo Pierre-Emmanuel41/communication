@@ -37,7 +37,7 @@ public class LayerInitializer implements ILayerInitializer {
 	 * @param layer The layer, already initialized.
 	 */
 	public LayerInitializer(ILayer layer) {
-		this(layer, _ -> layer);
+		this(layer, token -> layer);
 	}
 
 	/**

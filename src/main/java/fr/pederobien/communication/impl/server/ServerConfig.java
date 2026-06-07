@@ -24,7 +24,7 @@ public class ServerConfig<T, U> extends Configuration implements IServerConfig<T
 		this.name = name;
 		this.point = point;
 
-		clientValidator = _ -> true;
+		clientValidator = endPoint -> true;
 		serverMaxUnstableCounter = 5;
 		serverHealTime = 1000;
 	}

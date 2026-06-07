@@ -36,7 +36,7 @@ public class Network {
 	 * Create a network that does not modify data while being transferred to the remote.
 	 */
 	public Network() {
-		this((_, _, data) -> data);
+		this((mode, remote, data) -> data);
 	}
 
 	/**

@@ -1,8 +1,8 @@
 package fr.pederobien.communication.testing;
 
+import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.EthernetEndPoint;
 import fr.pederobien.communication.impl.client.ClientConfig;
-import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.layer.LayerInitializer;
 import fr.pederobien.communication.impl.server.ethernet.ServerEthernetEndPoint;
@@ -409,7 +409,7 @@ public class NetworkTest {
 			server.open();
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
-			clientConfig.setLayerInitializer(() -> new LayerInitializer(_ -> {
+			clientConfig.setLayerInitializer(() -> new LayerInitializer(token -> {
 				throw new RuntimeException("Exception to test unstable counter");
 			}));
 
@@ -624,7 +624,7 @@ public class NetworkTest {
 
 			ClientConfig<IEthernetEndPoint> clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
-			clientConfig.setMessageHandler(_ -> {
+			clientConfig.setMessageHandler(event -> {
 				throw new RuntimeException("Exception to test unstable counter");
 			});
 
@@ -675,7 +675,7 @@ public class NetworkTest {
 			clientConfig.setClientMaxUnstableCounter(5);
 			clientConfig.setClientHealTime(9000);
 			clientConfig.setConnectionHealTime(500);
-			clientConfig.setMessageHandler(_ -> {
+			clientConfig.setMessageHandler(event -> {
 				throw new RuntimeException("Exception to test unstable counter");
 			});
 

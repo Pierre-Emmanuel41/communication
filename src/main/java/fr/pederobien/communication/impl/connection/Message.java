@@ -1,10 +1,10 @@
 package fr.pederobien.communication.impl.connection;
 
+import java.util.function.Consumer;
+
 import fr.pederobien.communication.interfaces.connection.ICallback;
 import fr.pederobien.communication.interfaces.connection.ICallback.CallbackArgs;
 import fr.pederobien.communication.interfaces.connection.IMessage;
-
-import java.util.function.Consumer;
 
 public class Message implements IMessage {
 	private final byte[] bytes;
@@ -65,7 +65,7 @@ public class Message implements IMessage {
 	 * @param isSync True if this message shall be sent synchronously, false to send it asynchronously.
 	 */
 	public Message(byte[] bytes, boolean isSync) {
-		this(bytes, isSync, -1, _ -> {
+		this(bytes, isSync, -1, args -> {
 		});
 	}
 

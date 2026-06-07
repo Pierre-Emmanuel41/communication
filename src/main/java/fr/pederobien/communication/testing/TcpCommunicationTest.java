@@ -2,9 +2,9 @@ package fr.pederobien.communication.testing;
 
 import java.net.ServerSocket;
 
+import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.EthernetEndPoint;
 import fr.pederobien.communication.impl.client.ethernet.EthernetClientConfig;
-import fr.pederobien.communication.impl.Communication;
 import fr.pederobien.communication.impl.connection.Message;
 import fr.pederobien.communication.impl.layer.AesLayerInitializer;
 import fr.pederobien.communication.impl.layer.AesSafeLayerInitializer;
@@ -658,7 +658,7 @@ public class TcpCommunicationTest {
 
 			EthernetClientConfig clientConfig = createClientConfig();
 			clientConfig.setAutomaticReconnection(false);
-			clientConfig.setMessageHandler(_ -> {
+			clientConfig.setMessageHandler(event -> {
 				throw new RuntimeException("Exception to test unstable counter");
 			});
 
@@ -703,7 +703,7 @@ public class TcpCommunicationTest {
 			clientConfig.setClientMaxUnstableCounter(5);
 			clientConfig.setClientHealTime(9000);
 			clientConfig.setConnectionHealTime(500);
-			clientConfig.setMessageHandler(_ -> {
+			clientConfig.setMessageHandler(event -> {
 				throw new RuntimeException("Exception to test unstable counter");
 			});
 
