@@ -6,6 +6,7 @@ import fr.pederobien.communication.impl.client.ethernet.EthernetClientConfig;
 import fr.pederobien.communication.impl.client.ethernet.TcpClientImpl;
 import fr.pederobien.communication.impl.client.ethernet.UdpClientImpl;
 import fr.pederobien.communication.impl.connection.Connection;
+import fr.pederobien.communication.impl.server.EthernetServer;
 import fr.pederobien.communication.impl.server.Server;
 import fr.pederobien.communication.impl.server.ServerConfig;
 import fr.pederobien.communication.impl.server.ethernet.EthernetServerConfig;
@@ -21,6 +22,7 @@ import fr.pederobien.communication.interfaces.client.IEthernetClientConfig;
 import fr.pederobien.communication.interfaces.client.IEthernetClientImpl;
 import fr.pederobien.communication.interfaces.connection.IConnection;
 import fr.pederobien.communication.interfaces.connection.IConnectionImpl;
+import fr.pederobien.communication.interfaces.server.IEthernetServer;
 import fr.pederobien.communication.interfaces.server.IEthernetServerConfig;
 import fr.pederobien.communication.interfaces.server.IEthernetServerImpl;
 import fr.pederobien.communication.interfaces.server.IServer;
@@ -203,24 +205,35 @@ public class Communication {
 	}
 
 	/**
-	 * Creates an Ethernet server.
+	 * Creates an ethernet server.
 	 *
 	 * @param config The object that holds the server configuration.
 	 * @param impl   The server specific implementation to open/close the server.
 	 */
-	public static final IServer createEthernetServer(IEthernetServerConfig config, IEthernetServerImpl impl) {
-		return createServer(config, impl);
+	public static final IEthernetServer createEthernetServer(IServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> config,
+			IServerImpl<IServerEthernetEndPoint, IEthernetEndPoint> impl) {
+		return new EthernetServer(config, impl);
 	}
 
 	/**
-	 * Creates an Ethernet server with default configuration ready to be opened.
+	 * Creates an ethernet server.
+	 *
+	 * @param config The object that holds the server configuration.
+	 * @param impl   The server specific implementation to open/close the server.
+	 */
+	public static final IEthernetServer createEthernetServer(IEthernetServerConfig config, IEthernetServerImpl impl) {
+		return new EthernetServer(config, impl);
+	}
+
+	/**
+	 * Creates an ethernet server with default configuration ready to be opened.
 	 *
 	 * @param name  The name of the server.
 	 * @param point The properties of the server communication point.
 	 * @param impl  The server specific implementation to open/close the server.
 	 */
-	public static final IServer createDefaultEthernetServer(String name, IServerEthernetEndPoint point, IEthernetServerImpl impl) {
-		return createServer(createEthernetServerConfig(name, point), impl);
+	public static final IEthernetServer createDefaultEthernetServer(String name, IServerEthernetEndPoint point, IEthernetServerImpl impl) {
+		return createEthernetServer(createEthernetServerConfig(name, point), impl);
 	}
 
 	/**
@@ -228,8 +241,8 @@ public class Communication {
 	 *
 	 * @param config The object that holds the server configuration.
 	 */
-	public static final IServer createTcpServer(IServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> config) {
-		return createServer(config, new TcpServerImpl());
+	public static final IEthernetServer createTcpServer(IServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> config) {
+		return createEthernetServer(config, new TcpServerImpl());
 	}
 
 	/**
@@ -237,8 +250,8 @@ public class Communication {
 	 *
 	 * @param config The object that holds the server configuration.
 	 */
-	public static final IServer createTcpServer(IEthernetServerConfig config) {
-		return createServer(config, new TcpServerImpl());
+	public static final IEthernetServer createTcpServer(IEthernetServerConfig config) {
+		return createEthernetServer(config, new TcpServerImpl());
 	}
 
 	/**
@@ -246,8 +259,8 @@ public class Communication {
 	 *
 	 * @param config The object that holds the server configuration.
 	 */
-	public static final IServer createUdpServer(IServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> config) {
-		return createServer(config, new UdpServerImpl());
+	public static final IEthernetServer createUdpServer(IServerConfig<IServerEthernetEndPoint, IEthernetEndPoint> config) {
+		return createEthernetServer(config, new UdpServerImpl());
 	}
 
 	/**
@@ -255,8 +268,8 @@ public class Communication {
 	 *
 	 * @param config The object that holds the server configuration.
 	 */
-	public static final IServer createUdpServer(IEthernetServerConfig config) {
-		return createServer(config, new UdpServerImpl());
+	public static final IEthernetServer createUdpServer(IEthernetServerConfig config) {
+		return createEthernetServer(config, new UdpServerImpl());
 	}
 
 	/**
@@ -266,7 +279,7 @@ public class Communication {
 	 * @param address the IP address of the server.
 	 * @param port    The port number of the server.
 	 */
-	public static final IServer createDefaultTcpServer(String name, String address, int port) {
+	public static final IEthernetServer createDefaultTcpServer(String name, String address, int port) {
 		return createTcpServer(createEthernetServerConfig(name, new ServerEthernetEndPoint(address, port)));
 	}
 
@@ -276,7 +289,7 @@ public class Communication {
 	 * @param name The name of the server.
 	 * @param port The port number of the server.
 	 */
-	public static final IServer createDefaultTcpServer(String name, int port) {
+	public static final IEthernetServer createDefaultTcpServer(String name, int port) {
 		return createTcpServer(createEthernetServerConfig(name, new ServerEthernetEndPoint(port)));
 	}
 
@@ -288,7 +301,7 @@ public class Communication {
 	 * @param min     The minimum value of the port number of the server.
 	 * @param max     The maximum value of the port number of the server.
 	 */
-	public static final IServer createDefaultTcpServer(String name, String address, int min, int max) {
+	public static final IEthernetServer createDefaultTcpServer(String name, String address, int min, int max) {
 		return createTcpServer(createEthernetServerConfig(name, new ServerEthernetEndPoint(address, min, max)));
 	}
 
@@ -299,7 +312,7 @@ public class Communication {
 	 * @param min  The minimum value of the port number of the server.
 	 * @param max  The maximum value of the port number of the server.
 	 */
-	public static final IServer createDefaultTcpServer(String name, int min, int max) {
+	public static final IEthernetServer createDefaultTcpServer(String name, int min, int max) {
 		return createTcpServer(createEthernetServerConfig(name, new ServerEthernetEndPoint(min, max)));
 	}
 
@@ -310,7 +323,7 @@ public class Communication {
 	 * @param address the IP address of the server.
 	 * @param port    The port number of the server.
 	 */
-	public static final IServer createDefaultUdpServer(String name, String address, int port) {
+	public static final IEthernetServer createDefaultUdpServer(String name, String address, int port) {
 		return createUdpServer(createEthernetServerConfig(name, new ServerEthernetEndPoint(address, port)));
 	}
 
@@ -320,7 +333,7 @@ public class Communication {
 	 * @param name The name of the server.
 	 * @param port The port number of the server.
 	 */
-	public static final IServer createDefaultUdpServer(String name, int port) {
+	public static final IEthernetServer createDefaultUdpServer(String name, int port) {
 		return createUdpServer(createEthernetServerConfig(name, new ServerEthernetEndPoint(port)));
 	}
 
@@ -332,7 +345,7 @@ public class Communication {
 	 * @param min     The minimum value of the port number of the server.
 	 * @param max     The maximum value of the port number of the server.
 	 */
-	public static final IServer createDefaultUdpServer(String name, String address, int min, int max) {
+	public static final IEthernetServer createDefaultUdpServer(String name, String address, int min, int max) {
 		return createUdpServer(createEthernetServerConfig(name, new ServerEthernetEndPoint(address, min, max)));
 	}
 
@@ -343,7 +356,7 @@ public class Communication {
 	 * @param min  The minimum value of the port number of the server.
 	 * @param max  The maximum value of the port number of the server.
 	 */
-	public static final IServer createDefaultUdpServer(String name, int min, int max) {
+	public static final IEthernetServer createDefaultUdpServer(String name, int min, int max) {
 		return createUdpServer(createEthernetServerConfig(name, new ServerEthernetEndPoint(min, max)));
 	}
 }

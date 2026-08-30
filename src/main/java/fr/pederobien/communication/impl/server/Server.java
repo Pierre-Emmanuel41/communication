@@ -11,6 +11,7 @@ import fr.pederobien.utils.event.EventManager;
 import fr.pederobien.utils.event.IEventListener;
 
 public class Server<T, U> implements IServer, IEventListener {
+	private final IServerConfig<T, U> config;
 	private final IContext context;
 
 	/**
@@ -20,8 +21,9 @@ public class Server<T, U> implements IServer, IEventListener {
 	 * @param impl   The server specific implementation to open/close the server.
 	 */
 	public Server(IServerConfig<T, U> config, IServerImpl<T, U> impl) {
-		context = new Context<T, U>(this, config, impl);
+		this.config = config;
 
+		context = new Context<T, U>(this, config, impl);
 		EventManager.registerListener(this);
 	}
 
@@ -62,5 +64,12 @@ public class Server<T, U> implements IServer, IEventListener {
 		}
 
 		event.getServer().close();
+	}
+
+	/**
+	 * @return The object that holds the server configuration.
+	 */
+	protected IServerConfig<T, U> getConfig() {
+		return config;
 	}
 }

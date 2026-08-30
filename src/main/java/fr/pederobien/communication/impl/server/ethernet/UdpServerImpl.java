@@ -6,10 +6,11 @@ import fr.pederobien.communication.impl.server.ClientInfo;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.connection.IUdpSocket;
 import fr.pederobien.communication.interfaces.server.IClientInfo;
+import fr.pederobien.communication.interfaces.server.IEthernetServerImpl;
 import fr.pederobien.communication.interfaces.server.IServerConfig;
 import fr.pederobien.communication.interfaces.server.IServerEthernetEndPoint;
 
-public class UdpServerImpl extends EthernetServerImpl {
+public class UdpServerImpl extends EthernetServerImpl implements IEthernetServerImpl {
 	private UdpServerSocket serverSocket;
 
 	@Override

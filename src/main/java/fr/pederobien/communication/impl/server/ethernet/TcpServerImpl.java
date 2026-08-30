@@ -11,11 +11,12 @@ import fr.pederobien.communication.impl.connection.TcpConnectionImpl;
 import fr.pederobien.communication.impl.server.ClientInfo;
 import fr.pederobien.communication.interfaces.IEthernetEndPoint;
 import fr.pederobien.communication.interfaces.server.IClientInfo;
+import fr.pederobien.communication.interfaces.server.IEthernetServerImpl;
 import fr.pederobien.communication.interfaces.server.IServerConfig;
 import fr.pederobien.communication.interfaces.server.IServerEthernetEndPoint;
 import fr.pederobien.utils.event.Logger;
 
-public class TcpServerImpl extends EthernetServerImpl {
+public class TcpServerImpl extends EthernetServerImpl implements IEthernetServerImpl {
 	private ServerSocket serverSocket;
 
 	/**
